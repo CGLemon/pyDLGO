@@ -1,6 +1,10 @@
+# -*- coding: utf-8 -*-
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+from config import INPUT_CHANNELS, BLOCK_SIZE, FILTER_SIZE, USE_GPU
 
 class FullyConnect(nn.Module):
     def __init__(self, in_size,
@@ -116,7 +120,11 @@ class ResBlock(nn.Module):
 
 
 class Network(nn.Module):
-    def __init__(self, board_size, input_channels, block_size, filter_size):
+    def __init__(self, board_size,
+                       input_channels=INPUT_CHANNELS,
+                       block_size = BLOCK_SIZE,
+                       filter_size = FILTER_SIZE,
+                       use_gpu=USE_GPU):
         super().__init__()
 
         self.tensor_collector = []
@@ -128,6 +136,7 @@ class Network(nn.Module):
         self.board_size = board_size
         self.spatial_size = self.board_size ** 2
         self.input_channels = input_channels
+        self.use_gpu = True if torch.cuda.is_available() and use_gpu else False
 
         self.set_layers()
 
@@ -201,6 +210,14 @@ class Network(nn.Module):
         val = self.winrate_fc(val)
 
         return pol, torch.tanh(val)
+        
+    def get_outputs(self, planes):
+        m = nn.Softmax(dim=1)
+        x = torch.unsqueeze(torch.tensor(planes, dtype=torch.float32), dim=0)
+        if self.use_gpu:
+            x = x.to(torch.device('cuda:0'))
+        p, v = self.forward(x)
+        return m(p).data.tolist()[0], v.data.tolist()[0]
 
     def trainable(self, t=True):
         if t==True:

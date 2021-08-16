@@ -190,7 +190,7 @@ class Board(object):
             return False
         else:
             if v == PASS:
-                self.num_passes = num_passes + 1
+                self.num_passes += 1
                 self.ko = NULL_VERTEX
             else:
                 self.place_stone(v)
@@ -211,9 +211,11 @@ class Board(object):
 
     def compute_reach_color(self, color):
         queue = []
+        reachable = 0
         buf = [False] * NUM_VERTICES
-        for v in NUM_VERTICES:
+        for v in range(NUM_VERTICES):
             if self.color[v] == color:
+                reachable += 1
                 buf[v] = True
                 queue.append(v)
 
@@ -222,20 +224,22 @@ class Board(object):
             for d in self.dir4:
                 nv = v + d
                 if self.color[nv] == color and buf[nv] == False:
+                    reachable += 1
                     queue.append(nv)
                     buf[nv] = True
+        return reachable
 
-    def score(self):
-        return self.compute_reach_color(BLACK) - self.compute_reach_color(WHITE) - komi
+    def final_score(self):
+        return self.compute_reach_color(BLACK) - self.compute_reach_color(WHITE) - self.komi
 
     def showboard(self):
-        def pirnt_xlabel(bsize):
+        def get_xlabel(bsize):
             line_str = "  "
             for x in range(bsize):
                 line_str += " " + X_LABELS[x] + " "
-            stderr.write(line_str + "\n")
-
-        pirnt_xlabel(self.board_size)
+            return line_str + "\n"
+        out = str()
+        out += get_xlabel(self.board_size)
 
         for y in range(0, self.board_size)[::-1]:  # 9, 8, ..., 1
             line_str = str(y+1) if y >= 9 else " " + str(y+1)
@@ -251,10 +255,10 @@ class Board(object):
                         x_str = " " + stone_str + " "
                 line_str += x_str
             line_str += str(y+1) if y >= 10 else " " + str(y+1)
-            stderr.write(line_str + "\n")
+            out += (line_str + "\n")
 
-        pirnt_xlabel(self.board_size)
-        stderr.write("\n")
+        out += get_xlabel(self.board_size)
+        return out + "\n"
 
     def get_x(self, v):
         return v % (self.board_size+2) - 1
