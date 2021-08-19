@@ -6,12 +6,17 @@ from network import Network
 from mcts import Search
 from config import BOARD_SIZE, KOMI, INPUT_CHANNELS, PAST_MOVES
 
+cfg_playouts = 200
+cfg_weights_name = None
+
 class GTP_ENGINE:
     def __init__(self):
         self.board = Board(BOARD_SIZE, KOMI)
         self.network = Network(BOARD_SIZE)
         self.board_history = [self.board.copy()]
-        
+        if cfg_weights_name != None:
+            self.network.load_pt(cfg_weights_name)
+
     def clear_board(self):
         self.board.reset(self.board.board_size, self.board.komi)
         self.board_history = [self.board.copy()]
@@ -25,7 +30,7 @@ class GTP_ENGINE:
 
         self.board.to_move = c
         search = Search(self.board, self.network)
-        move = search.think()
+        move = search.think(cfg_playouts)
         self.board.play(move)
 
         if move == PASS:
@@ -77,7 +82,10 @@ class GTP_LOOP:
         "quit", "name", "version", "protocol_version", "list_commands",
         "play", "genmove", "undo", "clear_board", "boardsize", "komi"
     }
-    def __init__(self):
+    def __init__(self, args):
+        if args.playouts != None:
+            cfg_playouts  = args.playouts
+        cfg_weights_name = args.weights
         self.engine = GTP_ENGINE()
         self.loop()
         

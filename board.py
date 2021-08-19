@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from sys import stderr
 from config import BOARD_SIZE, KOMI, INPUT_CHANNELS, PAST_MOVES
 import numpy as np
 import copy

@@ -4,7 +4,6 @@ from config import INPUT_CHANNELS
 from board import Board, PASS, BLACK, WHITE
 from network import Network
 
-import torch
 import math
 
 class Node:
@@ -63,7 +62,7 @@ class Search:
         self.root_board = board
         self.root_node = None
         self.network = network
-        self.playouts = 200
+        self.playouts = None
 
     def prepare_root_node(self):
         self.root_node = Node(1)
@@ -100,7 +99,8 @@ class Search:
 
         return value
 
-    def think(self):
+    def think(self, playouts):
+        self.playouts = playouts
         self.prepare_root_node()
         for _ in range(self.playouts):
             curr_board = self.root_board.copy()
