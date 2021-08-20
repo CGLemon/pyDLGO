@@ -137,8 +137,15 @@ class Network(nn.Module):
         self.spatial_size = self.board_size ** 2
         self.input_channels = input_channels
         self.use_gpu = True if torch.cuda.is_available() and use_gpu else False
+        self.gpu_device = None
 
         self.set_layers()
+        if self.use_gpu:
+            self.gpu_device = torch.device('cuda:0')
+            self.to_gpu_device()
+
+    def to_gpu_device(self):
+        self = self.to(self.gpu_device)
 
     def set_layers(self):
         self.input_conv = ConvBlock(
@@ -215,7 +222,7 @@ class Network(nn.Module):
         m = nn.Softmax(dim=1)
         x = torch.unsqueeze(torch.tensor(planes, dtype=torch.float32), dim=0)
         if self.use_gpu:
-            x = x.to(torch.device('cuda:0'))
+            x = x.to(self.gpu_device)
         p, v = self.forward(x)
         return m(p).data.tolist()[0], v.data.tolist()[0]
 

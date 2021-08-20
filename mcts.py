@@ -40,7 +40,7 @@ class Node:
 
         puct_list = []
         for vtx, child in  self.children.items():
-            q_value = 0
+            q_value = self.clamp(0)
             if child.visits is not 0:
                 q_value = self.clamp(-child.values / child.visits)
             puct = q_value + self.CPUCT * child.policy * (numerator / (1+child.visits))

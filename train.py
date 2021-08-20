@@ -31,7 +31,7 @@ class DataSet:
             temp = self.process_one_game(game)
             self.buffer.extend(temp)
 
-    def get_batch(self, batch_size=512):
+    def get_batch(self, batch_size):
         s = random.sample(self.buffer, k=batch_size)
         inputs_batch = []
         policy_batch = []
@@ -100,7 +100,7 @@ class TrainingPipe:
         self.net = Network(BOARD_SIZE)
         self.data_set = DataSet(dir_name)
         
-    def running(self, step, batch_size, learning_rate):
+    def running(self, max_step, batch_size, learning_rate):
         cross_entry = nn.CrossEntropyLoss()
         mse_loss = nn.MSELoss()
         optimizer = optim.Adam(lr=leaning_rate, weight_decay=1e-4)
@@ -108,23 +108,33 @@ class TrainingPipe:
         p_running_loss = 0
         v_running_loss = 0
 
-        for _ in range(step):
-            i, target_p, target_v = data_set.get_batch(batch_size)
-        
-            optimizer.zero_grad()
+        for step in range(max_step):
+            inputs, target_p, target_v = data_set.get_batch(batch_size)
+
+            if self.net.use_gpu:
+                inputs = inputs.to(self.net.gpu_device)
+                target_p = target_p.to(self.net.gpu_device)
+                target_v = target_v.to(self.net.gpu_device)
+
             p, v = net(inputs)
 
             p_loss = cross_entry(p, target_p)
             v_loss = mse_loss(v, target_v)
             loss = p_loss + v_loss
+
+            # Backpropagation
+            optimizer.zero_grad()
             loss.backward()
+            optimizer.step()
 
             p_running_loss += p_loss.item()
             v_running_loss += v_loss.item()
 
             if (step+1) % verbose_step == 0:
-                print("step: {s} -> policy loss: {p} | value loss: {v}\n",
+                print("step: {s}/{m}, {v}% -> policy loss: {p} | value loss: {v}\n",
                           s=step,
+                          m=max_step,
+                          v=100 * (step/max_step),
                           p=p_running_loss/verbose_step,
                           v=v_running_loss/verbose_step)
                 p_running_loss = 0
