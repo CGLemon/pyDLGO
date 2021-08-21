@@ -57,12 +57,26 @@ class Node:
             gather_list.append((child.visits, vtx))
         return max(gather_list)[1]
 
+    def dump(self, board: Board):
+        out = str()
+        out += "Root -> W: {:.2f}%, P: {:.2f}%, V: {}\n".format(
+                    self.values,
+                    self.policy,
+                    self.visits)
+        for vtx, child in  self.children.items():
+            if child.visits is not 0:
+                out += "  {:4} -> W: {:.2f}%, P: {:.2f}%, V: {}\n".format(
+                           board.vertex_to_text(vtx),
+                           child.values,
+                           child.policy,
+                           child.visits)
+        print(out)
+
 class Search:
     def __init__(self, board: Board, network: Network):
         self.root_board = board
         self.root_node = None
         self.network = network
-        self.playouts = None
 
     def prepare_root_node(self):
         self.root_node = Node(1)
@@ -99,11 +113,12 @@ class Search:
 
         return value
 
-    def think(self, playouts):
-        self.playouts = playouts
+    def think(self, playouts, verbose):
         self.prepare_root_node()
-        for _ in range(self.playouts):
+        for _ in range(playouts):
             curr_board = self.root_board.copy()
             color = curr_board.to_move
             self.play_simulation(color, curr_board, self.root_node)
+        if verbose:
+            self.root_node.dump(self.root_board)
         return self.root_node.get_best_move()

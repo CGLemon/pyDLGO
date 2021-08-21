@@ -6,8 +6,9 @@ import argparse
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--playouts", help="The number of playouts", type=int)
-    parser.add_argument("-w", "--weights", help="The weights file name", type=int)
+    parser.add_argument("-p", "--playouts", help="The number of playouts", type=int, default=400)
+    parser.add_argument("-w", "--weights", help="The weights file name", type=str)
+    parser.add_argument("-v", "--verbose", type=bool, default=False)
 
     args = parser.parse_args()
     loop = GTP_LOOP(args)

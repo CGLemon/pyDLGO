@@ -6,16 +6,15 @@ from network import Network
 from mcts import Search
 from config import BOARD_SIZE, KOMI, INPUT_CHANNELS, PAST_MOVES
 
-cfg_playouts = 200
-cfg_weights_name = None
-
 class GTP_ENGINE:
-    def __init__(self):
+    def __init__(self, args):
+        self.args = args
         self.board = Board(BOARD_SIZE, KOMI)
         self.network = Network(BOARD_SIZE)
         self.board_history = [self.board.copy()]
-        if cfg_weights_name != None:
-            self.network.load_pt(cfg_weights_name)
+
+        if self.args.weights != None:
+            self.network.load_pt(self.args.weights)
 
     def clear_board(self):
         self.board.reset(self.board.board_size, self.board.komi)
@@ -30,18 +29,10 @@ class GTP_ENGINE:
 
         self.board.to_move = c
         search = Search(self.board, self.network)
-        move = search.think(cfg_playouts)
+        move = search.think(self.args.playouts, self.args.verbose)
         self.board.play(move)
 
-        if move == PASS:
-            return "pass"
-        elif move == RESIGN:
-            return "resign"
-        
-        x = self.board.get_x(move)
-        y = self.board.get_y(move)
-        offset = 1 if x >= 8 else 0
-        return "".join([chr(x + ord('A') + offset), str(y+1)])
+        return self.board.vertex_to_text(move)
         
 
     def play(self, color, move):
@@ -78,15 +69,13 @@ class GTP_ENGINE:
         return self.board.showboard()
 
 class GTP_LOOP:
+    # TODO: Soppurt for "time_settings", "time_left"
     COMMANDS_LIST = {
         "quit", "name", "version", "protocol_version", "list_commands",
         "play", "genmove", "undo", "clear_board", "boardsize", "komi"
     }
     def __init__(self, args):
-        if args.playouts != None:
-            cfg_playouts  = args.playouts
-        cfg_weights_name = args.weights
-        self.engine = GTP_ENGINE()
+        self.engine = GTP_ENGINE(args)
         self.loop()
         
     def loop(self):

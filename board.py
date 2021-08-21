@@ -277,6 +277,17 @@ class Board(object):
     def index_to_vertex(self, idx):
         return self.get_vertex(idx % self.board_size, idx // self.board_size)
 
+    def vertex_to_text(self, vtx):
+        if vtx == PASS:
+            return "pass"
+        elif vtx == RESIGN:
+            return "resign"
+        
+        x = self.get_x(vtx)
+        y = self.get_y(vtx)
+        offset = 1 if x >= 8 else 0
+        return "".join([chr(x + ord('A') + offset), str(y+1)])
+
     def get_features(self):
         my_color = self.to_move
         opp_color = (self.to_move + 1) % 2

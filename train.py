@@ -8,6 +8,10 @@ import sgf, argparse
 import copy, random
 import numpy as np
 
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
 class Chunk:
     def __init__(self):
         self.inputs = None
@@ -27,9 +31,18 @@ class DataSet:
 
     def load_data(self, dir_name):
         sgf_games = sgf.parser_from_dir(dir_name)
+        total = len(sgf_games)
+        step = 0
+        verbose_step = 1000
+        print("total {} games".format(total))
         for game in sgf_games:
+            step += 1
             temp = self.process_one_game(game)
             self.buffer.extend(temp)
+            if step % verbose_step == 0:
+                print("parsed {:.2f}% games".format(100 * step/total))
+        if total % verbose_step != 0:
+            print("parsed {:.2f}% games".format(100 * step/total))
 
     def get_batch(self, batch_size):
         s = random.sample(self.buffer, k=batch_size)
@@ -43,7 +56,11 @@ class DataSet:
         inputs_batch = np.array(inputs_batch)
         policy_batch = np.array(policy_batch)
         value_batch = np.array(value_batch)
-        return inputs_batch, policy_batch, value_batch
+        return (
+            torch.tensor(inputs_batch).float(),
+            torch.tensor(policy_batch).long(),
+            torch.tensor(value_batch).float()
+        )
 
     def process_one_game(self, game):
         temp = []
@@ -91,7 +108,7 @@ class DataSet:
             x = ord(move[0]) - ord('a')
             y = ord(move[1]) - ord('a')
             vtx = board.get_vertex(x, y)
-            policy = board.get_index(x,y)
+            policy = board.get_index(x, y)
         board.play(vtx)
         return policy
 
@@ -103,20 +120,20 @@ class TrainingPipe:
     def running(self, max_step, batch_size, learning_rate):
         cross_entry = nn.CrossEntropyLoss()
         mse_loss = nn.MSELoss()
-        optimizer = optim.Adam(lr=leaning_rate, weight_decay=1e-4)
-        verbose_step = 100
+        optimizer = optim.Adam(self.net.parameters(), lr=learning_rate, weight_decay=1e-4)
+        verbose_step = 1000
         p_running_loss = 0
         v_running_loss = 0
 
         for step in range(max_step):
-            inputs, target_p, target_v = data_set.get_batch(batch_size)
+            inputs, target_p, target_v = self.data_set.get_batch(batch_size)
 
             if self.net.use_gpu:
                 inputs = inputs.to(self.net.gpu_device)
                 target_p = target_p.to(self.net.gpu_device)
                 target_v = target_v.to(self.net.gpu_device)
 
-            p, v = net(inputs)
+            p, v = self.net(inputs)
 
             p_loss = cross_entry(p, target_p)
             v_loss = mse_loss(v, target_v)
@@ -131,17 +148,17 @@ class TrainingPipe:
             v_running_loss += v_loss.item()
 
             if (step+1) % verbose_step == 0:
-                print("step: {s}/{m}, {v}% -> policy loss: {p} | value loss: {v}\n",
-                          s=step,
-                          m=max_step,
-                          v=100 * (step/max_step),
-                          p=p_running_loss/verbose_step,
-                          v=v_running_loss/verbose_step)
+                print("step: {}/{}, {:.2f}% -> policy loss: {:.4f} | value loss: {:.4f}\n".format(
+                          step+1,
+                          max_step,
+                          100 * (step+1/max_step),
+                          p_running_loss/verbose_step,
+                          v_running_loss/verbose_step))
                 p_running_loss = 0
                 v_running_loss = 0
 
     def save_weights(self, name):
-        self.net.save_pt(name + ".pt")
+        self.net.save_pt(name)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -149,7 +166,7 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--step", help="The training step", type=int)
     parser.add_argument("-b", "--batch-size", type=int)
     parser.add_argument("-l", "--learning-rate", type=float)
-    parser.add_argument("-w", "--weights-name", type=float)
+    parser.add_argument("-w", "--weights-name", type=str)
 
     args = parser.parse_args()
     pipe = TrainingPipe(args.dir)
