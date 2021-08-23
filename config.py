@@ -8,7 +8,8 @@ USE_GPU = True # The network use the gpu or not.
 
 INPUT_CHANNELS = 18 # Network input layers.
 
-PAST_MOVES = 8
+PAST_MOVES = 8 # Number of past move encode to the planes.
 
 BLOCK_SIZE = 2 # Network residual block size.
+
 FILTER_SIZE = 64 # Network residual filter size.

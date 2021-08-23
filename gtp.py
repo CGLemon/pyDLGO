@@ -11,6 +11,7 @@ class GTP_ENGINE:
         self.args = args
         self.board = Board(BOARD_SIZE, KOMI)
         self.network = Network(BOARD_SIZE)
+        self.network.trainable(False)
         self.board_history = [self.board.copy()]
 
         if self.args.weights != None:
@@ -21,6 +22,7 @@ class GTP_ENGINE:
         self.board_history = [self.board.copy()]
 
     def genmove(self, color):
+        # Genrate next move and play it.
         c = self.board.to_move
         if color == "black" or color == "b"  or color == "B":
             c = BLACK

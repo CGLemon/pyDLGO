@@ -114,13 +114,14 @@ class DataSet:
 
 class TrainingPipe:
     def __init__(self, dir_name):
-        self.net = Network(BOARD_SIZE)
+        self.network = Network(BOARD_SIZE)
+        self.network.trainable()
         self.data_set = DataSet(dir_name)
         
     def running(self, max_step, batch_size, learning_rate):
         cross_entry = nn.CrossEntropyLoss()
         mse_loss = nn.MSELoss()
-        optimizer = optim.Adam(self.net.parameters(), lr=learning_rate, weight_decay=1e-4)
+        optimizer = optim.Adam(self.network.parameters(), lr=learning_rate, weight_decay=1e-4)
         verbose_step = 1000
         p_running_loss = 0
         v_running_loss = 0
@@ -128,12 +129,12 @@ class TrainingPipe:
         for step in range(max_step):
             inputs, target_p, target_v = self.data_set.get_batch(batch_size)
 
-            if self.net.use_gpu:
-                inputs = inputs.to(self.net.gpu_device)
-                target_p = target_p.to(self.net.gpu_device)
-                target_v = target_v.to(self.net.gpu_device)
+            if self.network.use_gpu:
+                inputs = inputs.to(self.network.gpu_device)
+                target_p = target_p.to(self.network.gpu_device)
+                target_v = target_v.to(self.network.gpu_device)
 
-            p, v = self.net(inputs)
+            p, v = self.network(inputs)
 
             p_loss = cross_entry(p, target_p)
             v_loss = mse_loss(v, target_v)
@@ -158,7 +159,7 @@ class TrainingPipe:
                 v_running_loss = 0
 
     def save_weights(self, name):
-        self.net.save_pt(name)
+        self.network.save_pt(name)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

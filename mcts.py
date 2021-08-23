@@ -17,7 +17,7 @@ class Node:
         self.children = {}
 
     def clamp(self, v):
-        # map the winrate 1 ~ -1 to 1 ~ 0
+        # Map the winrate 1 ~ -1 to 1 ~ 0
         return (v + 1) / 2
 
     def expend_children(self, board: Board, network: Network):
@@ -60,14 +60,14 @@ class Node:
     def dump(self, board: Board):
         out = str()
         out += "Root -> W: {:.2f}%, P: {:.2f}%, V: {}\n".format(
-                    self.values,
+                    self.clamp(self.values/child.visits),
                     self.policy,
                     self.visits)
         for vtx, child in  self.children.items():
             if child.visits is not 0:
                 out += "  {:4} -> W: {:.2f}%, P: {:.2f}%, V: {}\n".format(
                            board.vertex_to_text(vtx),
-                           child.values,
+                           self.clamp(child.values/child.visits),
                            child.policy,
                            child.visits)
         print(out)
@@ -79,6 +79,7 @@ class Search:
         self.network = network
 
     def prepare_root_node(self):
+        # Expand the root node first.
         self.root_node = Node(1)
         val = self.root_node.expend_children(self.root_board, self.network)
         self.root_node.update(val)
@@ -106,6 +107,7 @@ class Search:
             next_node = node.children[vtx]
             value = self.play_simulation(color, curr_board, next_node)
         else:
+            # Termainate node.
             value = node.expend_children(curr_board, self.network)
 
         assert value is not None, ""
@@ -116,6 +118,7 @@ class Search:
     def think(self, playouts, verbose):
         self.prepare_root_node()
         for _ in range(playouts):
+            # Monte carlo tree search.
             curr_board = self.root_board.copy()
             color = curr_board.to_move
             self.play_simulation(color, curr_board, self.root_node)
