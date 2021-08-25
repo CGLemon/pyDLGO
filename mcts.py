@@ -3,6 +3,7 @@
 from config import INPUT_CHANNELS
 from board import Board, PASS, BLACK, WHITE
 from network import Network
+from time_control import TimeControl
 
 import math
 
@@ -73,10 +74,11 @@ class Node:
         print(out)
 
 class Search:
-    def __init__(self, board: Board, network: Network):
+    def __init__(self, board: Board, network: Network, time_control: TimeControl):
         self.root_board = board
         self.root_node = None
         self.network = network
+        self.time_control = time_control
 
     def prepare_root_node(self):
         # Expand the root node first.
@@ -116,12 +118,22 @@ class Search:
         return value
 
     def think(self, playouts, verbose):
+        self.time_control.clock()
+        to_move = self.root_board.to_move
+        bsize = self.root_board.board_size
+        move_num = self.root_board.move_num
+        max_time = self.time_control.get_thinking_time(to_move, bsize, move_num)
+
         self.prepare_root_node()
         for _ in range(playouts):
+            if self.time_control.should_stop(max_time):
+                break
             # Monte carlo tree search.
             curr_board = self.root_board.copy()
             color = curr_board.to_move
             self.play_simulation(color, curr_board, self.root_node)
+
+        self.time_control.took_time(to_move)
         if verbose:
             self.root_node.dump(self.root_board)
         return self.root_node.get_best_move()

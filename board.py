@@ -79,7 +79,7 @@ class Board(object):
         self.num_passes = 0
         self.ko = NULL_VERTEX  # illegal position due to Ko
         self.to_move = BLACK  # black
-        self.move_cnt = 0  # move count
+        self.move_num = 0  # move number
         self.last_move = NULL_VERTEX  # last move
         self.remove_cnt = 0  # removed stones count
         self.history = []
@@ -98,7 +98,7 @@ class Board(object):
         b_cpy.num_passes = self.num_passes
         b_cpy.ko = self.ko
         b_cpy.to_move = self.to_move
-        b_cpy.move_cnt = self.move_cnt
+        b_cpy.move_num = self.move_num
         b_cpy.last_move = self.last_move
         b_cpy.remove_cnt = self.remove_cnt
 
@@ -204,7 +204,7 @@ class Board(object):
         self.last_move = v
         self.history.append(copy.deepcopy(self.color))
         self.to_move = int(self.to_move == 0)
-        self.move_cnt += 1
+        self.move_num += 1
 
         return True
 
