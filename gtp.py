@@ -34,7 +34,8 @@ class GTP_ENGINE:
         self.board.to_move = c
         search = Search(self.board, self.network, self.time_control)
         move = search.think(self.args.playouts, self.args.verbose)
-        self.board.play(move)
+        if self.board.play(move):
+            self.board_history.append(self.board.copy())
 
         return self.board.vertex_to_text(move)
         
