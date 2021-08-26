@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from config import INPUT_CHANNELS
-from board import Board, PASS, BLACK, WHITE
+from board import Board, PASS, RESIGN, BLACK, WHITE
 from network import Network
 from time_control import TimeControl
 
@@ -20,6 +20,9 @@ class Node:
     def clamp(self, v):
         # Map the winrate 1 ~ -1 to 1 ~ 0
         return (v + 1) / 2
+
+    def inverse(self, v):
+        return 1 - v;
 
     def expend_children(self, board: Board, network: Network):
         policy, value = network.get_outputs(board.get_features())
@@ -43,7 +46,7 @@ class Node:
         for vtx, child in  self.children.items():
             q_value = self.clamp(0)
             if child.visits is not 0:
-                q_value = self.clamp(-child.values / child.visits)
+                q_value = self.inverse(child.values / child.visits)
             puct = q_value + self.CPUCT * child.policy * (numerator / (1+child.visits))
             puct_list.append((puct, vtx))
         return max(puct_list)[1]
@@ -52,26 +55,30 @@ class Node:
         self.values += v
         self.visits += 1
 
-    def get_best_move(self):
+    def get_best_move(self, resigned_threshold):
         gather_list = []
         for vtx, child in  self.children.items():
             gather_list.append((child.visits, vtx))
-        return max(gather_list)[1]
+
+        vtx = max(gather_list)[1]
+        child = self.children[vtx]
+        if self.inverse(child.values / child.visits) < resigned_threshold:
+            return RESIGN
+        return vtx
 
     def dump(self, board: Board):
         out = str()
         out += "Root -> W: {:.2f}%, P: {:.2f}%, V: {}\n".format(
-                    self.clamp(self.values/child.visits),
+                    self.values/self.visits,
                     self.policy,
                     self.visits)
         for vtx, child in  self.children.items():
             if child.visits is not 0:
                 out += "  {:4} -> W: {:.2f}%, P: {:.2f}%, V: {}\n".format(
                            board.vertex_to_text(vtx),
-                           self.clamp(child.values/child.visits),
+                           self.inverse(child.values/child.visits),
                            child.policy,
                            child.visits)
-        print(out)
 
 class Search:
     def __init__(self, board: Board, network: Network, time_control: TimeControl):
@@ -136,4 +143,4 @@ class Search:
         self.time_control.took_time(to_move)
         if verbose:
             self.root_node.dump(self.root_board)
-        return self.root_node.get_best_move()
+        return self.root_node.get_best_move(0.1)

@@ -38,7 +38,7 @@ class ConvBlock(nn.Module):
             out_channels,
             kernel_size,
             padding=1 if kernel_size == 3 else 0,
-            bias=False,
+            bias=True,
         )
         self.bn = nn.BatchNorm2d(
             out_channels,
@@ -48,7 +48,7 @@ class ConvBlock(nn.Module):
 
         if collector != None:
             collector.append(self.conv.weight)
-            collector.append(torch.zeros(out_channels))
+            collector.append(self.conv.bias)
             collector.append(self.bn.running_mean)
             collector.append(self.bn.running_var)
 
