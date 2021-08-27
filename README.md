@@ -32,7 +32,16 @@ dlgo 可以解析 sgf 格式的棋譜，並直接訓練一個網路。
 
 ## 三、使用 GTP 介面
 
-dlgo支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體（ [Sabaki](https://github.com/SabakiHQ/Sabaki )），掛載 dlgo 上去，使用的參數參考上面。
+dlgo支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體（ [Sabaki](https://github.com/SabakiHQ/Sabaki )），掛載 dlgo 上去，使用的參數參考上面。以下是如何在 Sabaki 上使用的教學。
+
+第一步、打開引擎選項
+![step_one](https://github.com/CGLemon/pyDLGO/blob/master/img/截圖%202021-08-27%20下午7.44.57.png?raw=true)
+
+第二步、新增引擎
+![step_two](https://github.com/CGLemon/pyDLGO/blob/master/img/截圖%202021-08-27%20下午7.45.58.png?raw=true)
+
+第三步、加載引擎
+![step_two](https://github.com/CGLemon/pyDLGO/blob/master/img/截圖%202021-08-27%27下午7.56.38.png?raw=true)
 
 ## 四、Windows
 
@@ -47,5 +56,4 @@ dlgo支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體（ [Saba
 
 
 ## TODO
-* 加入圖片說明
 * 加上如何將引擎掛載在 KGS 上
