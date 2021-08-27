@@ -41,7 +41,7 @@ dlgo支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體（ [Saba
 ![step_two](https://github.com/CGLemon/pyDLGO/blob/master/img/截圖%202021-08-27%20下午7.45.58.png?raw=true)
 
 第三步、加載引擎
-![step_two](https://github.com/CGLemon/pyDLGO/blob/master/img/截圖%202021-08-27%27下午7.56.38.png?raw=true)
+![step_two](https://github.com/CGLemon/pyDLGO/blob/master/img/截圖%202021-08-27%20下午7.56.38.png?raw=true)
 
 ## 四、Windows
 
