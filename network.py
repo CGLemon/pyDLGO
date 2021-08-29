@@ -42,13 +42,14 @@ class ConvBlock(nn.Module):
         )
         self.bn = nn.BatchNorm2d(
             out_channels,
-            eps=1e-5,
-            affine=False,
+            eps=1e-5
         )
 
         if collector != None:
             collector.append(self.conv.weight)
             collector.append(self.conv.bias)
+            collector.append(self.bn.weight)
+            collector.append(self.bn.bias)
             collector.append(self.bn.running_mean)
             collector.append(self.bn.running_var)
 
