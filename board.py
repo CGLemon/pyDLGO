@@ -217,7 +217,7 @@ class Board(object):
                 reachable += 1
                 buf[v] = True
                 queue.append(v)
-        print(queue)
+
         while len(queue) != 0:
             v = queue.pop()
             for d in self.dir4:
