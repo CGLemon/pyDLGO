@@ -217,12 +217,12 @@ class Board(object):
                 reachable += 1
                 buf[v] = True
                 queue.append(v)
-
+        print(queue)
         while len(queue) != 0:
             v = queue.pop()
             for d in self.dir4:
                 nv = v + d
-                if self.color[nv] == color and buf[nv] == False:
+                if self.color[nv] == EMPTY and buf[nv] == False:
                     reachable += 1
                     queue.append(nv)
                     buf[nv] = True
