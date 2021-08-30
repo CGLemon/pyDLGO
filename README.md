@@ -1,30 +1,36 @@
 # pyDLGO
 
-基於深度學習的 GTP 圍棋引擎和 KGS 教學文件
+基於深度學習的 GTP 圍棋引擎和 KGS 的指引文件，幫助同學參加 TCGA 電腦對局競賽。
 
 ## 零、依賴與來源
 
-sgf.py 修改自 [sgf](https://github.com/jtauber/sgf)
+sgf.py 修改自 [jtauber/sgf](https://github.com/jtauber/sgf)
 
-board.py 修改自 [pyaq](https://github.com/ymgaq/Pyaq)
+board.py 修改自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
 
-sgf.zip 來源自 [pyaq](https://github.com/ymgaq/Pyaq)
+sgf.zip 來源自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
 
 以下的 python 是必須的（請注意本程式使用python3）
-1. pytorch
+1. PyTorch (1.x 版本)
 2. numpy
 
 KGS GTP 需要 Java
 
 ## ㄧ、訓練網路
 
-dlgo 可以解析 sgf 格式的棋譜，並將棋譜作為訓練資料訓練一個網路。
+dlgo 可以解析 sgf 格式的棋譜，並將棋譜作為訓練資料訓練一個網路，通過以下步驟可以訓練出一個基本網路。
 
-第一步、需要收集訓練的棋譜，如果你沒有可使用的棋譜，可以使用附的 sgf.zip，裡面包含三萬盤以上九路棋譜。
+#### 第一步、收集棋譜
 
-第二步、設定網路大小，參數包含在 config.py 裡，BLOCK_SIZE 為殘差網路的 block 數目，數目越大網路越大，FILTER_SIZE 卷積網路 filter 的數目，數目越大網路越大，BOARD_SIZE 為要訓練的棋盤大小，USE_GPU 為是否用使用 GPU 訓練。
+需要收集訓練的棋譜，如果你沒有可使用的棋譜，可以使用附的 sgf.zip，裡面包含三萬盤以上九路棋譜。也可以到 [Aya](http://www.yss-aya.com/ayaself/ayaself.html) 上找到更多可訓練的棋譜。
 
-第三步、開始訓練，參數如下
+#### 第二步、設定網路大小
+
+網路的參數包含在 config.py 裡，BLOCK_SIZE 為殘差網路的 block 數目，數目越大網路越大，FILTER_SIZE 卷積網路 filter 的數目，數目越大網路越大，BOARD_SIZE 為要訓練的棋盤大小，USE_GPU 為是否用使用 GPU 訓練。
+
+#### 第三步、開始訓練
+
+接下來便是開始訓練一個網路，所需要用到的參數如下
     
 | 參數                    |參數類別          | 說明                |
 | :---------------:    | :---------------: | :---------------: |
@@ -34,7 +40,7 @@ dlgo 可以解析 sgf 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | --learning-rate    |float                  | 學習率大小 |
 | --weights-name | string               | 要輸出的網路權重名稱 |
 
-以下是訓練範例
+以下是訓練範例命令
 
     $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
 
@@ -59,7 +65,7 @@ dlgo 可以解析 sgf 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
 ### Windows
 
-這裏需要更改的部分是 dlgo.py 內的第一行，需要改成當前環境所執行 python 路徑位置，此行就是
+Windows 系統是無法直接使用的，這裏需要更改的部分是 dlgo.py 內的第一行，需要改成當前環境所執行 python 路徑位置，此行就是
 
     #!/usr/bin/env python3
 
@@ -67,18 +73,23 @@ dlgo 可以解析 sgf 格式的棋譜，並將棋譜作為訓練資料訓練一�
 由於此路徑是基於 Linux/MacOS ，所以無法直接在 Windows 上使用，這裏有[討論串](https://superuser.com/questions/378477/making-usr-bin-env-python-work-on-windows)教導如何在 Windows 上可以 work，請根據你的使用環境更改此行，以下是範例
 
     #!c:/Python/python.exe
+    
+接下來參考上方 Linux/MacOS 的部分。
 
 ## 三、使用 GTP 介面
 
-dlgo支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比如用 [Sabaki](https://github.com/SabakiHQ/Sabaki ) 講 dlgo 掛載上去，使用的參數參考上面。以下是如何在 Sabaki 上使用的教學。
+dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比如用 [Sabaki](https://github.com/SabakiHQ/Sabaki ) 將 dlgo 掛載上去，使用的參數參考上面。以下是如何在 Sabaki 上使用的教學。
 
 #### 第一步、打開引擎選項
+
 ![step_one](https://github.com/CGLemon/pyDLGO/blob/master/img/截圖%202021-08-27%20下午7.44.57.png?raw=true)
 
 #### 第二步、新增引擎
+
 ![step_two](https://github.com/CGLemon/pyDLGO/blob/master/img/截圖%202021-08-27%20下午7.45.58.png?raw=true)
 
 #### 第三步、加載引擎
+
 ![step_two](https://github.com/CGLemon/pyDLGO/blob/master/img/截圖%202021-08-27%20下午7.56.38.png?raw=true)
 
 
@@ -87,10 +98,12 @@ dlgo支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比如
 KGS 是一個網路圍棋伺服器，它曾經世界最大、最多人使用的網路圍棋。KGS 除了可以上網下棋以外，還能掛載 GTP 引擎上去，以下將會教學如何將 dlgo 掛載上去。
 
 #### 第一步、下載 KGS 客戶端並註冊
+
 請到 [KGS 官網](https://www.gokgs.com/index.jsp?locale=zh_CN)上下載對應系統的客戶端，如果是 Linux 系統，請選擇 Raw JAR File。接下來到 [KGS  註冊網站](https://www.gokgs.com/register/index.html)創立一個帳號。
 
 
 #### 第二步、下載 KGS GTP 客戶端
+
 到 [KGS GTP 網站](https://www.gokgs.com/download.jsp)下載專為 GTP 引擎設計的客戶端。
 
 #### 第三步、掛載 GTP 引擎
@@ -112,24 +125,36 @@ KGS 是一個網路圍棋伺服器，它曾經世界最大、最多人使用的�
 
     engine=dlgo 的路徑和參數
 
-
-設定完成後就可以輸入以下命令掛載引擎
+設定完成後就可以輸入以下命令即可掛載引擎
 
     $ java -jar kgsGtp.jar config.txt
     
-詳細的參數說明可以看 [KGS GTP 文件]( http://www.weddslist.com/kgs/how/kgsGtp.html)。注意這是舊版的文件，如果要新版的文件，可以點擊在同個資料夾的 kgsGtp.xhtml，或是輸入以下命令。
+詳細的參數說明可以看 [KGS GTP 文件]( http://www.weddslist.com/kgs/how/kgsGtp.html)。注意這是舊版的文件，如果要新版的文件，可以點擊在同個資料夾的 kgsGtp.xhtml，或是輸入以下命令在終端機觀看。
 
     $ java -jar kgsGtp.jar -h
 
 #### 第四步、和 dlgo 在 KGS 上下棋
+
 登錄 KGS 客戶端（注意，你第一個申請的帳號正在被引擎使用，請申請第二個帳號或使用參觀模式），可以從“新開對局”找到你的帳號，點擊你的帳號即可發出對局申請。
 
 
+## 五、參加 TCGA 競賽
+
+TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型的電腦對局比賽，當然也包括圍棋。TCGA 的圍棋比賽是使用 KGS 伺服器比賽的，如果你已經能順利掛在引擎到 KGS 上，恭喜你完成第一步比賽的準備。dlgo 還有不少可以改進的空間，接下來設法強化 dlgo，希望你能在比賽中獲得好成績。
+
+
+#### 比賽列表
+
+| 比賽             |時間                 | 狀態                 |連結                  |
+| :------------: | :---------------: | :---------------: | :---------------: |
+| TAAI 2021    | 約 11 月          | 尚未開始報名   | NULL               |
+
 ## License
-board.py 和  sgf.py 依原作者為 MIT License 條款，剩餘文件皆為 MIT License 條款。
+
+board.py 和  sgf.py 依原作者為 MIT License 條款，剩餘程式皆為 MIT License 條款。
 
 
 ## TODO
 * 確認正確性
-* 增加 TCGA 訊息
+* 增加程式碼的  API 文件
 * 增加深度學和蒙蒂卡羅在圍棋上的應用、原理
