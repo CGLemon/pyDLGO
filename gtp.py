@@ -115,7 +115,7 @@ class GTP_LOOP:
         if main == "name":
             self.success_print("dlgo")
         elif main == "version":
-            self.success_print("alpha")
+            self.success_print("beta")
         elif main == "protocol_version":
             self.success_print("2")
         elif main == "list_commands":
