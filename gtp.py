@@ -47,13 +47,21 @@ class GTP_ENGINE:
         elif color == "white" or color == "w" or color == "W":
             c = WHITE
 
-        x = ord(move[0]) - (ord('A') if ord(move[0]) < ord('a') else ord('a'))
-        y = int(move[1:]) - 1
-        if x >= 8:
-            x -= 1
+        vtx = None
+        if move == "pass":
+            vtx = PASS
+        elif move == "resign":
+            vtx = RESIGN
+        else:
+            x = ord(move[0]) - (ord('A') if ord(move[0]) < ord('a') else ord('a'))
+            y = int(move[1:]) - 1
+            if x >= 8:
+                x -= 1
+            vtx = self.board.get_vertex(x,y)
+
         if c != INVLD:
             self.board.to_move = c
-            if self.board.play(self.board.get_vertex(x,y)):
+            if self.board.play(vtx):
                 self.board_history.append(self.board.copy())
                 return True
         return False
@@ -88,11 +96,11 @@ class GTP_ENGINE:
         return self.board.showboard()
 
 class GTP_LOOP:
-    COMMANDS_LIST = {
+    COMMANDS_LIST = [
         "quit", "name", "version", "protocol_version", "list_commands",
         "play", "genmove", "undo", "clear_board", "boardsize", "komi",
         "time_settings", "time_left"
-    }
+    ]
     def __init__(self, args):
         self.engine = GTP_ENGINE(args)
         self.loop()
@@ -121,7 +129,9 @@ class GTP_LOOP:
         elif main == "list_commands":
             clist = str()
             for c in self.COMMANDS_LIST:
-                clist += (c + "\n")
+                clist += c
+                if c is not self.COMMANDS_LIST[-1]:
+                    clist += '\n'
             self.success_print(clist)
         elif main == "clear_board":
             # reset the board

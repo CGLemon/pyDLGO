@@ -152,7 +152,7 @@ class TrainingPipe:
                 print("step: {}/{}, {:.2f}% -> policy loss: {:.4f} | value loss: {:.4f}\n".format(
                           step+1,
                           max_step,
-                          100 * (step+1/max_step),
+                          100 * ((step+1)/max_step),
                           p_running_loss/verbose_step,
                           v_running_loss/verbose_step))
                 p_running_loss = 0

@@ -125,6 +125,9 @@ class Search:
         return value
 
     def think(self, playouts, verbose):
+        if self.root_board.num_passes >= 2:
+            return PASS
+
         self.time_control.clock()
         to_move = self.root_board.to_move
         bsize = self.root_board.board_size
