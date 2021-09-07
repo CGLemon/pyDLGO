@@ -18,10 +18,11 @@ class Node:
         self.children = {}
 
     def clamp(self, v):
-        # Map the winrate 1 ~ -1 to 1 ~ 0
+        # Map the winrate 1 ~ -1 to 1 ~ 0.
         return (v + 1) / 2
 
     def inverse(self, v):
+        # swap side to move winrate. 
         return 1 - v;
 
     def expend_children(self, board: Board, network: Network):
@@ -130,7 +131,7 @@ class Search:
         assert value is not None, ""
         node.update(value)
 
-        return value
+        return node.inverse(value)
 
     def think(self, playouts, verbose):
         if self.root_board.num_passes >= 2:
@@ -149,6 +150,7 @@ class Search:
         for _ in range(playouts):
             if self.time_control.should_stop(max_time):
                 break
+
             # Monte carlo tree search.
             curr_board = self.root_board.copy()
             color = curr_board.to_move

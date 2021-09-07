@@ -62,7 +62,7 @@ class TimeControl:
                 stones_left[color] = byo_stones
 
     def get_thinking_time(self, color, board_size, move_num):
-        estimate_moves_left = max(4, int(board_size * board_size * 0.7) - move_num)
+        estimate_moves_left = max(4, int(board_size * board_size * 0.4) - move_num)
         return (self.maintime_left[color] + self.byotime_left[color]) / estimate_moves_left
 
     def should_stop(self, max_time):
