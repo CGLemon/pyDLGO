@@ -66,19 +66,27 @@ class Node:
             return RESIGN
         return vtx
 
-    def dump(self, board: Board):
+    def to_string(self, board: Board):
         out = str()
         out += "Root -> W: {:.2f}%, P: {:.2f}%, V: {}\n".format(
                     self.values/self.visits,
                     self.policy,
                     self.visits)
+
+        gather_list = []
         for vtx, child in  self.children.items():
+            gather_list.append((child.visits, vtx))
+        gather_list.sort(reverse=True)
+
+        for _, vtx in  gather_list:
+            child = self.children[vtx]
             if child.visits is not 0:
                 out += "  {:4} -> W: {:.2f}%, P: {:.2f}%, V: {}\n".format(
                            board.vertex_to_text(vtx),
                            self.inverse(child.values/child.visits),
                            child.policy,
                            child.visits)
+        return out
 
 class Search:
     def __init__(self, board: Board, network: Network, time_control: TimeControl):
@@ -129,6 +137,9 @@ class Search:
             return PASS
 
         self.time_control.clock()
+        if verbose:
+            print(self.time_control)
+
         to_move = self.root_board.to_move
         bsize = self.root_board.board_size
         move_num = self.root_board.move_num
@@ -145,5 +156,6 @@ class Search:
 
         self.time_control.took_time(to_move)
         if verbose:
-            self.root_node.dump(self.root_board)
+            print(self.root_node.to_string(self.root_board))
+            print(self.time_control)
         return self.root_node.get_best_move(0.1)
