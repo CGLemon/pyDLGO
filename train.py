@@ -161,6 +161,27 @@ class TrainingPipe:
     def save_weights(self, name):
         self.network.save_pt(name)
 
+def valid_args(args):
+    result = True
+
+    if args.dir == None:
+        print("Must to give the argument --dir <string>")
+        result = False
+    if args.weights_name == None:
+        print("Must to give the argument --weights-name <string>")
+        result = False
+    if args.step == None:
+        print("Must to give the argument --step <integer>")
+        result = False
+    if args.batch_size == None:
+        print("Must to give the argument --batch-size <integer>")
+        result = False
+    if args.learning_rate == None:
+        print("Must to give the argument --learning-rate <float>")
+        result = False
+
+    return result
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dir", help="The input directory", type=str)
@@ -170,6 +191,7 @@ if __name__ == "__main__":
     parser.add_argument("-w", "--weights-name", type=str)
 
     args = parser.parse_args()
-    pipe = TrainingPipe(args.dir)
-    pipe.running(args.step, args.batch_size, args.learning_rate)
-    pipe.save_weights(args.weights_name)
+    if valid_args(args):
+        pipe = TrainingPipe(args.dir)
+        pipe.running(args.step, args.batch_size, args.learning_rate)
+        pipe.save_weights(args.weights_name)
