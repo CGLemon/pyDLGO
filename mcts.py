@@ -10,11 +10,12 @@ import math
 class Node:
     CPUCT = 0.5
     def __init__(self, p):
-        self.policy = p
-        self.nn_eval = 0
+        self.policy = p  # The network raw policy from its parents node.
+        self.nn_eval = 0 # The network raw eval from this node.
 
-        self.values = 0
-        self.visits = 0
+        self.values = 0 # The accumulate winrate.
+        self.visits = 0 # The accumulate node visits.
+                        # The Q value must be equal to (self.values / self.visits)
         self.children = {}
 
     def clamp(self, v):
@@ -32,8 +33,12 @@ class Node:
             vtx = board.index_to_vertex(idx)
             if board.legal(vtx):
                 self.children[vtx] = Node(p)
-        self.children[PASS] = Node(policy[board.num_intersections]) # pass
+
+        # The pass move is alwaly the legal move. We don't need to
+        # check it.
+        self.children[PASS] = Node(policy[board.num_intersections])
         self.nn_eval = self.clamp(value[0])
+
         return self.nn_eval
 
     def uct_select(self):
@@ -45,7 +50,7 @@ class Node:
 
         puct_list = []
         for vtx, child in  self.children.items():
-            q_value = self.clamp(0)
+            q_value = self.clamp(0) # fair winrate if the node is no visit.
             if child.visits is not 0:
                 q_value = self.inverse(child.values / child.visits)
             puct = q_value + self.CPUCT * child.policy * (numerator / (1+child.visits))

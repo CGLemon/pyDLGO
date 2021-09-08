@@ -109,9 +109,9 @@ class Board(object):
     def remove(self, v):
         # remove stone group including stone at v
         v_tmp = v
-        while 1:
+        while True:
             self.remove_cnt += 1
-            self.color[v_tmp] = 2  # empty
+            self.color[v_tmp] = EMPTY  # empty
             self.id[v_tmp] = v_tmp  # reset id
             for d in self.dir4:
                 nv = v_tmp + d
@@ -132,7 +132,7 @@ class Board(object):
         self.sg[id_base].merge(self.sg[id_add])
 
         v_tmp = id_add
-        while 1:
+        while True:
             self.id[v_tmp] = id_base  # change id to id_base
             v_tmp = self.next[v_tmp]
             if v_tmp == id_add:
@@ -146,7 +146,7 @@ class Board(object):
         self.sg[self.id[v]].clear(stone=True)
         for d in self.dir4:
             nv = v + d
-            if self.color[nv] == 2:
+            if self.color[nv] == EMPTY:
                 self.sg[self.id[v]].add(nv)  # add liberty
             else:
                 self.sg[self.id[nv]].sub(v)  # remove liberty
@@ -166,7 +166,7 @@ class Board(object):
     def legal(self, v):
         if v == PASS:
             return True
-        elif v == self.ko or self.color[v] != 2:
+        elif v == self.ko or self.color[v] != EMPTY:
             return False
 
         stone_cnt = [0, 0]
@@ -174,21 +174,24 @@ class Board(object):
         for d in self.dir4:
             nv = v + d
             c = self.color[nv]
-            if c == 2:
+            if c == EMPTY:
                 return True
-            elif c <= 1:
+            elif c <= 1: # The color must be black or white
                 stone_cnt[c] += 1
                 if self.sg[self.id[nv]].lib_cnt == 1:
                     atr_cnt[c] += 1
 
-        return (atr_cnt[int(self.to_move == 0)] != 0 or
-                atr_cnt[self.to_move] < stone_cnt[self.to_move])
+        return (atr_cnt[int(self.to_move == 0)] != 0 or # That means we can eat other stones.
+                atr_cnt[self.to_move] < stone_cnt[self.to_move]) # That means we have enough liberty to live.
 
     def play(self, v):
+        # play the move and update board data if the move is legal.
         if not self.legal(v):
             return False
         else:
             if v == PASS:
+                # We should be stop it if the number of passes is bigger than 2.
+                # Be sure the to check the number of passes before playing it.
                 self.num_passes += 1
                 self.ko = NULL_VERTEX
             else:
@@ -209,6 +212,7 @@ class Board(object):
         return True
 
     def compute_reach_color(self, color):
+        # This is simple BFS algorithm to compute evey reachable vertices.
         queue = []
         reachable = 0
         buf = [False] * NUM_VERTICES
@@ -229,6 +233,7 @@ class Board(object):
         return reachable
 
     def final_score(self):
+        # Compute the final score by Tromp-Taylor rule.
         return self.compute_reach_color(BLACK) - self.compute_reach_color(WHITE) - self.komi
 
     def showboard(self):
@@ -289,6 +294,10 @@ class Board(object):
         return "".join([chr(x + ord('A') + offset), str(y+1)])
 
     def get_features(self):
+        #  1~ 8 planes: side to move current and past boards stones
+        #  9~16 planes: other to move current and past boards stones
+        #    17 plane: set one if the side to move is black.
+        #    18 plane: set one if the side to move is white.  
         my_color = self.to_move
         opp_color = (self.to_move + 1) % 2
         past = min(PAST_MOVES, len(self.history))

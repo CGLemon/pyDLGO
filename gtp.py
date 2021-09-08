@@ -41,6 +41,7 @@ class GTP_ENGINE:
         
 
     def play(self, color, move):
+        # play move if the move is legal.
         c = INVLD
         if color == "black" or color == "b"  or color == "B":
             c = BLACK
@@ -79,7 +80,13 @@ class GTP_ENGINE:
         self.board.komi = k
 
     def time_settings(self, main_time, byo_time, byo_stones):
+        if not main_time.isdigit() or \
+               not byo_time.isdigit() or \
+               not byo_stones.isdigit():
+            return False
+
         self.time_control.time_settings(int(main_time), int(byo_time), int(byo_stones))
+        return True
 
     def time_left(self, color, time, stones):
         c = INVLD
@@ -164,8 +171,10 @@ class GTP_LOOP:
             stderr.flush()
             self.success_print("")
         elif main == "time_settings":
-            self.engine.time_settings(cmd[1], cmd[2], cmd[3])
-            self.success_print("")
+            if self.engine.time_settings(cmd[1], cmd[2], cmd[3]):
+                self.success_print("")
+            else:
+                self.fail_print("")
         elif main == "time_left":
             if self.engine.time_left(cmd[1], cmd[2], cmd[3]):
                 self.success_print("")
