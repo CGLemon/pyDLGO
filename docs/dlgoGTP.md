@@ -25,11 +25,11 @@
    * `boardsize <size: integer>`
       * 設定不同的盤面大小。注意，dlgo 的神經網路接受的盤面大小是固定的，隨意調整可能使程式崩貴退出。
    * `komi <komi: float>`
-         * 設定不同的貼目。注意，dlgo 的勝率不會因貼目改變而動態調整。
+      * 設定不同的貼目。注意，dlgo 的勝率不會因貼目改變而動態調整。
    * `time_settings <main time: integer> <byo time: integer> <byo stones: integer>`
-         * 設定初始的限時時間。
+      * 設定初始的限時時間。
    * `time_left <color: string, 'black' or 'white'> <main time: integer> <byo time: integer> <byo stones: integer>`
-         * 設定剩餘的限時時間。
+      * 設定剩餘的限時時間。
 
 ## 二、其它
 
