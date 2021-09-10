@@ -9,6 +9,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--playouts", help="The number of playouts", type=int, default=400)
     parser.add_argument("-w", "--weights", help="The weights file name", type=str)
     parser.add_argument("-v", "--verbose", help="Dump some verbose", action="store_true")
+    parser.add_argument("-k", "--kgs", help="", action="store_true")
 
     args = parser.parse_args()
     loop = GTP_LOOP(args)

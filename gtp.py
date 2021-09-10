@@ -111,6 +111,7 @@ class GTP_LOOP:
     ]
     def __init__(self, args):
         self.engine = GTP_ENGINE(args)
+        self.args = args
         self.loop()
         
     def loop(self):
@@ -131,7 +132,10 @@ class GTP_LOOP:
         if main == "name":
             self.success_print("dlgo")
         elif main == "version":
-            self.success_print("0.1")
+            if self.args.kgs:
+                self.success_print("0.1\nI am a simple bot. I don't understand the alive or death. Please help me to remove the dead strings when the game is end. Have a nice game.")
+            else:
+                self.success_print("0.1")
         elif main == "protocol_version":
             self.success_print("2")
         elif main == "list_commands":
