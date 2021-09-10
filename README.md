@@ -2,6 +2,9 @@
 
 基於深度學習的 GTP 圍棋引擎和 KGS 的指引文件，幫助同學參加 TCGA 電腦對局競賽。
 
+#### (B) GNU Go 3.8 vs (W) dlgo 0.1
+![vs_gnugo](https://github.com/CGLemon/pyDLGO/blob/master/img/b_gungo_vs_w_dlgo.gif)
+
 ## 零、依賴與來源
 
 sgf.py 修改自 [jtauber/sgf](https://github.com/jtauber/sgf)
@@ -44,7 +47,7 @@ dlgo 可以解析 sgf 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
     $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
 
-當網路出現後，就完成訓練了。
+當網路權重出現後，就完成訓練了。
 
 ## 二、啟動引擎
 
@@ -57,7 +60,7 @@ dlgo 可以解析 sgf 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | --weights     | string              | 要使用的網路權重名稱 |
 | --playouts    | int                   | MCTS 的 playouts，數目越多越強 |
 
-注意再啟動以前，必須確定你有權限打開 dlgo.py ，以下是啟動的範例
+注意再啟動以前，必須確定你有權限打開 dlgo.py ，如果沒有，請先更改用 chmod 指令更改權限，以下是啟動的範例
 
     $ chmod 777 dlgo.py
     $ ./dlgo.py --weights weights-name --playouts 1600
@@ -70,11 +73,11 @@ Windows 系統是無法直接使用的，這裏需要更改的部分是 dlgo.py 
     #!/usr/bin/env python3
 
 
-由於此路徑是基於 Linux/MacOS ，所以無法直接在 Windows 上使用，這裏有[討論串](https://superuser.com/questions/378477/making-usr-bin-env-python-work-on-windows)教導如何在 Windows 上可以 work，請根據你的使用環境更改此行，以下是範例
+由於此路徑是基於 Linux/MacOS ，所以無法直接在 Windows 上使用，這裏有[討論串](https://superuser.com/questions/378477/making-usr-bin-env-python-work-on-windows)教導如何在 Windows 上可以 work，請跟據你的電腦的 python 執行檔路徑更改此行，以下是範例
 
     #!c:/Python/python.exe
     
-接下來參考上方 Linux/MacOS 的部分。
+接下來參考上方 Linux/MacOS 的部分啟動引擎。
 
 ## 三、使用 GTP 介面
 
@@ -100,7 +103,7 @@ KGS 是一個網路圍棋伺服器，它曾經世界最大、最多人使用的�
 
 #### 第一步、下載 KGS 客戶端並註冊
 
-請到 [KGS 官網](https://www.gokgs.com/index.jsp?locale=zh_CN)上下載對應系統的客戶端，如果是 Linux 系統，請選擇 Raw JAR File。接下來到 [KGS  註冊網站](https://www.gokgs.com/register/index.html)創立一個帳號。
+請到 [KGS 官網](https://www.gokgs.com/index.jsp?locale=zh_CN)上下載對應系統的客戶端，如果是 Linux 系統，請選擇 Raw JAR File。接下來到 [KGS 註冊網站](https://www.gokgs.com/register/index.html)創立一個帳號。
 
 
 #### 第二步、下載 KGS GTP 客戶端
@@ -136,7 +139,7 @@ KGS 是一個網路圍棋伺服器，它曾經世界最大、最多人使用的�
 
 #### 第四步、和 dlgo 在 KGS 上下棋
 
-登錄 KGS 客戶端（注意，你第一個申請的帳號正在被引擎使用，請申請第二個帳號或使用參觀模式），可以從“新開對局”找到你的帳號，點擊你的帳號即可發出對局申請。
+登錄 KGS 客戶端（注意，你第一個申請的帳號正在被引擎使用，請申請第二個帳號或使用參觀模式），可以從“新開對局”中找到你的帳號，點擊你的帳號即可發出對局申請。
 
 
 ## 五、參加 TCGA 競賽

@@ -16,8 +16,8 @@
       * 顯示所有支援的 GTP 指令。
    * `play <color: string, 'black' or 'white'> <vertex: string, eg. 'a1', 'a2', 'pass', 'resign'>`
       * 走一手棋到盤面上，必須是合法手。
-   * `genmove <color>`
-      * 讓引擎生成並走一手棋到盤面上。
+   * `genmove <color: string, 'black' or 'white'>`
+      * 讓引擎思考並產生下一手棋到盤面上。
    * `undo`
       * 悔棋。
    * `clear_board`
@@ -29,7 +29,7 @@
    * `time_settings <main time: integer> <byo time: integer> <byo stones: integer>`
       * 設定初始的限時時間。
    * `time_left <color: string, 'black' or 'white'> <main time: integer> <byo time: integer> <byo stones: integer>`
-      * 設定剩餘的限時時間。
+      * 設定某方剩餘的限時時間。
 
 ## 二、其它
 
