@@ -78,7 +78,7 @@ Windows 系統是無法直接使用的，這裏需要更改的部分是 dlgo.py 
 
 ## 三、使用 GTP 介面
 
-dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比如用 [Sabaki](https://github.com/SabakiHQ/Sabaki ) 將 dlgo 掛載上去，使用的參數參考上面。以下是如何在 Sabaki 上使用的教學。
+dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比如用 [Sabaki](https://sabaki.yichuanshen.de) 將 dlgo 掛載上去，使用的參數參考上面。以下是如何在 Sabaki 上使用的教學。
 
 #### 第一步、打開引擎選項
 
@@ -92,6 +92,7 @@ dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比�
 
 ![step_two](https://github.com/CGLemon/pyDLGO/blob/master/img/截圖%202021-08-27%20下午7.56.38.png?raw=true)
 
+如果想知道 dlgo 支援哪些指令，可到[這裏](docs/dlgoGTP.md)查看。
 
 ## 四、在 KGS 上使用
 
@@ -149,6 +150,9 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 | :------------: | :---------------: | :---------------: | :---------------: |
 | TAAI 2021    | 約 11 月          | 尚未開始報名   | NULL               |
 
+## 六、其它
+如果想利用 dlgo 檔案重新製作其它圍棋引擎，可到[這裏](docs/dlgoAPI.md)查看。
+
 ## License
 
 board.py 和  sgf.py 依原作者為 MIT License 條款，剩餘程式皆為 MIT License 條款。
@@ -156,5 +160,5 @@ board.py 和  sgf.py 依原作者為 MIT License 條款，剩餘程式皆為 MIT
 
 ## TODO
 * 確認正確性
-* 增加程式碼的  API 文件
+* 增加程式碼可讀性
 * 增加深度學和蒙蒂卡羅在圍棋上的應用、原理

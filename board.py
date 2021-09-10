@@ -236,34 +236,6 @@ class Board(object):
         # Compute the final score by Tromp-Taylor rule.
         return self.compute_reach_color(BLACK) - self.compute_reach_color(WHITE) - self.komi
 
-    def showboard(self):
-        def get_xlabel(bsize):
-            line_str = "  "
-            for x in range(bsize):
-                line_str += " " + X_LABELS[x] + " "
-            return line_str + "\n"
-        out = str()
-        out += get_xlabel(self.board_size)
-
-        for y in range(0, self.board_size)[::-1]:  # 9, 8, ..., 1
-            line_str = str(y+1) if y >= 9 else " " + str(y+1)
-            for x in range(0, self.board_size):
-                v = self.get_vertex(x, y)
-                x_str = " . "
-                color = self.color[v]
-                if color <= 1:
-                    stone_str = "O" if color == WHITE else "X"
-                    if v == self.last_move:
-                        x_str = "[" + stone_str + "]"
-                    else:
-                        x_str = " " + stone_str + " "
-                line_str += x_str
-            line_str += str(y+1) if y >= 10 else " " + str(y+1)
-            out += (line_str + "\n")
-
-        out += get_xlabel(self.board_size)
-        return out + "\n"
-
     def get_x(self, v):
         return v % (self.board_size+2) - 1
 
@@ -313,3 +285,31 @@ class Board(object):
                     features[p*2+1, self.vertex_to_index(v)] = 1
         features[INPUT_CHANNELS - 2 + self.to_move, :] = 1
         return np.reshape(features, (INPUT_CHANNELS, self.board_size, self.board_size))
+
+    def __str__(self):
+        def get_xlabel(bsize):
+            line_str = "  "
+            for x in range(bsize):
+                line_str += " " + X_LABELS[x] + " "
+            return line_str + "\n"
+        out = str()
+        out += get_xlabel(self.board_size)
+
+        for y in range(0, self.board_size)[::-1]:  # 9, 8, ..., 1
+            line_str = str(y+1) if y >= 9 else " " + str(y+1)
+            for x in range(0, self.board_size):
+                v = self.get_vertex(x, y)
+                x_str = " . "
+                color = self.color[v]
+                if color <= 1:
+                    stone_str = "O" if color == WHITE else "X"
+                    if v == self.last_move:
+                        x_str = "[" + stone_str + "]"
+                    else:
+                        x_str = " " + stone_str + " "
+                line_str += x_str
+            line_str += str(y+1) if y >= 10 else " " + str(y+1)
+            out += (line_str + "\n")
+
+        out += get_xlabel(self.board_size)
+        return out + "\n"

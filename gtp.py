@@ -100,7 +100,8 @@ class GTP_ENGINE:
         return True
 
     def showboard(self):
-        return self.board.showboard()
+        stderr.write(str(self.board))
+        stderr.flush()
 
 class GTP_LOOP:
     COMMANDS_LIST = [
@@ -167,8 +168,7 @@ class GTP_LOOP:
             self.success_print("")
         elif main == "showboard":
             # display the board
-            stderr.write(self.engine.showboard())
-            stderr.flush()
+            self.engine.showboard()
             self.success_print("")
         elif main == "time_settings":
             if self.engine.time_settings(cmd[1], cmd[2], cmd[3]):
