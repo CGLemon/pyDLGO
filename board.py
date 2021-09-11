@@ -266,10 +266,10 @@ class Board(object):
         return "".join([chr(x + ord('A') + offset), str(y+1)])
 
     def get_features(self):
-        #  1~ 8 planes: side to move current and past boards stones
-        #  9~16 planes: other to move current and past boards stones
-        #    17 plane: set one if the side to move is black.
-        #    18 plane: set one if the side to move is white.  
+        # 1~ 16, odd planes:  side to move current and past boards stones
+        # 1~ 16, even planes: side to move current and past boards stones
+        # 17 plane:           set one if the side to move is black.
+        # 18 plane:           set one if the side to move is white.  
         my_color = self.to_move
         opp_color = (self.to_move + 1) % 2
         past = min(PAST_MOVES, len(self.history))
@@ -285,6 +285,13 @@ class Board(object):
                     features[p*2+1, self.vertex_to_index(v)] = 1
         features[INPUT_CHANNELS - 2 + self.to_move, :] = 1
         return np.reshape(features, (INPUT_CHANNELS, self.board_size, self.board_size))
+
+    def is_superko(self):
+        curr_hash = hash(self.color.tostring())
+        for h in self.history:
+            if hash(h.tostring()) == curr_hash:
+                return True
+        return False
 
     def __str__(self):
         def get_xlabel(bsize):

@@ -41,15 +41,25 @@ class Node:
 
         return self.nn_eval
 
+    def remove_superko(self, board: Board):
+        remove_list = []
+        for vtx, child in self.children.items():
+            next_board = board.copy()
+            next_board.play(vtx)
+            if next_board.is_superko():
+                remove_list.append(vtx)
+        for vtx in remove_list:
+            self.children.pop(vtx)
+
     def uct_select(self):
         parent_visits = 1
-        for _, child in  self.children.items():
+        for _, child in self.children.items():
             parent_visits += child.visits
 
         numerator = math.sqrt(parent_visits)
 
         puct_list = []
-        for vtx, child in  self.children.items():
+        for vtx, child in self.children.items():
             q_value = self.clamp(0) # fair winrate if the node is no visit.
             if child.visits is not 0:
                 q_value = self.inverse(child.values / child.visits)
@@ -63,7 +73,7 @@ class Node:
 
     def get_best_move(self, resigned_threshold):
         gather_list = []
-        for vtx, child in  self.children.items():
+        for vtx, child in self.children.items():
             gather_list.append((child.visits, vtx))
 
         vtx = max(gather_list)[1]
@@ -80,7 +90,7 @@ class Node:
                     self.visits)
 
         gather_list = []
-        for vtx, child in  self.children.items():
+        for vtx, child in self.children.items():
             gather_list.append((child.visits, vtx))
         gather_list.sort(reverse=True)
 
@@ -105,6 +115,7 @@ class Search:
         # Expand the root node first.
         self.root_node = Node(1)
         val = self.root_node.expend_children(self.root_board, self.network)
+        self.root_node.remove_superko(self.root_board)
         self.root_node.update(val)
 
     def play_simulation(self, color, curr_board, node):

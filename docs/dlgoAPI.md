@@ -29,6 +29,9 @@
    * `Board Board.copy()`
       * 快速複製當前的棋盤，複製的棋盤共用歷史盤面。
     
+   * `bool Board.is_superko()`
+      * 當前盤面是否和過去盤面相同。
+
    * `nparry Board.get_features()`
       * 得到神經網路的輸入資料。
 
