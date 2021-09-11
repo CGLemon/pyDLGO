@@ -5,9 +5,11 @@
 注意，此檔案依賴於 config.py 和 numpy
 
 #### Functions
+   * `void Board.__init__(size: int, komi: float)`
+      * 初始化建構。
 
    * `void Board.reset(size: int, komi: float)`
-      * 清理盤面。
+      * 清理盤面重新開始。
 
    * `bool Board.legal(vertex: int)`
       * 測試是否為合法手，如果是合法手，返回 True。
@@ -25,7 +27,7 @@
       * 將 vertex 轉成文字。
 
    * `Board Board.copy()`
-      * 快速複製當前盤面，共用歷史盤面。
+      * 快速複製當前的棋盤，複製的棋盤共用歷史盤面。
     
    * `nparry Board.get_features()`
       * 得到神經網路的輸入資料。
@@ -34,6 +36,18 @@
       * 將當前盤面轉成文字。
 
 #### Parametes
+
+   * `int BLACK = 0`
+      * 黑棋的數值。
+
+   * `int WHITE = 1`
+      * 白棋的數值。
+
+   * `int PASS = -1`
+      * 虛手的 vertex 數值。
+
+   * `int RESIGN = -2`
+      * 投降的 vertex 數值。
 
    * `int Board.board_size`
       * 當前盤面大小。

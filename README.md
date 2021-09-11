@@ -60,7 +60,7 @@ dlgo 可以解析 sgf 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | --weights     | string              | 要使用的網路權重名稱 |
 | --playouts    | int                   | MCTS 的 playouts，數目越多越強 |
 
-注意再啟動以前，必須確定你有權限打開 dlgo.py ，如果沒有，請先更改用 chmod 指令更改權限，以下是啟動的範例
+注意再啟動以前，必須確定你有權限打開 dlgo.py ，如果沒有，請先更使用 chmod 指令更改權限，以下是啟動的範例
 
     $ chmod 777 dlgo.py
     $ ./dlgo.py --weights weights-name --playouts 1600
