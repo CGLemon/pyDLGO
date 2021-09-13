@@ -14,10 +14,10 @@
       * 顯示程式版本。
 
    * `protocol_version`
-      * 顯示 GTP 的版本。
+      * 顯示使用的 GTP 版本。
 
    * `list_commands`
-      * 顯示所有支援的 GTP 指令。
+      * 顯示所有此程式支援的 GTP 指令。
 
    * `play <color: string, 'black' or 'white'> <vertex: string, eg. 'a1', 'a2', 'pass', 'resign'>`
       * 走一手棋到盤面上，必須是合法手。

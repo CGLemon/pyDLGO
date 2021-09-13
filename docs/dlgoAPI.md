@@ -6,16 +6,16 @@
 
 #### Functions
    * `void Board.__init__(size: int, komi: float)`
-      * 初始化建構。
+      * Board 的初始化建構。
 
    * `void Board.reset(size: int, komi: float)`
-      * 清理盤面重新開始。
+      * 清理盤面並重新開始。
 
    * `bool Board.legal(vertex: int)`
       * 測試是否為合法手，如果是合法手，返回 True。
 
    * `bool Board.play(vertex: int)`
-      * 走一手棋到到盤面上，如果是合法手，返回 True。
+      * 走一手棋到到盤面上。也會測試是否為合法手，如果是合法手，返回 True。
 
    * `int Board.final_score()`
       * 計算基於 Tromp-Taylor 規則的目數。
@@ -30,7 +30,7 @@
       * 快速複製當前的棋盤，複製的棋盤共用歷史盤面。
     
    * `bool Board.is_superko()`
-      * 當前盤面是否和過去盤面相同。
+      * 當前盤面是否為 superko，如果是則返回 True。
 
    * `nparry Board.get_features()`
       * 得到神經網路的輸入資料。

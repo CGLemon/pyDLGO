@@ -33,7 +33,7 @@ class GTP_ENGINE:
 
         self.board.to_move = c
         search = Search(self.board, self.network, self.time_control)
-        move = search.think(self.args.playouts, self.args.verbose)
+        move = search.think(self.args.playouts, self.args.resign_threshold, self.args.verbose)
         if self.board.play(move):
             self.board_history.append(self.board.copy())
 

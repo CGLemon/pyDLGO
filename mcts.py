@@ -26,7 +26,7 @@ class Node:
         # swap side to move winrate. 
         return 1 - v;
 
-    def expend_children(self, board: Board, network: Network):
+    def expand_children(self, board: Board, network: Network):
         policy, value = network.get_outputs(board.get_features())
         for idx in range(board.num_intersections):
             p = policy[idx]
@@ -71,14 +71,14 @@ class Node:
         self.values += v
         self.visits += 1
 
-    def get_best_move(self, resigned_threshold):
+    def get_best_move(self, resign_threshold):
         gather_list = []
         for vtx, child in self.children.items():
             gather_list.append((child.visits, vtx))
 
         vtx = max(gather_list)[1]
         child = self.children[vtx]
-        if self.inverse(child.values / child.visits) < resigned_threshold:
+        if self.inverse(child.values / child.visits) < resign_threshold:
             return RESIGN
         return vtx
 
@@ -114,7 +114,7 @@ class Search:
     def prepare_root_node(self):
         # Expand the root node first.
         self.root_node = Node(1)
-        val = self.root_node.expend_children(self.root_board, self.network)
+        val = self.root_node.expand_children(self.root_board, self.network)
         self.root_node.remove_superko(self.root_board)
         self.root_node.update(val)
 
@@ -133,23 +133,25 @@ class Search:
                 # The game is draw
                 value = 0.5
         elif len(node.children) is not 0:
-            # Expending...
+            # Select the next node by PUCT algorithm. 
             vtx = node.uct_select()
             curr_board.to_move = color
             curr_board.play(vtx)
             color = (color + 1) % 2
             next_node = node.children[vtx]
+
+            # Search the next node.
             value = self.play_simulation(color, curr_board, next_node)
         else:
-            # Termainate node.
-            value = node.expend_children(curr_board, self.network)
+            # This is the termainated node. Now to expand it. 
+            value = node.expand_children(curr_board, self.network)
 
         assert value is not None, ""
         node.update(value)
 
         return node.inverse(value)
 
-    def think(self, playouts, verbose):
+    def think(self, playouts, resign_threshold, verbose):
         if self.root_board.num_passes >= 2:
             return PASS
 
@@ -167,7 +169,7 @@ class Search:
             if self.time_control.should_stop(max_time):
                 break
 
-            # Monte carlo tree search.
+            # The main body of Monte carlo tree search.
             curr_board = self.root_board.copy()
             color = curr_board.to_move
             self.play_simulation(color, curr_board, self.root_node)
@@ -176,4 +178,4 @@ class Search:
         if verbose:
             print(self.root_node.to_string(self.root_board))
             print(self.time_control)
-        return self.root_node.get_best_move(0.1)
+        return self.root_node.get_best_move(resign_threshold)

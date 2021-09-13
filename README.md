@@ -1,6 +1,6 @@
 # pyDLGO
 
-基於深度學習的 GTP 圍棋引擎和 KGS 的指引文件，幫助同學參加 TCGA 電腦對局競賽。
+基於深度學習的 GTP 圍棋引擎和 KGS 的指引文件，幫助同學參加 TCGA 電腦對局競賽。此程式不需要任何修改，就可以輕鬆訓練出明顯強於 GNU Go 的網路。
 
 #### (黑) GNU Go 3.8 vs (白) dlgo 0.1
 ![vs_gnugo](https://github.com/CGLemon/pyDLGO/blob/master/img/b_gungo_vs_w_dlgo.gif)
@@ -14,8 +14,8 @@ board.py 修改自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
 sgf.zip 來源自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
 
 以下的 python 是必須的（請注意本程式使用python3）
-1. PyTorch (1.x 版本)
-2. numpy
+1. PyTorch (1.x 版本，如果要使用 GPU 請下載對應的 CUDA/cuDNN 版本)
+2. Numpy
 
 KGS GTP 需要 Java
 
@@ -25,23 +25,31 @@ dlgo 可以解析 sgf 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
 #### 第一步、收集棋譜
 
-需要收集訓練的棋譜，如果你沒有可使用的棋譜，可以使用附的 sgf.zip，裡面包含三萬盤以上九路棋譜。也可以到 [Aya](http://www.yss-aya.com/ayaself/ayaself.html) 上找到更多可訓練的棋譜。
+需要收集訓練的棋譜，如果你沒有可使用的棋譜，可以使用附的 sgf.zip，裡面包含三萬五千盤左右的九路棋譜。也可以到 [Aya](http://www.yss-aya.com/ayaself/ayaself.html) 上找到更多可訓練的棋譜。
 
 #### 第二步、設定網路大小
 
-網路的參數包含在 config.py 裡，BLOCK_SIZE 為殘差網路的 block 數目，數目越大網路越大，FILTER_SIZE 卷積網路 filter 的數目，數目越大網路越大，BOARD_SIZE 為要訓練的棋盤大小，USE_GPU 為是否用使用 GPU 訓練。
+網路的參數包含在 config.py 裡，所需要用到的參數如下
+
+| 參數              | 說明              |
+| :---------------: | :---------------: |
+| BLOCK_SIZE        | 殘差網路的 block 的數目，數目越大網路越大 |
+| FILTER_SIZE       | 卷積網路 filter 的數目，數目越大網路越大  |
+| BOARD_SIZE        | 棋盤大小，必須和棋譜的大小一致            |
+| USE_GPU           | 是否用使用 GPU 訓練。如果為 True ，會自動檢查是否有可用的 GPU ，如果沒有檢測到 GPU ，則會使用 CPU 訓練，如果為 False ，則強至使用 CPU 訓練。此參數建議使用 True |
+
 
 #### 第三步、開始訓練
 
 接下來便是開始訓練一個網路，所需要用到的參數如下
     
-| 參數                    |參數類別          | 說明                |
+| 參數                 |參數類別            | 說明              |
 | :---------------:    | :---------------: | :---------------: |
-| --dir                    | string               | 要訓練的 sgf 檔案夾|
-| --step                 | int                    | 要訓練的步數，越多訓練時間越久 |
-| --batch-size       | int                    | 訓練的 batch size |
-| --learning-rate    |float                  | 學習率大小 |
-| --weights-name | string               | 要輸出的網路權重名稱 |
+| --dir                | string            | 要訓練的 sgf 檔案夾|
+| --step               | int               | 要訓練的步數，越多訓練時間越久 |
+| --batch-size         | int               | 訓練的 batch size |
+| --learning-rate      |float              | 學習率大小 |
+| --weights-name       | string            | 要輸出的網路權重名稱 |
 
 以下是訓練範例命令
 
@@ -57,21 +65,21 @@ dlgo 可以解析 sgf 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
 | 參數             |參數類別          | 說明                |
 | :------------: | :---------------: | :---------------: |
-| --weights     | string              | 要使用的網路權重名稱 |
-| --playouts    | int                   | MCTS 的 playouts，數目越多越強 |
+| -w, --weights  | string            | 要使用的網路權重名稱 |
+| -p, --playouts | int               | MCTS 的 playouts，數目越多越強。預設值是 400 |
+| -r, --resign-threshold | float     | 投降的門檻，0.1 代表勝率低於 10% 就會投降。預設值是 0.1 |
 
-注意再啟動以前，必須確定你有權限打開 dlgo.py ，如果沒有，請先更使用 chmod 指令更改權限，以下是啟動的範例
+注意再啟動以前，必須確定你有權限打開 dlgo.py ，如果沒有，請先使用 chmod 指令更改權限，以下是啟動的範例
 
     $ chmod 777 dlgo.py
-    $ ./dlgo.py --weights weights-name --playouts 1600
+    $ ./dlgo.py --weights weights-name --playouts 1600 -r 0.25
 
 
 ### Windows
 
-Windows 系統是無法直接使用的，這裏需要更改的部分是 dlgo.py 內的第一行，需要改成當前環境所執行 python 路徑位置，此行就是
+Windows 系統是無法直接使用此程式，這裏需要更改的部分是 dlgo.py 內的第一行，需要改成當前環境所執行 python 路徑位置，此行就是
 
     #!/usr/bin/env python3
-
 
 由於此路徑是基於 Linux/MacOS ，所以無法直接在 Windows 上使用，這裏有[討論串](https://superuser.com/questions/378477/making-usr-bin-env-python-work-on-windows)教導如何在 Windows 上可以 work，請跟據你的電腦的 python 執行檔路徑更改此行，以下是範例
 
@@ -95,7 +103,7 @@ dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比�
 
 ![step_two](https://github.com/CGLemon/pyDLGO/blob/master/img/截圖%202021-08-27%20下午7.56.38.png?raw=true)
 
-如果想知道 dlgo 支援哪些指令，可到[這裏](docs/dlgoGTP.md)查看。
+如果想知道 dlgo 支援哪些 GTP 指令，可到[這裏](docs/dlgoGTP.md)查看。
 
 ## 四、在 KGS 上使用
 
@@ -144,7 +152,7 @@ KGS 是一個網路圍棋伺服器，它曾經世界最大、最多人使用的�
 
 ## 五、參加 TCGA 競賽
 
-TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型的電腦對局比賽，當然也包括圍棋。TCGA 的圍棋比賽是使用 KGS 伺服器比賽的，如果你已經能順利掛載引擎到 KGS 上，恭喜你完成第一步比賽的準備。dlgo 還有不少可以改進的空間，接下來可以設法強化 dlgo，希望你能在比賽中獲得好成績。
+TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型的電腦對局比賽，當然也包括圍棋。TCGA 的圍棋比賽是使用 KGS 伺服器比賽的，如果你已經能順利掛載引擎到 KGS 上，恭喜你完成第一步比賽的準備。當然 dlgo 還有不少可以改進的空間，接下來可以設法強化 dlgo，希望你能在比賽中獲得好成績。
 
 
 #### 比賽列表
@@ -154,7 +162,8 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 | TAAI 2021    | 約 11 月          | 尚未開始報名   | NULL               |
 
 ## 六、其它
-如果想利用 dlgo 檔案重新製作其它圍棋引擎，可到[這裏](docs/dlgoAPI.md)查看。
+* 如果想利用 dlgo 檔案重新製作其它圍棋引擎，可到[這裏](docs/dlgoAPI.md)查看。
+* dlgo 實做的規則是 Tromp-Taylor。
 
 ## License
 
@@ -164,4 +173,5 @@ board.py 和  sgf.py 依原作者為 MIT License 條款，剩餘程式皆為 MIT
 ## TODO
 * 確認正確性
 * 增加程式碼可讀性
+* 增加 Tromp-Taylor 規則的解釋
 * 增加深度學和蒙蒂卡羅在圍棋上的應用、原理
