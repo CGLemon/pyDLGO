@@ -13,7 +13,7 @@ board.py 修改自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
 
 sgf.zip 來源自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
 
-以下的 python 是必須的（請注意本程式使用python3）
+以下的 python 依賴庫是必須的（請注意本程式使用python3）
 1. PyTorch (1.x 版本，如果要使用 GPU 請下載對應的 CUDA/cuDNN 版本)
 2. Numpy
 
@@ -45,11 +45,11 @@ dlgo 可以解析 sgf 格式的棋譜，並將棋譜作為訓練資料訓練一�
     
 | 參數                 |參數類別            | 說明              |
 | :---------------:    | :---------------: | :---------------: |
-| --dir                | string            | 要訓練的 sgf 檔案夾|
-| --step               | int               | 要訓練的步數，越多訓練時間越久 |
-| --batch-size         | int               | 訓練的 batch size |
-| --learning-rate      |float              | 學習率大小 |
-| --weights-name       | string            | 要輸出的網路權重名稱 |
+| -d, --dir            | string            | 要訓練的 sgf 檔案夾|
+| -s, --step           | int               | 要訓練的步數，越多訓練時間越久 |
+| -b, --batch-size     | int               | 訓練的 batch size |
+| -l, --learning-rate  |float              | 學習率大小 |
+| -w, --weights-name   | string            | 要輸出的網路權重名稱 |
 
 以下是訓練範例命令
 
@@ -93,15 +93,15 @@ dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比�
 
 #### 第一步、打開引擎選項
 
-![step_one](https://github.com/CGLemon/pyDLGO/blob/master/img/截圖%202021-08-27%20下午7.44.57.png?raw=true)
+![step_one](https://github.com/CGLemon/pyDLGO/blob/master/img/screenshot_sabaki_01.png)
 
 #### 第二步、新增引擎
 
-![step_two](https://github.com/CGLemon/pyDLGO/blob/master/img/截圖%202021-08-27%20下午7.45.58.png?raw=true)
+![step_two](https://github.com/CGLemon/pyDLGO/blob/master/img/screenshot_sabaki_02.png)
 
 #### 第三步、加載引擎
 
-![step_two](https://github.com/CGLemon/pyDLGO/blob/master/img/截圖%202021-08-27%20下午7.56.38.png?raw=true)
+![step_two](https://github.com/CGLemon/pyDLGO/blob/master/img/screenshot_sabaki_03.png)
 
 如果想知道 dlgo 支援哪些 GTP 指令，可到[這裏](docs/dlgoGTP.md)查看。
 
@@ -157,9 +157,9 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 
 #### 比賽列表
 
-| 比賽             |時間                 | 狀態                 |連結                  |
-| :------------: | :---------------: | :---------------: | :---------------: |
-| TAAI 2021    | 約 11 月          | 尚未開始報名   | NULL               |
+| 比賽                                             |時間                | 狀態               |
+| :------------:                                   | :---------------: | :---------------: |
+| [TAAI 2021](https://www.tcga.tw/taai2021/zh_TW/) | 約 11 月中旬       | 尚未開始報名   |
 
 ## 六、其它
 * 如果想利用 dlgo 檔案重新製作其它圍棋引擎，可到[這裏](docs/dlgoAPI.md)查看。
