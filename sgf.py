@@ -285,7 +285,6 @@ class Parser:
         if state != 4:
             raise ParseException(ch, state)
 
-
 def parse_from_string(sgf_string):
     parser = Parser()
     collection = Collection(parser)

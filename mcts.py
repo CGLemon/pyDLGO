@@ -29,9 +29,11 @@ class Node:
     def expand_children(self, board: Board, network: Network):
         policy, value = network.get_outputs(board.get_features())
         for idx in range(board.num_intersections):
-            p = policy[idx]
             vtx = board.index_to_vertex(idx)
+
+            # Remove the illegal move.
             if board.legal(vtx):
+                p = policy[idx]
                 self.children[vtx] = Node(p)
 
         # The pass move is alwaly the legal move. We don't need to
@@ -46,13 +48,14 @@ class Node:
         for vtx, child in self.children.items():
             next_board = board.copy()
             next_board.play(vtx)
-            if next_board.is_superko():
+            if next_board.superko():
                 remove_list.append(vtx)
         for vtx in remove_list:
             self.children.pop(vtx)
 
-    def uct_select(self):
-        parent_visits = 1
+    def puct_select(self):
+        parent_visits = 1 # We set the initialization value is 1 because we want to get the 
+                          # best policy value in the first selection.
         for _, child in self.children.items():
             parent_visits += child.visits
 
@@ -115,6 +118,9 @@ class Search:
         # Expand the root node first.
         self.root_node = Node(1)
         val = self.root_node.expand_children(self.root_board, self.network)
+
+        # In order to avoid overhead, we only remove the superko position in
+        # the root.
         self.root_node.remove_superko(self.root_board)
         self.root_node.update(val)
 
@@ -134,7 +140,7 @@ class Search:
                 value = 0.5
         elif len(node.children) is not 0:
             # Select the next node by PUCT algorithm. 
-            vtx = node.uct_select()
+            vtx = node.puct_select()
             curr_board.to_move = color
             curr_board.play(vtx)
             color = (color + 1) % 2

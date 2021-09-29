@@ -1,6 +1,6 @@
 # pyDLGO
 
-基於深度學習的 GTP 圍棋引擎和 KGS 的指引文件，幫助同學參加 TCGA 電腦對局競賽。此程式不需要任何修改，就可以輕鬆訓練出明顯強於 GNU Go 的網路。
+自從 AlphaGo 打敗世界冠軍後，電腦圍棋儼然變成深度學習的代名詞，讓不少同學對於電腦圍棋有不小的興趣，但實做一個完整的圍棋引擎並不是只有深度學習而已，還包含許許多多枯燥乏味且需花費大量時間的部份，這令多數同學望而卻步。dlgo 實做一個最低要求的圍棋引擎，它包含圍棋的基本演算法，GTP 界面和 SGF 格式解析器，讓同學可以簡單跳過這些部份，專注於深度學習，輕鬆訓練出明顯強於 GNU Go 的網路，最終目標是幫助同學參加 TCGA 電腦對局競賽。
 
 #### (黑) GNU Go 3.8 vs (白) dlgo 0.1
 ![vs_gnugo](https://github.com/CGLemon/pyDLGO/blob/master/img/b_gungo_vs_w_dlgo.gif)
@@ -13,15 +13,15 @@ board.py 修改自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
 
 sgf.zip 來源自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
 
-以下的 python 依賴庫是必須的（請注意本程式使用python3）
+以下的 python 依賴庫是必須的（請注意本程式使用 python3）
 1. PyTorch (1.x 版本，如果要使用 GPU 請下載對應的 CUDA/cuDNN 版本)
-2. Numpy
+2. NumPy
 
 KGS GTP 需要 Java
 
 ## ㄧ、訓練網路
 
-dlgo 可以解析 sgf 格式的棋譜，並將棋譜作為訓練資料訓練一個網路，通過以下步驟可以訓練出一個基本網路。
+dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一個網路，通過以下步驟可以訓練出一個基本網路。
 
 #### 第一步、收集棋譜
 
@@ -45,7 +45,7 @@ dlgo 可以解析 sgf 格式的棋譜，並將棋譜作為訓練資料訓練一�
     
 | 參數                 |參數類別            | 說明              |
 | :---------------:    | :---------------: | :---------------: |
-| -d, --dir            | string            | 要訓練的 sgf 檔案夾|
+| -d, --dir            | string            | 要訓練的 SGF 檔案夾|
 | -s, --step           | int               | 要訓練的步數，越多訓練時間越久 |
 | -b, --batch-size     | int               | 訓練的 batch size |
 | -l, --learning-rate  |float              | 學習率大小 |
@@ -159,11 +159,11 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 
 | 比賽                                             |時間                | 狀態               |
 | :------------:                                   | :---------------: | :---------------: |
-| [TAAI 2021](https://www.tcga.tw/taai2021/zh_TW/) | 約 11 月中旬       | 尚未開始報名   |
+| [TAAI 2021](https://www.tcga.tw/taai2021/zh_TW/) | 11 月 18 號報名截止 | 開始報名   |
 
 ## 六、其它
 * 如果想利用 dlgo 檔案重新製作其它圍棋引擎，可到[這裏](docs/dlgoAPI.md)查看。
-* dlgo 實做的規則是 Tromp-Taylor。
+* dlgo 實做的規則是 Tromp-Taylor（但禁止自殺）。
 
 ## License
 
@@ -174,4 +174,5 @@ board.py 和  sgf.py 依原作者為 MIT License 條款，剩餘程式皆為 MIT
 * 確認正確性
 * 增加程式碼可讀性
 * 增加 Tromp-Taylor 規則的解釋
+* 增加 SGF 格式的教學
 * 增加深度學和蒙蒂卡羅在圍棋上的應用、原理

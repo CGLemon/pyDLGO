@@ -12,6 +12,18 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+def get_symmetry_plane(symm, plane):
+    use_flip = False
+    if symm // 4 != 0:
+        use_flip = True
+    symm = symm % 4
+
+    transformed = np.rot90(plane, symm)
+
+    if use_flip:
+        transformed = np.flip(transformed, 1)
+    return transformed
+
 class Chunk:
     def __init__(self):
         self.inputs = None
@@ -23,6 +35,20 @@ class Chunk:
         out = str()
         out += "policy: {p} | value: {v}\n".format(p=self.policy, v=self.value)
         return out
+
+    def symm(self):
+        assert self.policy != None, ""
+
+        symm = int(np.random.choice(8, 1)[0])
+        for p in self.inputs:
+            p = get_symmetry_plane(symm, p)
+
+        if self.policy != NUM_INTESECTIONS:
+            buf = np.zeros(NUM_INTESECTIONS)
+            buf[self.policy] = 1
+            buf = get_symmetry_plane(symm, np.reshape(buf, (BOARD_SIZE, BOARD_SIZE)))
+            buf = np.reshape(buf, (NUM_INTESECTIONS))
+            self.policy = int(np.argmax(buf, axis=0))
 
 class DataSet:
     def  __init__(self, dir_name):
@@ -50,6 +76,7 @@ class DataSet:
         policy_batch = []
         value_batch = []
         for chunk in s:
+            chunk.symm()
             inputs_batch.append(chunk.inputs)
             policy_batch.append(chunk.policy)
             value_batch.append([chunk.value])
@@ -116,31 +143,36 @@ class TrainingPipe:
     def __init__(self, dir_name):
         self.network = Network(BOARD_SIZE)
         self.network.trainable()
+
+        # Prepare the data set from sgf files.
         self.data_set = DataSet(dir_name)
         
-    def running(self, max_step, batch_size, learning_rate):
+    def running(self, max_step, verbose_step, batch_size, learning_rate):
         cross_entry = nn.CrossEntropyLoss()
         mse_loss = nn.MSELoss()
         optimizer = optim.Adam(self.network.parameters(), lr=learning_rate, weight_decay=1e-4)
-        verbose_step = 1000
         p_running_loss = 0
         v_running_loss = 0
 
         for step in range(max_step):
+            # First, get the batch data.
             inputs, target_p, target_v = self.data_set.get_batch(batch_size)
 
+
+            # Second, Move the data to GPU memory if we use it.
             if self.network.use_gpu:
                 inputs = inputs.to(self.network.gpu_device)
                 target_p = target_p.to(self.network.gpu_device)
                 target_v = target_v.to(self.network.gpu_device)
 
+            # Third, compute network result.
             p, v = self.network(inputs)
 
+            # fourth, compute loss result and update network.
             p_loss = cross_entry(p, target_p)
             v_loss = mse_loss(v, target_v)
             loss = p_loss + v_loss
 
-            # Backpropagation
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -148,6 +180,7 @@ class TrainingPipe:
             p_running_loss += p_loss.item()
             v_running_loss += v_loss.item()
 
+            # fitth, dump verbose.
             if (step+1) % verbose_step == 0:
                 print("step: {}/{}, {:.2f}% -> policy loss: {:.4f} | value loss: {:.4f}\n".format(
                           step+1,
@@ -186,6 +219,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dir", help="The input directory", type=str)
     parser.add_argument("-s", "--step", help="The training step", type=int)
+    parser.add_argument("-v", "--verbose-step", help="Dump verbose in every X steps." , type=int, default=1000)
     parser.add_argument("-b", "--batch-size", type=int)
     parser.add_argument("-l", "--learning-rate", type=float)
     parser.add_argument("-w", "--weights-name", type=str)
@@ -193,5 +227,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if valid_args(args):
         pipe = TrainingPipe(args.dir)
-        pipe.running(args.step, args.batch_size, args.learning_rate)
+        pipe.running(args.step, args.verbose_step, args.batch_size, args.learning_rate)
         pipe.save_weights(args.weights_name)

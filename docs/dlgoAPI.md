@@ -29,7 +29,7 @@
    * `Board Board.copy()`
       * 快速複製當前的棋盤，複製的棋盤共用歷史盤面。
     
-   * `bool Board.is_superko()`
+   * `bool Board.superko()`
       * 當前盤面是否為 superko，如果是則返回 True。
 
    * `nparry Board.get_features()`
