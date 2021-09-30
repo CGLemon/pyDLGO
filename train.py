@@ -36,19 +36,21 @@ class Chunk:
         out += "policy: {p} | value: {v}\n".format(p=self.policy, v=self.value)
         return out
 
-    def symm(self):
+    def do_symmetry(self, symm=None):
         assert self.policy != None, ""
 
-        symm = int(np.random.choice(8, 1)[0])
-        for p in self.inputs:
-            p = get_symmetry_plane(symm, p)
+        if symm == None:
+            symm = int(np.random.choice(8, 1)[0])
+
+        for i in range(INPUT_CHANNELS-2): # last 2 channels is side to move.
+            p = self.inputs[i]
+            self.inputs[i][:][:] = get_symmetry_plane(symm, p)[:][:]
 
         if self.policy != NUM_INTESECTIONS:
             buf = np.zeros(NUM_INTESECTIONS)
             buf[self.policy] = 1
             buf = get_symmetry_plane(symm, np.reshape(buf, (BOARD_SIZE, BOARD_SIZE)))
-            buf = np.reshape(buf, (NUM_INTESECTIONS))
-            self.policy = int(np.argmax(buf, axis=0))
+            self.policy = int(np.argmax(buf))
 
 class DataSet:
     def  __init__(self, dir_name):
@@ -76,7 +78,7 @@ class DataSet:
         policy_batch = []
         value_batch = []
         for chunk in s:
-            chunk.symm()
+            chunk.do_symmetry()
             inputs_batch.append(chunk.inputs)
             policy_batch.append(chunk.policy)
             value_batch.append([chunk.value])
@@ -168,7 +170,7 @@ class TrainingPipe:
             # Third, compute network result.
             p, v = self.network(inputs)
 
-            # fourth, compute loss result and update network.
+            # Fourth, compute loss result and update network.
             p_loss = cross_entry(p, target_p)
             v_loss = mse_loss(v, target_v)
             loss = p_loss + v_loss
@@ -180,7 +182,7 @@ class TrainingPipe:
             p_running_loss += p_loss.item()
             v_running_loss += v_loss.item()
 
-            # fitth, dump verbose.
+            # Fifth, dump verbose.
             if (step+1) % verbose_step == 0:
                 print("step: {}/{}, {:.2f}% -> policy loss: {:.4f} | value loss: {:.4f}\n".format(
                           step+1,
@@ -193,6 +195,10 @@ class TrainingPipe:
 
     def save_weights(self, name):
         self.network.save_pt(name)
+
+    def load_weights(self, name):
+        if name != None:
+            self.network.load_pt(name)
 
 def valid_args(args):
     result = True
@@ -223,9 +229,11 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--batch-size", type=int)
     parser.add_argument("-l", "--learning-rate", type=float)
     parser.add_argument("-w", "--weights-name", type=str)
+    parser.add_argument("--load-weights", type=str)
 
     args = parser.parse_args()
     if valid_args(args):
         pipe = TrainingPipe(args.dir)
+        pipe.load_weights(args.load_weights)
         pipe.running(args.step, args.verbose_step, args.batch_size, args.learning_rate)
         pipe.save_weights(args.weights_name)

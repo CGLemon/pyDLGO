@@ -274,7 +274,7 @@ class Board(object):
         opp_color = (self.to_move + 1) % 2
         past = min(PAST_MOVES, len(self.history))
         
-        features = np.zeros((INPUT_CHANNELS, self.num_intersections))
+        features = np.zeros((INPUT_CHANNELS, self.num_intersections), dtype=np.int8)
         for p in range(past):
             h = self.history[len(self.history) - p - 1]
             for v in range(self.num_vertices):
