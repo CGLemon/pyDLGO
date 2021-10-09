@@ -19,10 +19,13 @@ class GTP_ENGINE:
         if self.args.weights != None:
             self.network.load_pt(self.args.weights)
 
+# For GTP command "clear_board". Reset the board to the initial state and
+# clear the move history.
     def clear_board(self):
         self.board.reset(self.board.board_size, self.board.komi)
         self.board_history = [self.board.copy()]
 
+# For GTP command "genmove". The engine returns the best move and play it. 
     def genmove(self, color):
         # Genrate next move and play it.
         c = self.board.to_move
@@ -39,7 +42,7 @@ class GTP_ENGINE:
 
         return self.board.vertex_to_text(move)
         
-
+# For GTP command "play". Play a move if it is legal. 
     def play(self, color, move):
         # play move if the move is legal.
         c = INVLD
@@ -67,18 +70,22 @@ class GTP_ENGINE:
                 return True
         return False
 
+# For GTP command "undo". Play the undo move.
     def undo(self):
         if len(self.board_history) > 1:
             self.board_history.pop()
             self.board = self.board_history[-1].copy()
 
+# For GTP command "boardsize". Set variant board size.
     def boardsize(self, bsize):
         self.board.reset(bsize, self.board.komi)
         self.board_history = [self.board.copy()]
 
+# For GTP command "boardsize". Set variant komi.
     def komi(self, k):
         self.board.komi = k
 
+# For GTP command "time_settings". Set initial time settings.
     def time_settings(self, main_time, byo_time, byo_stones):
         if not main_time.isdigit() or \
                not byo_time.isdigit() or \
@@ -88,6 +95,7 @@ class GTP_ENGINE:
         self.time_control.time_settings(int(main_time), int(byo_time), int(byo_stones))
         return True
 
+# For GTP command "time_left". Set time left value for one side.
     def time_left(self, color, time, stones):
         c = INVLD
         if color == "black" or color == "b"  or color == "B":
@@ -99,6 +107,7 @@ class GTP_ENGINE:
         self.time_control.time_left(c, int(time), int(stones))
         return True
 
+# For GTP command "showboard". Dump the board(stand error output).
     def showboard(self):
         stderr.write(str(self.board))
         stderr.flush()
@@ -112,11 +121,15 @@ class GTP_LOOP:
     def __init__(self, args):
         self.engine = GTP_ENGINE(args)
         self.args = args
+
+        # Start the main GTP loop.
         self.loop()
         
     def loop(self):
         while True:
+            # Get the commands.
             cmd = stdin.readline().split()
+
             if len(cmd) == 0:
                 continue
 
@@ -124,6 +137,8 @@ class GTP_LOOP:
             if main == "quit":
                 self.success_print("")
                 break
+
+            # Parse the commands.
             self.process(cmd)
 
     def process(self, cmd):
@@ -132,10 +147,11 @@ class GTP_LOOP:
         if main == "name":
             self.success_print("dlgo")
         elif main == "version":
+            version = "0.1";
             if self.args.kgs:
-                self.success_print("0.1\nI am a simple bot. I don't understand the alive or death. Please help me to remove the dead strings when the game is end. Have a nice game.")
+                self.success_print(version + "\nI am a simple bot. I don't understand the life and death. Please help me to remove the dead strings when the game is end. Have a nice game.")
             else:
-                self.success_print("0.1")
+                self.success_print(version)
         elif main == "protocol_version":
             self.success_print("2")
         elif main == "list_commands":
@@ -186,7 +202,7 @@ class GTP_LOOP:
                 self.fail_print("")
         else:
             self.fail_print("Unknown command")
-            
+
     def success_print(self, res):
         stdout.write("= {}\n\n".format(res))
         stdout.flush()

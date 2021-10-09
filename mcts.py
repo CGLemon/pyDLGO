@@ -8,7 +8,7 @@ from time_control import TimeControl
 import math
 
 class Node:
-    CPUCT = 0.5
+    CPUCT = 0.5 # The PUCT hyperparameter.
     def __init__(self, p):
         self.policy = p  # The network raw policy from its parents node.
         self.nn_eval = 0 # The network raw eval from this node.
@@ -23,11 +23,13 @@ class Node:
         return (v + 1) / 2
 
     def inverse(self, v):
-        # swap side to move winrate. 
+        # Swap the side to move winrate. 
         return 1 - v;
 
     def expand_children(self, board: Board, network: Network):
+        # Compute the Net result.
         policy, value = network.get_outputs(board.get_features())
+
         for idx in range(board.num_intersections):
             vtx = board.index_to_vertex(idx)
 
@@ -54,7 +56,7 @@ class Node:
             self.children.pop(vtx)
 
     def puct_select(self):
-        parent_visits = 1 # We set the initialization value is 1 because we want to get the 
+        parent_visits = 1 # We set the initial value is 1 because we want to get the 
                           # best policy value in the first selection.
         for _, child in self.children.items():
             parent_visits += child.visits
@@ -62,8 +64,10 @@ class Node:
         numerator = math.sqrt(parent_visits)
 
         puct_list = []
+
+        # Select the best node by PUCT algorithm. 
         for vtx, child in self.children.items():
-            q_value = self.clamp(0) # fair winrate if the node is no visit.
+            q_value = self.clamp(0) # Fair winrate if the node is no visit.
             if child.visits is not 0:
                 q_value = self.inverse(child.values / child.visits)
             puct = q_value + self.CPUCT * child.policy * (numerator / (1+child.visits))
@@ -74,6 +78,7 @@ class Node:
         self.values += v
         self.visits += 1
 
+# Get best move by nymber of node visits.
     def get_best_move(self, resign_threshold):
         gather_list = []
         for vtx, child in self.children.items():
@@ -85,6 +90,7 @@ class Node:
             return RESIGN
         return vtx
 
+# Collect some node information in order to debug.
     def to_string(self, board: Board):
         out = str()
         out += "Root -> W: {:.2f}%, P: {:.2f}%, V: {}\n".format(
@@ -157,6 +163,8 @@ class Search:
 
         return node.inverse(value)
 
+# Get the best move by Monte carlo tree. The time controller and max playout limit
+# the search. Stonger search result by more time and more playouts.
     def think(self, playouts, resign_threshold, verbose):
         if self.root_board.num_passes >= 2:
             return PASS
@@ -165,21 +173,30 @@ class Search:
         if verbose:
             print(self.time_control)
 
+        # Prepare some basic information.
         to_move = self.root_board.to_move
         bsize = self.root_board.board_size
         move_num = self.root_board.move_num
+
+        # Compute thinking time limit.
         max_time = self.time_control.get_thinking_time(to_move, bsize, move_num)
 
+        # Try to expand the root node first. We assume that the time will
+        # be not over.
         self.prepare_root_node()
+
         for _ in range(playouts):
             if self.time_control.should_stop(max_time):
                 break
 
-            # The main body of Monte carlo tree search.
+            # Copy the root board because we need to simulate the current board.
             curr_board = self.root_board.copy()
             color = curr_board.to_move
+
+            # Start the Monte carlo tree search.
             self.play_simulation(color, curr_board, self.root_node)
 
+        # Reduce the remaining time. 
         self.time_control.took_time(to_move)
         if verbose:
             print(self.root_node.to_string(self.root_board))

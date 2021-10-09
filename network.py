@@ -228,6 +228,7 @@ class Network(nn.Module):
         return m(p).data.tolist()[0], v.data.tolist()[0]
 
     def trainable(self, t=True):
+        torch.set_grad_enabled(t)
         if t==True:
             self.train()
         else:

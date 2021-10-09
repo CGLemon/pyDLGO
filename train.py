@@ -223,13 +223,16 @@ def valid_args(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--dir", help="The input directory", type=str)
-    parser.add_argument("-s", "--step", help="The training step", type=int)
-    parser.add_argument("-v", "--verbose-step", help="Dump verbose in every X steps." , type=int, default=1000)
-    parser.add_argument("-b", "--batch-size", type=int)
-    parser.add_argument("-l", "--learning-rate", type=float)
-    parser.add_argument("-w", "--weights-name", type=str)
-    parser.add_argument("--load-weights", type=str)
+    parser.add_argument("-d", "--dir", metavar="<string>",
+                        help="The input directory", type=str)
+    parser.add_argument("-s", "--step", metavar="<integer>",
+                        help="The training step", type=int)
+    parser.add_argument("-v", "--verbose-step", metavar="<integer>",
+                        help="Dump verbose in every X steps." , type=int, default=1000)
+    parser.add_argument("-b", "--batch-size", metavar="<integer>", type=int)
+    parser.add_argument("-l", "--learning-rate", metavar="<float>", type=float)
+    parser.add_argument("-w", "--weights-name", metavar="<string>", type=str)
+    parser.add_argument("--load-weights", metavar="<string>", type=str)
 
     args = parser.parse_args()
     if valid_args(args):
