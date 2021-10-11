@@ -8,7 +8,6 @@ BLACK = 0
 WHITE = 1
 EMPTY = 2
 INVLD = 3
-X_LABELS = "ABCDEFGHJKLMNOPQRST"
 
 NUM_VERTICES = (BOARD_SIZE+2) ** 2
 NUM_INTESECTIONS = BOARD_SIZE ** 2
@@ -17,49 +16,82 @@ PASS = -1  # pass
 RESIGN = -2 # resign
 NULL_VERTEX = NUM_VERTICES+1 # invalid position
 
-class StoneGroup(object):
+class StoneLiberty(object):
     def __init__(self):
         self.lib_cnt = NULL_VERTEX  # liberty count
-        self.size = NULL_VERTEX  # stone size
-        self.v_atr = NULL_VERTEX  # liberty position if in Atari
+        self.v_atr = NULL_VERTEX  # liberty position if in atari
         self.libs = set()  # set of liberty positions
 
-    def clear(self, stone=True):
-        # clear as placed stone or empty
-        self.lib_cnt = 0 if stone else NULL_VERTEX
-        self.size = 1 if stone else NULL_VERTEX
+    def clear(self):
+        # Reset itself.
+        self.lib_cnt = NULL_VERTEX
+        self.v_atr = NULL_VERTEX
+        self.libs.clear()
+
+    def set(self):
+        # Set one stone.
+        self.lib_cnt = 0
         self.v_atr = NULL_VERTEX
         self.libs.clear()
 
     def add(self, v):
-        # add liberty at v
+        # Add liberty at v.
         if v not in self.libs:
             self.libs.add(v)
             self.lib_cnt += 1
             self.v_atr = v
 
     def sub(self, v):
-        # remove liberty at v
+        # Remove liberty at v.
         if v in self.libs:
             self.libs.remove(v)
             self.lib_cnt -= 1
 
     def merge(self, other):
-        # merge with aother stone group
+        # Merge itself with aother stone.
         self.libs |= other.libs
         self.lib_cnt = len(self.libs)
-        self.size += other.size
         if self.lib_cnt == 1:
             for lib in self.libs:
                 self.v_atr = lib
 
+'''
+ What is vertex? Vertex is not real board position. It is mail-box position. For example, We
+ set the board size 3. The real board looks like
+
+  a b c
+1 . . .
+2 . . .
+3 . . .
+
+ We call this position is index, and number of positions is intersections number. The mail-box
+ looks like
+
+    a b c 
+  - - - - -
+1 - . . . -
+2 - . . . -
+3 - . . . -
+  - - - - -
+
+ We call this position is vertex, and number of positions is vertices number. Should notice that
+ '-' is out of board position.
+
+
+ What is the advantage of the mail-box? The mail-box can shift vertex faster that because we don't
+ need to condside where is the vertex. Does the vertex wiil be out of array affer shifting? The
+ shift operation is always safe.
+'''
+
 class Board(object):
     def __init__(self, board_size=BOARD_SIZE, komi=KOMI):
         self.color = np.full(NUM_VERTICES, INVLD) # stone color
-        self.sg = [StoneGroup() for _ in range(NUM_VERTICES)]  # stone groups
+        self.sl = [StoneLiberty() for _ in range(NUM_VERTICES)]  # stone liberties
         self.reset(board_size, komi)
 
     def reset(self, board_size, komi):
+        # Initialize all board data with current board size and komi.
+
         self.board_size = board_size;
         self.num_intersections = self.board_size ** 2
         self.num_vertices = (self.board_size+2) ** 2
@@ -69,67 +101,80 @@ class Board(object):
         self.diag4 = [1 + ebsize, ebsize - 1, -ebsize - 1, 1 - ebsize]
 
         for idx in range(self.num_intersections):
-            self.color[self.index_to_vertex(idx)] = EMPTY  # empty
+            self.color[self.index_to_vertex(idx)] = EMPTY  # set empty
 
-        self.id = np.arange(NUM_VERTICES)  # id of stone group
-        self.next = np.arange(NUM_VERTICES)  # next position in the same group
+        self.id = np.arange(NUM_VERTICES)  # the id of string
+        self.next = np.arange(NUM_VERTICES)  # next position in the same string
+        self.stones = np.zeros(NUM_VERTICES) # the string size
+
         for i in range(NUM_VERTICES):
-            self.sg[i].clear(stone=False)
+            self.sl[i].clear() # clear liberties
 
-        self.num_passes = 0
+        self.num_passes = 0 # number of passes played.
         self.ko = NULL_VERTEX  # illegal position due to Ko
         self.to_move = BLACK  # black
         self.move_num = 0  # move number
         self.last_move = NULL_VERTEX  # last move
-        self.remove_cnt = 0  # removed stones count
-        self.history = []
+        self.removed_cnt = 0  # removed stones count
+        self.history = [] # history boards.
 
     def copy(self):
+        # Deep copy the board to another board. But they will share the same
+        # history boards.
+
         b_cpy = Board(self.board_size, self.komi)
         b_cpy.color = np.copy(self.color)
         b_cpy.id = np.copy(self.id)
         b_cpy.next = np.copy(self.next)
+        b_cpy.stones = np.copy(self.stones)
         for i in range(NUM_VERTICES):
-            b_cpy.sg[i].lib_cnt = self.sg[i].lib_cnt
-            b_cpy.sg[i].size = self.sg[i].size
-            b_cpy.sg[i].v_atr = self.sg[i].v_atr
-            b_cpy.sg[i].libs |= self.sg[i].libs
+            b_cpy.sl[i].lib_cnt = self.sl[i].lib_cnt
+            b_cpy.sl[i].v_atr = self.sl[i].v_atr
+            b_cpy.sl[i].libs |= self.sl[i].libs
 
         b_cpy.num_passes = self.num_passes
         b_cpy.ko = self.ko
         b_cpy.to_move = self.to_move
         b_cpy.move_num = self.move_num
         b_cpy.last_move = self.last_move
-        b_cpy.remove_cnt = self.remove_cnt
+        b_cpy.removed_cnt = self.removed_cnt
 
         for h in self.history:
             b_cpy.history.append(h)
         return b_cpy
 
     def remove(self, v):
-        # remove stone group including stone at v
+        # Remove string including v.
+
         v_tmp = v
+        removed = 0
         while True:
-            self.remove_cnt += 1
-            self.color[v_tmp] = EMPTY  # empty
+            removed += 1
+            self.color[v_tmp] = EMPTY  # set mpty
             self.id[v_tmp] = v_tmp  # reset id
             for d in self.dir4:
                 nv = v_tmp + d
-                # add liberty to neighbor groups
-                self.sg[self.id[nv]].add(v_tmp)
+                # Add liberty to neighbor strings.
+                self.sl[self.id[nv]].add(v_tmp)
             v_next = self.next[v_tmp]
             self.next[v_tmp] = v_tmp
             v_tmp = v_next
             if v_tmp == v:
-                break  # finish when all stones are removed
+                break  # Finish when all stones are removed.
+        return removed
 
     def merge(self, v1, v2):
-        # merge stone groups at v1 and v2
+        # Merge string including v1 with string including v2.
+
         id_base = self.id[v1]
         id_add = self.id[v2]
-        if self.sg[id_base].size < self.sg[id_add].size:
+
+        # We want the large string merges the small string.
+        if self.stones[id_base] < self.stones[id_add]:
             id_base, id_add = id_add, id_base  # swap
-        self.sg[id_base].merge(self.sg[id_add])
+
+        self.sl[id_base].merge(self.sl[id_add])
+        self.stones[id_base] += self.stones[id_add]
 
         v_tmp = id_add
         while True:
@@ -137,40 +182,51 @@ class Board(object):
             v_tmp = self.next[v_tmp]
             if v_tmp == id_add:
                 break
-        # swap next id for circulation
+        # Swap next id for circulation.
         self.next[v1], self.next[v2] = self.next[v2], self.next[v1]
 
     def place_stone(self, v):
+        # Play a stone on the board and try to merge it with adjacent strings.
+
+        # Set one stone to the board and prepare data.
         self.color[v] = self.to_move
         self.id[v] = v
-        self.sg[self.id[v]].clear(stone=True)
+        self.stones[v] = 1
+        self.sl[v].set()
+
         for d in self.dir4:
             nv = v + d
             if self.color[nv] == EMPTY:
-                self.sg[self.id[v]].add(nv)  # add liberty
+                self.sl[self.id[v]].add(nv)  # Add liberty to itself.
             else:
-                self.sg[self.id[nv]].sub(v)  # remove liberty
-        # merge stone groups
+                self.sl[self.id[nv]].sub(v)  # Remove liberty from opponent's string.
+
+        # Merge the stone with my string.
         for d in self.dir4:
             nv = v + d
             if self.color[nv] == self.to_move and self.id[nv] != self.id[v]:
                 self.merge(v, nv)
-        # remove opponent's stones
-        self.remove_cnt = 0
+
+        # Remove the opponent's string.
+        self.removed_cnt = 0
         for d in self.dir4:
             nv = v + d
             if self.color[nv] == int(self.to_move == 0) and \
-                    self.sg[self.id[nv]].lib_cnt == 0:
-                self.remove(nv)
+                    self.sl[self.id[nv]].lib_cnt == 0:
+                self.removed_cnt += self.remove(nv)
 
     def legal(self, v):
+        # Reture true if the move is legal.
+
         if v == PASS:
+            # The pass move is always legal in any condition.
             return True
         elif v == self.ko or self.color[v] != EMPTY:
+            # The move is ko move.
             return False
 
         stone_cnt = [0, 0]
-        atr_cnt = [0, 0]
+        atr_cnt = [0, 0] # atari count
         for d in self.dir4:
             nv = v + d
             c = self.color[nv]
@@ -178,7 +234,7 @@ class Board(object):
                 return True
             elif c <= 1: # The color must be black or white
                 stone_cnt[c] += 1
-                if self.sg[self.id[nv]].lib_cnt == 1:
+                if self.sl[self.id[nv]].lib_cnt == 1:
                     atr_cnt[c] += 1
 
         return (atr_cnt[int(self.to_move == 0)] != 0 or # That means we can eat other stones.
@@ -186,6 +242,7 @@ class Board(object):
 
     def play(self, v):
         # play the move and update board data if the move is legal.
+
         if not self.legal(v):
             return False
         else:
@@ -198,30 +255,39 @@ class Board(object):
                 self.place_stone(v)
                 id = self.id[v]
                 self.ko = NULL_VERTEX
-                if self.remove_cnt == 1 and \
-                        self.sg[id].lib_cnt == 1 and \
-                        self.sg[id].size == 1:
-                    self.ko = self.sg[id].v_atr
+                if self.removed_cnt == 1 and \
+                        self.sl[id].lib_cnt == 1 and \
+                        self.stones[id] == 1:
+                    # Set the ko move if the last move only captured one and was surround
+                    # by opponent's stones.
+                    self.ko = self.sl[id].v_atr
                 self.num_passes = 0
 
+
         self.last_move = v
-        self.history.append(copy.deepcopy(self.color))
-        self.to_move = int(self.to_move == 0)
+        self.to_move = int(self.to_move == 0) # switch side
         self.move_num += 1
+
+        # Push the current board position to history.
+        self.history.append(copy.deepcopy(self.color))
 
         return True
 
     def compute_reach_color(self, color):
         # This is simple BFS algorithm to compute evey reachable vertices.
+
         queue = []
         reachable = 0
         buf = [False] * NUM_VERTICES
+
+        # Collect my positions.
         for v in range(NUM_VERTICES):
             if self.color[v] == color:
                 reachable += 1
                 buf[v] = True
                 queue.append(v)
 
+        # Now start the BFS algorithm to get reachable point.
         while len(queue) != 0:
             v = queue.pop()
             for d in self.dir4:
@@ -237,24 +303,32 @@ class Board(object):
         return self.compute_reach_color(BLACK) - self.compute_reach_color(WHITE) - self.komi
 
     def get_x(self, v):
+        # vertex to x
         return v % (self.board_size+2) - 1
 
     def get_y(self, v):
+        # vertex to y
         return v // (self.board_size+2) - 1
 
     def get_vertex(self, x, y):
+        # x, y to vertex
         return (y+1) * (self.board_size+2) + (x+1)
         
     def get_index(self, x, y):
+        # x, y to index
         return y * self.board_size + x
 
     def vertex_to_index(self, v):
+        # vertex to index
         return self.get_index(self.get_x(v), self.get_y(v))
         
     def index_to_vertex(self, idx):
+        # index to vertex
         return self.get_vertex(idx % self.board_size, idx // self.board_size)
 
     def vertex_to_text(self, vtx):
+        # vertex to GTP move.
+
         if vtx == PASS:
             return "pass"
         elif vtx == RESIGN:
@@ -262,20 +336,21 @@ class Board(object):
         
         x = self.get_x(vtx)
         y = self.get_y(vtx)
-        offset = 1 if x >= 8 else 0
+        offset = 1 if x >= 8 else 0 # skip 'I'
         return "".join([chr(x + ord('A') + offset), str(y+1)])
 
     def get_features(self):
-        # 1~ 16, odd planes:  my side to move current and past boards stones
-        # 1~ 16, even planes: other side to move current and past boards stones
-        # 17 plane:           set one if the side to move is black.
-        # 18 plane:           set one if the side to move is white.  
+        # 1~ 16, odd planes:  My side to move current and past boards stones
+        # 1~ 16, even planes: Other side to move current and past boards stones
+        # 17 plane:           Set one if the side to move is black.
+        # 18 plane:           Set one if the side to move is white.  
         my_color = self.to_move
         opp_color = (self.to_move + 1) % 2
         past = min(PAST_MOVES, len(self.history))
         
         features = np.zeros((INPUT_CHANNELS, self.num_intersections), dtype=np.int8)
         for p in range(past):
+            # Fill past board positions features.
             h = self.history[len(self.history) - p - 1]
             for v in range(self.num_vertices):
                 c  = h[v]
@@ -283,18 +358,25 @@ class Board(object):
                     features[p*2, self.vertex_to_index(v)] = 1
                 elif c == opp_color:
                     features[p*2+1, self.vertex_to_index(v)] = 1
+
+        # Fill side to move features.
         features[INPUT_CHANNELS - 2 + self.to_move, :] = 1
         return np.reshape(features, (INPUT_CHANNELS, self.board_size, self.board_size))
 
     def superko(self):
+        # Return true if the current position is superko.
+
         curr_hash = hash(self.color.tostring())
-        for h in self.history:
+        s = len(self.history)
+        for p in range(s-1):
+            h = self.history[p]
             if hash(h.tostring()) == curr_hash:
                 return True
         return False
 
     def __str__(self):
         def get_xlabel(bsize):
+            X_LABELS = "ABCDEFGHJKLMNOPQRST"
             line_str = "  "
             for x in range(bsize):
                 line_str += " " + X_LABELS[x] + " "

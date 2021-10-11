@@ -56,14 +56,16 @@ class TimeControl:
                 self.in_byo[color] = True
 
         if self.in_byo[color] and remaing_took_time > 0:
-            byotime_left[color] -= remaing_took_time
-            stones_left[color] -= 1
-            if stones_left[color] == 0:
-                stones_left[color] = byo_stones
+            self.byotime_left[color] -= remaing_took_time
+            self.stones_left[color] -= 1
+            if self.stones_left[color] == 0:
+                self.stones_left[color] = self.byo_stones
 
     def get_thinking_time(self, color, board_size, move_num):
         estimate_moves_left = max(4, int(board_size * board_size * 0.4) - move_num)
-        return (self.maintime_left[color] + self.byotime_left[color]) / estimate_moves_left
+        if self.byo_stones == 0:
+            return (self.maintime_left[color] + self.byotime_left[color]) / estimate_moves_left
+        return (self.maintime_left[color] + self.byotime_left[color]) / self.stones_left[color]
 
     def should_stop(self, max_time):
         elapsed = time.time() - self.clock_time
