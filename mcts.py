@@ -27,13 +27,13 @@ class Node:
         return 1 - v;
 
     def expand_children(self, board: Board, network: Network):
-        # Compute the Net result.
+        # Compute the Net results.
         policy, value = network.get_outputs(board.get_features())
 
         for idx in range(board.num_intersections):
             vtx = board.index_to_vertex(idx)
 
-            # Remove the illegal move.
+            # Remove the all illegal move.
             if board.legal(vtx):
                 p = policy[idx]
                 self.children[vtx] = Node(p)
@@ -46,14 +46,18 @@ class Node:
         return self.nn_eval
 
     def remove_superko(self, board: Board):
+        # Remove all superko moves.
+
         remove_list = []
-        for vtx, child in self.children.items():
+        for vtx, _ in self.children.items():
             next_board = board.copy()
             next_board.play(vtx)
             if next_board.superko():
                 remove_list.append(vtx)
+
         for vtx in remove_list:
             self.children.pop(vtx)
+
 
     def puct_select(self):
         parent_visits = 1 # We set the initial value is 1 because we want to get the 
@@ -78,20 +82,24 @@ class Node:
         self.values += v
         self.visits += 1
 
-# Get best move by nymber of node visits.
     def get_best_move(self, resign_threshold):
+        # Get best move by number of node visits.
+
         gather_list = []
         for vtx, child in self.children.items():
             gather_list.append((child.visits, vtx))
 
         vtx = max(gather_list)[1]
         child = self.children[vtx]
+
+        # Do resin move if we think we have already lost.
         if self.inverse(child.values / child.visits) < resign_threshold:
             return RESIGN
         return vtx
 
-# Collect some node information in order to debug.
     def to_string(self, board: Board):
+        # Collect some node information in order to debug.
+
         out = str()
         out += "Root -> W: {:.2f}%, P: {:.2f}%, V: {}\n".format(
                     self.values/self.visits,
@@ -115,12 +123,12 @@ class Node:
 
 class Search:
     def __init__(self, board: Board, network: Network, time_control: TimeControl):
-        self.root_board = board
-        self.root_node = None
+        self.root_board = board # Root board positions, all simulation boards will fork from it.
+        self.root_node = None # Root node, start the PUCT search from it.
         self.network = network
         self.time_control = time_control
 
-    def prepare_root_node(self):
+    def _prepare_root_node(self):
         # Expand the root node first.
         self.root_node = Node(1)
         val = self.root_node.expand_children(self.root_board, self.network)
@@ -130,7 +138,7 @@ class Search:
         self.root_node.remove_superko(self.root_board)
         self.root_node.update(val)
 
-    def play_simulation(self, color, curr_board, node):
+    def _play_simulation(self, color, curr_board, node):
         value = None
         if curr_board.num_passes >= 2:
             # The game is over.
@@ -153,7 +161,7 @@ class Search:
             next_node = node.children[vtx]
 
             # Search the next node.
-            value = self.play_simulation(color, curr_board, next_node)
+            value = self._play_simulation(color, curr_board, next_node)
         else:
             # This is the termainated node. Now to expand it. 
             value = node.expand_children(curr_board, self.network)
@@ -163,9 +171,10 @@ class Search:
 
         return node.inverse(value)
 
-# Get the best move by Monte carlo tree. The time controller and max playout limit
-# the search. Stonger search result by more time and more playouts.
     def think(self, playouts, resign_threshold, verbose):
+        # Get the best move by Monte carlo tree. The time controller and max playout limit
+        # the search. Stonger search result by more time and more playouts.
+
         if self.root_board.num_passes >= 2:
             return PASS
 
@@ -183,7 +192,7 @@ class Search:
 
         # Try to expand the root node first. We assume that the time will
         # be not over.
-        self.prepare_root_node()
+        self._prepare_root_node()
 
         for _ in range(playouts):
             if self.time_control.should_stop(max_time):
@@ -194,7 +203,7 @@ class Search:
             color = curr_board.to_move
 
             # Start the Monte carlo tree search.
-            self.play_simulation(color, curr_board, self.root_node)
+            self._play_simulation(color, curr_board, self.root_node)
 
         # Reduce the remaining time. 
         self.time_control.took_time(to_move)

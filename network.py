@@ -138,7 +138,7 @@ class Network(nn.Module):
         self.spatial_size = self.board_size ** 2
         self.input_channels = input_channels
         self.use_gpu = True if torch.cuda.is_available() and use_gpu else False
-        self.gpu_device = None
+        self.gpu_device = torch.device('cpu')
 
         self.set_layers()
         if self.use_gpu:
@@ -238,4 +238,4 @@ class Network(nn.Module):
         torch.save(self.state_dict(), filename)
 
     def load_pt(self, filename):
-        self.load_state_dict(torch.load(filename))
+        self.load_state_dict(torch.load(filename, map_location=self.gpu_device))

@@ -79,13 +79,12 @@ class StoneLiberty(object):
 
 
  What is the advantage of the mail-box? The mail-box can shift vertex faster that because we don't
- need to condside where is the vertex. Does the vertex wiil be out of array affer shifting? The
- shift operation is always safe.
+ need to condside where is the vertex. The shift operation is always safe.
 '''
 
 class Board(object):
     def __init__(self, board_size=BOARD_SIZE, komi=KOMI):
-        self.color = np.full(NUM_VERTICES, INVLD) # stone color
+        self.state = np.full(NUM_VERTICES, INVLD) # positions state
         self.sl = [StoneLiberty() for _ in range(NUM_VERTICES)]  # stone liberties
         self.reset(board_size, komi)
 
@@ -100,8 +99,11 @@ class Board(object):
         self.dir4 = [1, ebsize, -1, -ebsize]
         self.diag4 = [1 + ebsize, ebsize - 1, -ebsize - 1, 1 - ebsize]
 
+        for vtx in range(self.num_vertices):
+            self.state[vtx] = INVLD  # set invalid
+
         for idx in range(self.num_intersections):
-            self.color[self.index_to_vertex(idx)] = EMPTY  # set empty
+            self.state[self.index_to_vertex(idx)] = EMPTY  # set empty
 
         self.id = np.arange(NUM_VERTICES)  # the id of string
         self.next = np.arange(NUM_VERTICES)  # next position in the same string
@@ -123,7 +125,7 @@ class Board(object):
         # history boards.
 
         b_cpy = Board(self.board_size, self.komi)
-        b_cpy.color = np.copy(self.color)
+        b_cpy.state = np.copy(self.state)
         b_cpy.id = np.copy(self.id)
         b_cpy.next = np.copy(self.next)
         b_cpy.stones = np.copy(self.stones)
@@ -143,14 +145,14 @@ class Board(object):
             b_cpy.history.append(h)
         return b_cpy
 
-    def remove(self, v):
+    def _remove(self, v):
         # Remove string including v.
 
         v_tmp = v
         removed = 0
         while True:
             removed += 1
-            self.color[v_tmp] = EMPTY  # set mpty
+            self.state[v_tmp] = EMPTY  # set empty
             self.id[v_tmp] = v_tmp  # reset id
             for d in self.dir4:
                 nv = v_tmp + d
@@ -163,7 +165,7 @@ class Board(object):
                 break  # Finish when all stones are removed.
         return removed
 
-    def merge(self, v1, v2):
+    def _merge(self, v1, v2):
         # Merge string including v1 with string including v2.
 
         id_base = self.id[v1]
@@ -185,18 +187,18 @@ class Board(object):
         # Swap next id for circulation.
         self.next[v1], self.next[v2] = self.next[v2], self.next[v1]
 
-    def place_stone(self, v):
+    def _place_stone(self, v):
         # Play a stone on the board and try to merge it with adjacent strings.
 
         # Set one stone to the board and prepare data.
-        self.color[v] = self.to_move
+        self.state[v] = self.to_move
         self.id[v] = v
         self.stones[v] = 1
         self.sl[v].set()
 
         for d in self.dir4:
             nv = v + d
-            if self.color[nv] == EMPTY:
+            if self.state[nv] == EMPTY:
                 self.sl[self.id[v]].add(nv)  # Add liberty to itself.
             else:
                 self.sl[self.id[nv]].sub(v)  # Remove liberty from opponent's string.
@@ -204,16 +206,16 @@ class Board(object):
         # Merge the stone with my string.
         for d in self.dir4:
             nv = v + d
-            if self.color[nv] == self.to_move and self.id[nv] != self.id[v]:
-                self.merge(v, nv)
+            if self.state[nv] == self.to_move and self.id[nv] != self.id[v]:
+                self._merge(v, nv)
 
         # Remove the opponent's string.
         self.removed_cnt = 0
         for d in self.dir4:
             nv = v + d
-            if self.color[nv] == int(self.to_move == 0) and \
+            if self.state[nv] == int(self.to_move == 0) and \
                     self.sl[self.id[nv]].lib_cnt == 0:
-                self.removed_cnt += self.remove(nv)
+                self.removed_cnt += self._remove(nv)
 
     def legal(self, v):
         # Reture true if the move is legal.
@@ -221,7 +223,7 @@ class Board(object):
         if v == PASS:
             # The pass move is always legal in any condition.
             return True
-        elif v == self.ko or self.color[v] != EMPTY:
+        elif v == self.ko or self.state[v] != EMPTY:
             # The move is ko move.
             return False
 
@@ -229,7 +231,7 @@ class Board(object):
         atr_cnt = [0, 0] # atari count
         for d in self.dir4:
             nv = v + d
-            c = self.color[nv]
+            c = self.state[nv]
             if c == EMPTY:
                 return True
             elif c <= 1: # The color must be black or white
@@ -252,7 +254,7 @@ class Board(object):
                 self.num_passes += 1
                 self.ko = NULL_VERTEX
             else:
-                self.place_stone(v)
+                self._place_stone(v)
                 id = self.id[v]
                 self.ko = NULL_VERTEX
                 if self.removed_cnt == 1 and \
@@ -268,12 +270,12 @@ class Board(object):
         self.to_move = int(self.to_move == 0) # switch side
         self.move_num += 1
 
-        # Push the current board position to history.
-        self.history.append(copy.deepcopy(self.color))
+        # Push the current board positions to history.
+        self.history.append(copy.deepcopy(self.state))
 
         return True
 
-    def compute_reach_color(self, color):
+    def _compute_reach_color(self, color):
         # This is simple BFS algorithm to compute evey reachable vertices.
 
         queue = []
@@ -282,7 +284,7 @@ class Board(object):
 
         # Collect my positions.
         for v in range(NUM_VERTICES):
-            if self.color[v] == color:
+            if self.state[v] == color:
                 reachable += 1
                 buf[v] = True
                 queue.append(v)
@@ -292,7 +294,7 @@ class Board(object):
             v = queue.pop()
             for d in self.dir4:
                 nv = v + d
-                if self.color[nv] == EMPTY and buf[nv] == False:
+                if self.state[nv] == EMPTY and buf[nv] == False:
                     reachable += 1
                     queue.append(nv)
                     buf[nv] = True
@@ -300,7 +302,7 @@ class Board(object):
 
     def final_score(self):
         # Compute the final score by Tromp-Taylor rule.
-        return self.compute_reach_color(BLACK) - self.compute_reach_color(WHITE) - self.komi
+        return self._compute_reach_color(BLACK) - self._compute_reach_color(WHITE) - self.komi
 
     def get_x(self, v):
         # vertex to x
@@ -366,7 +368,7 @@ class Board(object):
     def superko(self):
         # Return true if the current position is superko.
 
-        curr_hash = hash(self.color.tostring())
+        curr_hash = hash(self.state.tostring())
         s = len(self.history)
         for p in range(s-1):
             h = self.history[p]
@@ -389,7 +391,7 @@ class Board(object):
             for x in range(0, self.board_size):
                 v = self.get_vertex(x, y)
                 x_str = " . "
-                color = self.color[v]
+                color = self.state[v]
                 if color <= 1:
                     stone_str = "O" if color == WHITE else "X"
                     if v == self.last_move:
