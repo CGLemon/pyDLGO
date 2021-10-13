@@ -50,14 +50,13 @@ class Node:
 
         remove_list = []
         for vtx, _ in self.children.items():
-            next_board = board.copy()
-            next_board.play(vtx)
-            if next_board.superko():
-                remove_list.append(vtx)
-
+            if vtx != PASS:
+                next_board = board.copy()
+                next_board.play(vtx)
+                if next_board.superko():
+                    remove_list.append(vtx)
         for vtx in remove_list:
             self.children.pop(vtx)
-
 
     def puct_select(self):
         parent_visits = 1 # We set the initial value is 1 because we want to get the 
