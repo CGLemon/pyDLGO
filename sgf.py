@@ -291,13 +291,13 @@ def parse_from_string(sgf_string):
     parser.parse(sgf_string)
     return collection
 
-def parser_from_file(filenme):
+def parse_from_file(filenme):
     sgf_string = str()
     with open(filenme, "r") as f:
         sgf_string += f.read()
     return parse_from_string(sgf_string)
 
-def parser_from_dir(dir):
+def parse_from_dir(dir):
     sgf_string = str()
     for filenme in glob.glob(os.path.join(dir, "*.sgf")):
         with open(filenme, "r") as f:

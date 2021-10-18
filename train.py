@@ -58,7 +58,7 @@ class DataSet:
         self.load_data(dir_name)
 
     def load_data(self, dir_name):
-        sgf_games = sgf.parser_from_dir(dir_name)
+        sgf_games = sgf.parse_from_dir(dir_name)
         total = len(sgf_games)
         step = 0
         verbose_step = 1000
