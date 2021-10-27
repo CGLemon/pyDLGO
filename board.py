@@ -105,7 +105,63 @@ class Board(object):
         for idx in range(self.num_intersections):
             self.state[self.index_to_vertex(idx)] = EMPTY  # set empty
 
-        self.id = np.arange(NUM_VERTICES)  # the id of string
+        '''
+        self.id, self,next, self.stones are basic data struct for strings. By
+        these struct, we can search a whole string more fast. For exmple, we have
+        a board looks like
+        
+        board position
+           a b c d e
+        1| . . . . .
+        2| . x x x .
+        3| . . . . .
+        4| . x x . .
+        5| . . . . .
+        
+        vertex position
+           a  b  c  d  e
+        1| 8  9  10 11 12
+        2| 15 16 17 18 19
+        3| 22 23 24 25 26
+        4| 29 30 31 32 33
+        5| 36 37 38 39 40
+
+        self.id
+           a  b  c  d  e
+        1| .  .  .  .  .
+        2| .  16 16 16 .
+        3| .  .  .  .  .
+        4| .  30 30 .  .
+        5| .  .  .  .  .
+
+        self.next
+           a  b  c  d  e
+        1| .  .  .  .  .
+        2| .  17 18 16 .
+        3| .  .  .  .  .
+        4| .  31 30 .  .
+        5| .  .  .  .  .
+
+        self.stones
+           a  b  c  d  e
+        1| .  .  .  .  .
+        2| .  3  .  .  .
+        3| .  .  .  .  .
+        4| .  2  .  .  .
+        5| .  .  .  .  .
+
+        If we want to search the string 16, just simply start from the
+        id (the string parent vertex). The pseudo code looks like
+        
+        start_pos = id[vertex]
+        next_pos = start_pos
+        {
+            next_pos = next[next_pos]
+        } while(next_pos != start_pos)
+
+        '''
+
+        self.id = np.arange(NUM_VERTICES)  # the id(parent vertex) of string
         self.next = np.arange(NUM_VERTICES)  # next position in the same string
         self.stones = np.zeros(NUM_VERTICES) # the string size
 
@@ -118,11 +174,11 @@ class Board(object):
         self.move_num = 0  # move number
         self.last_move = NULL_VERTEX  # last move
         self.removed_cnt = 0  # removed stones count
-        self.history = [] # history boards.
+        self.history = [] # history board positions.
 
     def copy(self):
         # Deep copy the board to another board. But they will share the same
-        # history boards.
+        # history board positions.
 
         b_cpy = Board(self.board_size, self.komi)
         b_cpy.state = np.copy(self.state)

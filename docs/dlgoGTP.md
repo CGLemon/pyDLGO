@@ -2,7 +2,7 @@
 
 ## ㄧ、支援的指令
 
-以下是 dlgo 所支援的 GTP 指令
+dlgo 僅支援少量的 GTP 指令，主要是為了滿足 TCGA 比賽的基本需求（KGS），當然還有很多指令尚未實作，如果有興趣可到 [GTP 英文文檔](https://www.gnu.org/software/gnugo/gnugo_19.html)找到更多資訊。
 
    * `quit`
       * 退出並結束執行。
@@ -43,6 +43,24 @@
    * `time_left <color: string, 'black' or 'white'> <main time: integer> <byo time: integer> <byo stones: integer>`
       * 設定某方剩餘的限時時間。
 
-## 二、其它
+## 二、其它 KGS 可用指令
 
-更多完整的指令和詳細的參數設置可到 [GTP 英文文檔](https://www.gnu.org/software/gnugo/gnugo_19.html)查看。
+有些指令在 kgs 上有特殊效果，或是可以提供更多功能，如果有興趣的話，可以優先實作下列指令，指令的參數和效果可到[GTP 英文文檔](https://www.gnu.org/software/gnugo/gnugo_19.html)
+
+   * `final_status_list`
+      * 顯示當言盤面的死棋和活棋。
+
+   * `place_free_handicap`
+      * 讓 Bot 自己決定讓子的位置。
+      
+   * `set_free_handicap`
+      * 使用者告所電腦讓子的位置。
+      
+   * `kgs-genmove_cleanup`
+      * KGS 專用的生成合法手。
+      
+   * `kgs-time_settings`
+      * KGS 專用的時間控制指令。
+      
+   * `kgs-game_over`
+      * 當每盤對戰結束，會發出此指令。

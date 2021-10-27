@@ -36,7 +36,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | BLOCK_SIZE        | 殘差網路的 block 的數目，數目越大網路越大 |
 | FILTER_SIZE       | 卷積網路 filter 的數目，數目越大網路越大  |
 | BOARD_SIZE        | 棋盤大小，必須和棋譜的大小一致            |
-| USE_GPU           | 是否用使用 GPU 訓練。如果為 True ，會自動檢查是否有可用的 GPU ，如果沒有檢測到 GPU ，則會使用 CPU 訓練，如果為 False ，則強至使用 CPU 訓練。此參數建議使用 True |
+| USE_GPU           | 是否用使用 GPU 訓練。如果為 True ，會自動檢查是否有可用的 GPU ，如果沒有檢測到 GPU ，則會使用 CPU 訓練，如果為 False ，則強制使用 CPU 訓練。此參數建議使用 True |
 
 
 #### 第三步、開始訓練
@@ -47,8 +47,8 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | :---------------:    | :---------------: | :---------------: |
 | -d, --dir            | string            | 要訓練的 SGF 檔案夾|
 | -s, --step           | int               | 要訓練的步數，越多訓練時間越久 |
-| -b, --batch-size     | int               | 訓練的 batch size |
-| -l, --learning-rate  | float             | 學習率大小 |
+| -b, --batch-size     | int               | 訓練的 batch size，建議至少大於 128 |
+| -l, --learning-rate  | float             | 學習率大小 ，建議從 0.001 開始|
 | -w, --weights-name   | string            | 要輸出的網路權重名稱 |
 | --load-weights       | string            | 載入其它權重，可以從此權重繼續開始訓練 |
 
@@ -56,7 +56,14 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
     $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
 
-當網路權重出現後，就完成訓練了。
+當網路權重出現後，就完成第一步的訓練了，如果你覺得此時網路還沒有訓練完成，可以選擇載入網路再次訓練此權重
+
+    $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.001 --load-weights preweights --weights-name outweights
+    
+或是你覺得 loss 已經無法下降了，你可以調整學習率，再次訓練此權重
+
+    $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.0001 --load-weights preweights --weights-name outweights
+
 
 ## 二、啟動引擎
 
@@ -66,7 +73,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
 | 參數             |參數類別          | 說明                |
 | :------------: | :---------------: | :---------------: |
-| -w, --weights  | string            | 要使用的網路權重名稱 |
+| -w, --weights  | string            | 要使用的網路權重名稱，如果沒給則使用 random 的權重|
 | -p, --playouts | int               | MCTS 的 playouts，數目越多越強。預設值是 400 |
 | -r, --resign-threshold | float     | 投降的門檻，0.1 代表勝率低於 10% 就會投降。預設值是 0.1 |
 
@@ -163,7 +170,8 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 | [TAAI 2021](https://www.tcga.tw/taai2021/zh_TW/) | 11 月 12 號報名截止 | 開始報名   |
 
 ## 六、其它
-* 如果想利用 dlgo 檔案重新製作其它圍棋引擎，可到[這裏](docs/dlgoAPI.md)查看。
+* 如果想利用 board.py 檔案重新製作其它圍棋算體，可到[這裏](docs/dlgoAPI.md)查看。
+* 如果想知道 SGF 格式的訊息，和如何使用 sgf.py，可到[這裏](docs/SmartGameFormat.md)查看。
 * dlgo 實做的規則是 Tromp-Taylor（但禁止自殺）。
 
 ## License
@@ -172,8 +180,7 @@ board.py 和  sgf.py 依原作者為 MIT License 條款，剩餘程式皆為 MIT
 
 
 ## TODO
-* 確認正確性
-* 增加程式碼可讀性
+* 增加可改進列表
+* 增加為基本的演算法
 * 增加 Tromp-Taylor 規則的解釋
-* 增加 SGF 格式的教學
 * 增加深度學和蒙蒂卡羅在圍棋上的應用、原理
