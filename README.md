@@ -1,23 +1,23 @@
 # pyDLGO
 
-自從 AlphaGo 打敗世界冠軍後，電腦圍棋儼然變成深度學習的代名詞，讓不少同學對於電腦圍棋有不小的興趣，但實做一個完整的圍棋引擎並不是只有深度學習而已，還包含許許多多枯燥乏味且需花費大量時間的部份，這令多數同學望而卻步。dlgo 實做一個最低要求的圍棋引擎，它包含圍棋的基本演算法，GTP 界面和 SGF 格式解析器，讓同學可以簡單跳過這些部份，專注於深度學習，輕鬆訓練出明顯強於 GNU Go 的網路，最終目標是幫助同學參加 TCGA 電腦對局競賽。
+自從 AlphaGo 打敗世界冠軍後，電腦圍棋儼然變成深度學習的代名詞，讓不少同學對於電腦圍棋有不小的興趣，但實做一個完整的圍棋引擎並不是只有深度學習而已，還包含許許多多枯燥乏味且需花費大量時間的部份，這令多數同學望而卻步。dlgo 實做一個最低要求的圍棋引擎，它包含圍棋的基本演算法、GTP 界面和 SGF 格式解析器，讓同學可以先跳過這些部份，專注於深度學習，體驗電腦圍棋的魅力。最終目標是希望幫助同學製造屬於自己的圍棋引擎，並參加 TCGA 電腦對局競賽。
 
 #### (黑) GNU Go 3.8 vs (白) dlgo 0.1
 ![vs_gnugo](https://github.com/CGLemon/pyDLGO/blob/master/img/b_gungo_vs_w_dlgo.gif)
 
 ## 零、依賴與來源
 
-sgf.py 修改自 [jtauber/sgf](https://github.com/jtauber/sgf)
-
-board.py 修改自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
-
-sgf.zip 來源自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
+以下是部份程式碼和資源的來源
+1. sgf.py 修改自 [jtauber/sgf](https://github.com/jtauber/sgf)
+2. board.py 修改自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
+3. sgf.zip 來源自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
 
 以下的 python 依賴庫是必須的（請注意本程式使用 python3）
 1. PyTorch (1.x 版本，如果要使用 GPU 請下載對應的 CUDA/cuDNN 版本)
 2. NumPy
 
-KGS GTP 需要 Java
+以下程式需要 Java
+1. KGS GTP
 
 ## ㄧ、訓練網路
 
@@ -46,8 +46,8 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | 參數                 |參數類別            | 說明              |
 | :---------------:    | :---------------: | :---------------: |
 | -d, --dir            | string            | 要訓練的 SGF 檔案夾|
-| -s, --step           | int               | 要訓練的步數，越多訓練時間越久 |
-| -b, --batch-size     | int               | 訓練的 batch size，建議至少大於 128 |
+| -s, --step           | integer           | 要訓練的步數，越多訓練時間越久 |
+| -b, --batch-size     | integer           | 訓練的 batch size，建議至少大於 128 |
 | -l, --learning-rate  | float             | 學習率大小 ，建議從 0.001 開始|
 | -w, --weights-name   | string            | 要輸出的網路權重名稱 |
 | --load-weights       | string            | 載入其它權重，可以從此權重繼續開始訓練 |
@@ -56,7 +56,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
     $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
 
-當網路權重出現後，就完成第一步的訓練了，如果你覺得此時網路還沒有訓練完成，可以選擇載入網路再次訓練此權重
+在一台有配備獨立顯示卡的電腦，大概數個小時內可以完成訓練，如果用 CPU 訓練大概需要幾天時間。當網路權重出現後，就完成第一步的訓練了，如果你覺得此時網路還沒有訓練完成，可以選擇載入網路再次訓練此權重
 
     $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.001 --load-weights preweights --weights-name outweights
     
@@ -64,6 +64,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
     $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.0001 --load-weights preweights --weights-name outweights
 
+如果你好奇強度大概如何的話？使用附上的棋譜和預設的網路大小（2 blocks, 64 filters），其強度大概可以到棋協四、五段左右的強度，用上更大的網路（4 blocks, 128 filters），可以達到棋協六段的強度。
 
 ## 二、啟動引擎
 
@@ -74,7 +75,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | 參數             |參數類別          | 說明                |
 | :------------: | :---------------: | :---------------: |
 | -w, --weights  | string            | 要使用的網路權重名稱，如果沒給則使用 random 的權重|
-| -p, --playouts | int               | MCTS 的 playouts，數目越多越強。預設值是 400 |
+| -p, --playouts | integer           | MCTS 的 playouts，數目越多越強。預設值是 400 |
 | -r, --resign-threshold | float     | 投降的門檻，0.1 代表勝率低於 10% 就會投降。預設值是 0.1 |
 
 注意再啟動以前，必須確定你有權限打開 dlgo.py ，如果沒有，請先使用 chmod 指令更改權限，以下是啟動的範例
@@ -97,7 +98,7 @@ Windows 系統是無法直接使用此程式，這裏需要更改的部分是 dl
 
 ## 三、使用 GTP 介面
 
-dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比如用 [Sabaki](https://sabaki.yichuanshen.de) 將 dlgo 掛載上去，使用的參數參考上面。以下是如何在 Sabaki 上使用的教學。
+dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比如用 [Sabaki](https://sabaki.yichuanshen.de) 將 dlgo 掛載上去，使用的參數參考第二部份。以下是如何在 Sabaki 上使用的教學。
 
 #### 第一步、打開引擎選項
 
@@ -111,7 +112,7 @@ dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比�
 
 ![step_two](https://github.com/CGLemon/pyDLGO/blob/master/img/screenshot_sabaki_03.png)
 
-如果想知道 dlgo 支援哪些 GTP 指令，可到[這裏](docs/dlgoGTP.md)查看。
+完成後就可以和 dlgo 對戰了。如果想知道 dlgo 支援哪些 GTP 指令，可到[這裏](docs/dlgoGTP.md)查看。
 
 ## 四、在 KGS 上使用
 
@@ -167,20 +168,19 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 
 | 比賽                                             |時間                | 狀態               |
 | :------------:                                   | :---------------: | :---------------: |
-| [TAAI 2021](https://www.tcga.tw/taai2021/zh_TW/) | 11 月 12 號報名截止 | 開始報名   |
+| [TAAI 2021](https://www.tcga.tw/taai2021/zh_TW/) | 11 月 12 號報名截止，20 號比賽 | 開始報名   |
 
 ## 六、其它
-* 如果想利用 board.py 檔案重新製作其它圍棋算體，可到[這裏](docs/dlgoAPI.md)查看。
+* 如果想利用 board.py 檔案重新製作其它圍棋軟體，可到[這裏](docs/dlgoAPI.md)查看。
 * 如果想知道 SGF 格式的訊息，和如何使用 sgf.py，可到[這裏](docs/SmartGameFormat.md)查看。
-* dlgo 實做的規則是 Tromp-Taylor（但禁止自殺）。
+* dlgo 實做的規則是 [Tromp-Taylor](https://senseis.xmp.net/?TrompTaylorRules)（不同的是禁止自殺）。
 
 ## License
 
-board.py 和  sgf.py 依原作者為 MIT License 條款，剩餘程式皆為 MIT License 條款。
-
+board.py 和 sgf.py 依照原作者為 MIT License 條款，剩餘程式也皆為 MIT License 條款。
 
 ## TODO
-* 增加可改進列表
-* 增加為基本的演算法
+* 增加可改進的列表
+* 增加圍棋基本的演算法
 * 增加 Tromp-Taylor 規則的解釋
-* 增加深度學和蒙蒂卡羅在圍棋上的應用、原理
+* 增加深度學習和蒙蒂卡羅在圍棋上的應用、原理

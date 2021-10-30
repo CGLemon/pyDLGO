@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 BOARD_SIZE = 9 # The default board size. We can reset the value later.
 
 KOMI = 7 # The default komi. We can reset the value later.

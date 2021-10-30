@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from sys import stderr, stdout, stdin
 from board import Board, PASS, RESIGN, BLACK, WHITE, INVLD
 from network import Network

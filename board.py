@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from config import BOARD_SIZE, KOMI, INPUT_CHANNELS, PAST_MOVES
 import numpy as np
 import copy
@@ -150,7 +148,7 @@ class Board(object):
         4| .  2  .  .  .
         5| .  .  .  .  .
 
-        If we want to search the string 16, just simply start from the
+        If we want to search the string 16, just simply start from its
         id (the string parent vertex). The pseudo code looks like
         
         start_pos = id[vertex]

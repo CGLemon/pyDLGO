@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from config import INPUT_CHANNELS
 from board import Board, PASS, RESIGN, BLACK, WHITE
 from network import Network

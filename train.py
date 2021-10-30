@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from network import Network
 from config import BOARD_SIZE, KOMI, INPUT_CHANNELS, PAST_MOVES
 from board import Board, PASS, BLACK, WHITE, EMPTY, INVLD, NUM_INTESECTIONS
@@ -159,7 +157,6 @@ class TrainingPipe:
         for step in range(max_step):
             # First, get the batch data.
             inputs, target_p, target_v = self.data_set.get_batch(batch_size)
-
 
             # Second, Move the data to GPU memory if we use it.
             if self.network.use_gpu:

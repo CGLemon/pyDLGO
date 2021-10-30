@@ -1,7 +1,7 @@
 # Smart Game Format
 
 ## ㄧ、歷史
-智慧遊戲格式最早來源於 Smart Go ，由其原作者 Anders Kierulf 和後繼者 Martin Mueller ， Arno Hollosi 接力開發，因此早期版本又稱為 Smart Go Format。到了現在 SGF 已經是圍棋軟體預設紀錄儲存棋譜的格式，而且不只是圍棋，其它棋類如，黑白棋，也採用 SGF 格式。
+智慧遊戲格式 (Smart Game Format) 最早來源於 Smart Go ，由其原作者 Anders Kierulf 和後繼者 Martin Mueller ， Arno Hollosi 接力開發，因此早期版本稱為智慧圍棋格式 (Smart Game Format)。到了現在 SGF 已經是圍棋軟體預設紀錄儲存棋譜的格式，而且不只是圍棋，其它棋類如，黑白棋，也採用 SGF 格式。
 
 ## 二、基本概念
 SGF 是以樹狀結構紀錄，每一個節點以 ';' 分隔，每一個樹枝以 '(' 和 ')' 分隔，例如某一樹狀結構為
@@ -26,32 +26,42 @@ SGF 是以樹狀結構紀錄，每一個節點以 ';' 分隔，每一個樹枝�
 
     (;B[aa];W[ab](;B[ac];W[ad])(;B[bc];W[bd];B[bd]))
 
-一些常用的屬性為下
+一些常用的屬性列在下方
 
 | 屬性            | 說明                |
 | :------------: | :---------------: |
 | GM               | 遊戲種類，圍棋為 1，必須在 root node |
 | FF               | 版本，現行版本為 4 ，必須在 root node |
+| RU               | 規則，必須在 root node |
+| RE               | 勝負結果，必須在 root node |
 | KM               | 貼目，必須在 root node |
 | SZ               | 盤面大小，必須在 root node |
-| DT              | 日期 |
-| B                 | 黑棋落子 |
-| W                 | 白棋落子 |
+| AP               | 使用軟體，必須在 root node |
+| HA               | 讓子數目，必須在 root node |
+| AB               | 初始盤面的黑棋落子位置，必須在 root node |
+| AW               | 初始盤面的白棋落子位置，必須在 root node |
+| PB               | 黑棋玩家名稱，必須在 root node |
+| PW               | 白落玩家名稱，必須在 root node |
+| DT               | 日期 |
+| B                | 黑棋落子|
+| W                | 白棋落子 |
 
 ## 四、範例
 以下是一個 sgf 檔案範例，可用 Sabaki 或是其它支援 SGF 的軟體打開
 
-
     (
-      ;GM[1]FF[4]CA[UTF-8]AP[Sabaki:0.35.1]KM[7]SZ[9]DT[2021-10-27]
-      ;B[dd];W[ff];B[fe];W[ee];B[ed];W[ge];B[fd];W[ef];B[gd]
+      ;GM[1]FF[4]CA[UTF-8]AP[Sabaki:0.43.3]KM[7.5]SZ[19]DT[2021-10-31]HA[2]AB[dp][pd]PB[Black Player]PW[White Player]
+      ;W[qp];B[dd];W[fq];B[cn];W[kq]
       (
-        ;W[cf];B[ce];W[be];B[bd];W[de];B[cd];W[bf];B[gf];W[gg];B[he];W[hg]
+        ;B[qf];W[fc];B[df];W[jd];B[lc];W[pk];B[op];W[pn];B[qq];W[rq];B[pq];W[rr];B[mq];W[ko]
       )
       (
-        ;W[ce];B[de];W[df];B[cd];W[bf];B[be];W[cf];B[gf];W[gg];B[he];W[hg];B[bd]
+        ;B[df];W[qf];B[nc];W[pj];B[op]
       )
     )
+
+其中座標的表示法為 a~z，如 B[ab] 代表黑棋下在 (1,2) 的位置。要注意的是，在十九路或小於十九路的棋盤，可用 [tt] 或是 [] 代表虛手，但超過十九路棋盤，則 [tt] 代表 (20,20) 的位置，只有 [] 代表虛手。至於投降手沒有統一的表示方式，通常是不會紀錄在棋譜裡。
+
 
 ## 五、使用 sgf.py
 
@@ -66,7 +76,7 @@ sgf.py 提供三個 functions 解析 SGF 檔案
    * `parse_from_dir(string)`
       * 解析裝有 SGF 檔案的檔案夾，必須注意檔案的後綴必須是 '.sgf' 或是 '.sgfs'
 
-解析出來的結果，是所有的 sgf tree  使用方式如下
+解析出來的結果，是包含每個棋譜的 sgf tree 的資料，使用方式如下
 
     sgf_games = parse_from_string(sgf_strig)
     for game in sgf_games:

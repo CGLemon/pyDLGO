@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import glob, os
 
 # map from numerical coordinates to letters used by SGF
