@@ -54,30 +54,34 @@ class StoneLiberty(object):
                 self.v_atr = lib
 
 '''
- What is vertex? Vertex is not real board position. It is mail-box position. For example, We
- set the board size 3. The real board looks like
+ What is the vertex? Vertex is not real board position. It is mail-box position. For example,
+ We set the board size to 5. The real board looks like
 
-  a b c
-1 . . .
-2 . . .
-3 . . .
+           a b c d e
+        1  . . . . .
+        2  . . . . .
+        3  . . . . .
+        4  . . . . .
+        5  . . . . .
 
- We call this position is index, and number of positions is intersections number. The mail-box
- looks like
+ We define the coordinate as index, from a1 to e5. This is some problem to shife the index, The
+ shift operation may out of the board. For example, we want to find all positions of adjacent a1
+ index. There are two positions out of the board. One way to deal with it is to check out the
+ boundary. A fast way to deal with it is mail-box struct. Here is the mail-box looks like
 
-    a b c 
-  - - - - -
-1 - . . . -
-2 - . . . -
-3 - . . . -
-  - - - - -
+           a b c d e
+         - - - - - - -
+       1 - . . . . . -
+       2 - . . . . . -
+       3 - . . . . . -
+       4 - . . . . . -
+       5 - . . . . . -
+         - - - - - - -
 
- We call this position is vertex, and number of positions is vertices number. Should notice that
- '-' is out of board position.
+ We can see that the board size from 5 to 7. We define the new coordinate as vertex . With mail-box,
+ We don't need to waste time to check out the boundary any more. Notice that '-' is out
+ of board position.
 
-
- What is the advantage of the mail-box? The mail-box can shift vertex faster that because we don't
- need to condside where is the vertex. The shift operation is always safe.
 '''
 
 class Board(object):
@@ -200,7 +204,7 @@ class Board(object):
         return b_cpy
 
     def _remove(self, v):
-        # Remove string including v.
+        # Remove a string including v.
 
         v_tmp = v
         removed = 0
@@ -220,6 +224,43 @@ class Board(object):
         return removed
 
     def _merge(self, v1, v2):
+        '''
+        real board
+           a  b  c  d  e
+        1| .  .  .  .  .
+        2| .  x  x  x  .
+        3| .  x  .  .  .
+        4| .  x  .  .  .
+        5| .  .  .  .  .
+
+        Merge two strings...
+
+        self.id
+           a  b  c  d  e             a  b  c  d  e
+        1| .  .  .  .  .          1| .  .  .  .  .
+        2| .  16 16 16 .          2| .  16 16 16 . 
+        3| .  30 .  .  .    >>    3| .  16 .  .  .
+        4| .  30 .  .  .          4| .  16 .  .  .
+        5| .  .  .  .  .          5| .  .  .  .  .
+
+        self.next
+           a  b  c  d  e             a  b  c  d  e
+        1| .  .  .  .  .          1| .  .  .  .  .
+        2| .  17 18 16 .          2| .  30 18 16 .
+        3| .  30 .  .  .    >>    3| .  17 .  .  .
+        4| .  23 .  .  .          4| .  23 .  .  .
+        5| .  .  .  .  .          5| .  .  .  .  .
+
+        self.stones
+           a  b  c  d  e             a  b  c  d  e
+        1| .  .  .  .  .          1| .  .  .  .  .
+        2| .  3  .  .  .          2| .  5  .  .  .
+        3| .  .  .  .  .    >>    3| .  .  .  .  .
+        4| .  2  .  .  .          4| .  .  .  .  .
+        5| .  .  .  .  .          5| .  .  .  .  .
+
+        '''
+
         # Merge string including v1 with string including v2.
 
         id_base = self.id[v1]
@@ -242,7 +283,7 @@ class Board(object):
         self.next[v1], self.next[v2] = self.next[v2], self.next[v1]
 
     def _place_stone(self, v):
-        # Play a stone on the board and try to merge it with adjacent strings.
+        # Play a stone on the board and try to merge itself with adjacent strings.
 
         # Set one stone to the board and prepare data.
         self.state[v] = self.to_move

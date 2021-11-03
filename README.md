@@ -112,7 +112,7 @@ dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比�
 
 ![step_two](https://github.com/CGLemon/pyDLGO/blob/master/img/screenshot_sabaki_03.png)
 
-完成後就可以和 dlgo 對戰了。如果想知道 dlgo 支援哪些 GTP 指令，可到[這裏](docs/dlgoGTP.md)查看。
+設置完成後就可以和 dlgo 對戰了。如果想知道 dlgo 支援哪些 GTP 指令，可到[這裏](docs/dlgoGTP.md)查看。
 
 ## 四、在 KGS 上使用
 
@@ -173,6 +173,7 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 ## 六、其它
 * 如果想利用 board.py 檔案重新製作其它圍棋軟體，可到[這裏](docs/dlgoAPI.md)查看。
 * 如果想知道 SGF 格式的訊息，和如何使用 sgf.py，可到[這裏](docs/SmartGameFormat.md)查看。
+* 如果想知道 GTP 有哪些實用的擴展指令，可到[這裏](docs/dlgoGTP.md)查看。
 * dlgo 實做的規則是 [Tromp-Taylor](https://senseis.xmp.net/?TrompTaylorRules)（不同的是禁止自殺）。
 
 ## License
@@ -182,5 +183,6 @@ board.py 和 sgf.py 依照原作者為 MIT License 條款，剩餘程式也皆�
 ## TODO
 * 增加可改進的列表
 * 增加圍棋基本的演算法
+* 增加新版本 sabaki 的使用方法
 * 增加 Tromp-Taylor 規則的解釋
 * 增加深度學習和蒙蒂卡羅在圍棋上的應用、原理

@@ -62,7 +62,7 @@ GTP 為 Go Text Protocol 最早為 GNU Go 團隊為了簡化當時的圍棋協�
 
 ## 二、支援的指令
 
-dlgo 僅支援少量的 GTP 指令，主要是為了滿足 TCGA 比賽的基本需求（KGS），當然還有很多指令尚未實作，如果有興趣可到 [GTP 英文文檔](https://www.gnu.org/software/gnugo/gnugo_19.html)找到更多資訊。以下是支援 dlgo 的指令。
+dlgo 僅支援少量的 GTP 指令，主要是為了滿足 TCGA 比賽的基本需求（KGS），當然還有很多指令尚未實作，如果有興趣可到 [GTP 英文文檔](https://www.gnu.org/software/gnugo/gnugo_19.html)找到更多資訊。以下是 dlgo 支援的指令。
 
    * `quit`
       * 退出並結束執行。
@@ -105,7 +105,7 @@ dlgo 僅支援少量的 GTP 指令，主要是為了滿足 TCGA 比賽的基本�
 
 ## 三、其它 KGS 可用指令
 
-有些指令在 KGS 上有特殊效果，或是可以提供更多功能，如果有興趣的話，可以優先實作下列指令，指令的參數和效果可到[GTP 英文文檔](https://www.gnu.org/software/gnugo/gnugo_19.html)查看
+有些指令在 KGS 上有特殊效果，或是可以提供更多功能，如果有興趣的話，可以優先實作下列指令，指令的參數和效果可到 [GTP 英文文檔](https://www.gnu.org/software/gnugo/gnugo_19.html)查看
 
    * `final_status_list [alive|dead]`
       * 顯示當前盤面的死棋和活棋棋串。GNU Go 還有實做其它種類的判斷，如 "seki"、 "white_territory"、 "black_territory" 和 "dame"。
@@ -127,3 +127,15 @@ dlgo 僅支援少量的 GTP 指令，主要是為了滿足 TCGA 比賽的基本�
       
    * `kgs-game_over`
       * 當每盤對戰結束，會發出此指令。
+
+
+## 四、其它 Sabaki 可用指令
+
+有些指令在 Sabaki 上有特殊效果，可提供分析功能，詳細指令的參數可到[這裡](https://github.com/SabakiHQ/Sabaki/blob/master/docs/guides/engine-analysis-integration.md)查看
+
+   * `analyze [black|white] <interval: integer>`
+      * 後台送出分析結果。
+      
+   * `genmove_analyze [black|white] <interval: integer>`
+      * 讓引擎思考並產生下一手棋到盤面上並在後台送出分析結果。
+
