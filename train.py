@@ -3,12 +3,18 @@ from config import BOARD_SIZE, KOMI, INPUT_CHANNELS, PAST_MOVES
 from board import Board, PASS, BLACK, WHITE, EMPTY, INVLD, NUM_INTESECTIONS
 
 import sgf, argparse
-import copy, random
+import copy, random, time
 import numpy as np
+import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
+def get_currtime():
+    lt = time.localtime(time.time())
+    return "[{y}-{m}-{d} {h:02d}:{mi:02d}:{s:02d}]".format(
+               y=lt.tm_year, m=lt.tm_mon,  d=lt.tm_mday, h=lt.tm_hour, mi=lt.tm_min, s=lt.tm_sec)
 
 def get_symmetry_plane(symm, plane):
     use_flip = False
@@ -67,6 +73,8 @@ class DataSet:
             self.buffer.extend(temp)
             if step % verbose_step == 0:
                 print("parsed {:.2f}% games".format(100 * step/total))
+            if step == 100:
+                break
         if total % verbose_step != 0:
             print("parsed {:.2f}% games".format(100 * step/total))
 
@@ -153,6 +161,8 @@ class TrainingPipe:
         optimizer = optim.Adam(self.network.parameters(), lr=learning_rate, weight_decay=1e-4)
         p_running_loss = 0
         v_running_loss = 0
+        running_loss_record = []
+        clock_time = time.time()
 
         for step in range(max_step):
             # First, get the batch data.
@@ -181,14 +191,40 @@ class TrainingPipe:
 
             # Fifth, dump verbose.
             if (step+1) % verbose_step == 0:
-                print("step: {}/{}, {:.2f}% -> policy loss: {:.4f} | value loss: {:.4f}\n".format(
+                elapsed = time.time() - clock_time
+                rate = verbose_step/elapsed
+                remaining_step = max_step - step
+                estimate_remaining_time = int(remaining_step/rate)
+                print("{} steps: {}/{}, {:.2f}% -> policy loss: {:.4f}, value loss: {:.4f} | rate: {:.2f}(step/sec), estimate: {}(sec)".format(
+                          get_currtime(),
                           step+1,
                           max_step,
                           100 * ((step+1)/max_step),
                           p_running_loss/verbose_step,
-                          v_running_loss/verbose_step))
+                          v_running_loss/verbose_step,
+                          rate,
+                          estimate_remaining_time))
+                running_loss_record.append((step+1, p_running_loss/verbose_step, v_running_loss/verbose_step))
                 p_running_loss = 0
                 v_running_loss = 0
+                clock_time = time.time()
+        print("Trainig is over.");
+        self.plot_loss(running_loss_record)
+
+    def plot_loss(self, record):
+        p_running_loss = []
+        v_running_loss = []
+        step = []
+        for (s, p, v) in record:
+            p_running_loss.append(p)
+            v_running_loss.append(v)
+            step.append(s)
+        plt.plot(step, p_running_loss, label="policy loss")
+        plt.plot(step, v_running_loss, label="value loss")
+        plt.ylabel("loss")
+        plt.xlabel("steps")
+        plt.legend()
+        plt.show()
 
     def save_weights(self, name):
         self.network.save_pt(name)
