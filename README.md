@@ -15,7 +15,7 @@
 以下的 python 依賴庫是必須的（請注意本程式使用 python3）
 1. PyTorch (1.x 版本，如果要使用 GPU 請下載對應的 CUDA/cuDNN 版本)
 2. NumPy
-3. Matplotlib
+3. Matplotlib (僅訓練時需要)
 
 以下程式需要 Java
 1. KGS GTP
@@ -169,12 +169,13 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 
 | 比賽                                             |時間                | 狀態               |
 | :------------:                                   | :---------------: | :---------------: |
-| [TAAI 2021](https://www.tcga.tw/taai2021/zh_TW/) | 11 月 20 號比賽 | 報名截止   |
+| [TAAI 2021](https://www.tcga.tw/taai2021/zh_TW/) | 11 月 20 號比賽 | 結束   |
 
 ## 六、其它
 * 如果想利用 board.py 檔案重新製作其它圍棋軟體，可到[這裏](docs/dlgoAPI.md)查看。
 * 如果想知道 SGF 格式的訊息，和如何使用 sgf.py，可到[這裏](docs/SmartGameFormat.md)查看。
 * 如果想知道 GTP 有哪些實用的擴展指令，可到[這裏](docs/dlgoGTP.md)查看。
+* 如果想知道實做原理，可到[這裏](docs/Methods.md)查看。
 * dlgo 實做的規則是 [Tromp-Taylor](https://senseis.xmp.net/?TrompTaylorRules)（不同的是禁止自殺）。
 
 ## License

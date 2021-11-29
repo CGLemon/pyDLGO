@@ -1,7 +1,7 @@
 # Smart Game Format
 
 ## ㄧ、歷史
-智慧遊戲格式 (Smart Game Format) 最早來源於 Smart Go ，由其原作者 Anders Kierulf 和後繼者 Martin Mueller ， Arno Hollosi 接力開發，因此早期版本稱為智慧圍棋格式 (Smart Game Format)。到了現在 SGF 已經是圍棋軟體預設紀錄儲存棋譜的格式，而且不只是圍棋，其它棋類如，黑白棋，也採用 SGF 格式。
+智慧遊戲格式 (Smart Game Format) 最早來源於 Smart Go ，由其原作者 Anders Kierulf 和後繼者 Martin Mueller ， Arno Hollosi 接力開發，因此早期版本稱為智慧圍棋格式 (Smart Go Format)。到了現在 SGF 已經是圍棋軟體預設紀錄儲存棋譜的格式，而且不只是圍棋，其它棋類如，黑白棋，也採用 SGF 格式。
 
 ## 二、基本概念
 SGF 是以樹狀結構紀錄，每一個節點以 ';' 分隔，每一個樹枝以 '(' 和 ')' 分隔，例如某一樹狀結構為
@@ -25,6 +25,10 @@ SGF 是以樹狀結構紀錄，每一個節點以 ';' 分隔，每一個樹枝�
 此屬性為 'B' ，括號內的 'aa' 為此屬性的值。如果用 SGF 表示則看起來像
 
     (;B[aa];W[ab](;B[ac];W[ad])(;B[bc];W[bd];B[bd]))
+
+每個節點也可以包含多個屬性資料
+
+    (;B[aa]C[Hello])
 
 一些常用的屬性列在下方，如果想要了解更多指令可到 [SGF Wiki](https://en.wikipedia.org/wiki/Smart_Game_Format)
 
