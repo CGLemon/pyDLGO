@@ -59,9 +59,10 @@ class Chunk:
 class DataSet:
     def  __init__(self, dir_name):
         self.buffer = []
-        self.load_data(dir_name)
+        self._load_data(dir_name)
 
-    def load_data(self, dir_name):
+    # Collect training data from sgf dirctor.
+    def _load_data(self, dir_name):
         sgf_games = sgf.parse_from_dir(dir_name)
         total = len(sgf_games)
         step = 0
@@ -69,7 +70,7 @@ class DataSet:
         print("total {} games".format(total))
         for game in sgf_games:
             step += 1
-            temp = self.process_one_game(game)
+            temp = self._process_one_game(game)
             self.buffer.extend(temp)
             if step % verbose_step == 0:
                 print("parsed {:.2f}% games".format(100 * step/total))
@@ -78,26 +79,8 @@ class DataSet:
         if total % verbose_step != 0:
             print("parsed {:.2f}% games".format(100 * step/total))
 
-    def get_batch(self, batch_size):
-        s = random.sample(self.buffer, k=batch_size)
-        inputs_batch = []
-        policy_batch = []
-        value_batch = []
-        for chunk in s:
-            chunk.do_symmetry()
-            inputs_batch.append(chunk.inputs)
-            policy_batch.append(chunk.policy)
-            value_batch.append([chunk.value])
-        inputs_batch = np.array(inputs_batch)
-        policy_batch = np.array(policy_batch)
-        value_batch = np.array(value_batch)
-        return (
-            torch.tensor(inputs_batch).float(),
-            torch.tensor(policy_batch).long(),
-            torch.tensor(value_batch).float()
-        )
-
-    def process_one_game(self, game):
+    # Collect training data from one sgf game.
+    def _process_one_game(self, game):
         temp = []
         winner = None
         board = Board(BOARD_SIZE)
@@ -120,7 +103,7 @@ class DataSet:
                 chunk = Chunk()
                 chunk.inputs = board.get_features()
                 chunk.to_move = color
-                chunk.policy = self.do_text_move(board, color, move)
+                chunk.policy = self._do_text_move(board, color, move)
                 temp.append(chunk)
 
         for chunk in temp:
@@ -132,7 +115,7 @@ class DataSet:
                 chunk.value = -1
         return temp
 
-    def do_text_move(self, board, color, move):
+    def _do_text_move(self, board, color, move):
         board.to_move = color
         policy = None
         vtx = None
@@ -147,6 +130,25 @@ class DataSet:
         board.play(vtx)
         return policy
 
+    def get_batch(self, batch_size):
+        s = random.sample(self.buffer, k=batch_size)
+        inputs_batch = []
+        policy_batch = []
+        value_batch = []
+        for chunk in s:
+            chunk.do_symmetry()
+            inputs_batch.append(chunk.inputs)
+            policy_batch.append(chunk.policy)
+            value_batch.append([chunk.value])
+        inputs_batch = np.array(inputs_batch)
+        policy_batch = np.array(policy_batch)
+        value_batch = np.array(value_batch)
+        return (
+            torch.tensor(inputs_batch).float(),
+            torch.tensor(policy_batch).long(),
+            torch.tensor(value_batch).float()
+        )
+
 class TrainingPipe:
     def __init__(self, dir_name):
         self.network = Network(BOARD_SIZE)
@@ -155,7 +157,7 @@ class TrainingPipe:
         # Prepare the data set from sgf files.
         self.data_set = DataSet(dir_name)
         
-    def running(self, max_step, verbose_step, batch_size, learning_rate):
+    def running(self, max_step, verbose_step, batch_size, learning_rate, noplot):
         cross_entry = nn.CrossEntropyLoss()
         mse_loss = nn.MSELoss()
         optimizer = optim.Adam(self.network.parameters(), lr=learning_rate, weight_decay=1e-4)
@@ -209,7 +211,8 @@ class TrainingPipe:
                 v_running_loss = 0
                 clock_time = time.time()
         print("Trainig is over.");
-        self.plot_loss(running_loss_record)
+        if not noplot:
+            self.plot_loss(running_loss_record)
 
     def plot_loss(self, record):
         p_running_loss = []
@@ -266,10 +269,11 @@ if __name__ == "__main__":
     parser.add_argument("-l", "--learning-rate", metavar="<float>", type=float)
     parser.add_argument("-w", "--weights-name", metavar="<string>", type=str)
     parser.add_argument("--load-weights", metavar="<string>", type=str)
+    parser.add_argument("--noplot", action="store_true", default=False)
 
     args = parser.parse_args()
     if valid_args(args):
         pipe = TrainingPipe(args.dir)
         pipe.load_weights(args.load_weights)
-        pipe.running(args.step, args.verbose_step, args.batch_size, args.learning_rate)
+        pipe.running(args.step, args.verbose_step, args.batch_size, args.learning_rate, args.noplot)
         pipe.save_weights(args.weights_name)

@@ -225,11 +225,11 @@ class Board(object):
 
     def _merge(self, v1, v2):
         '''
-        real board
+        board position
            a  b  c  d  e
         1| .  .  .  .  .
         2| .  x  x  x  .
-        3| .  x  .  .  .
+        3| . [x] .  .  .
         4| .  x  .  .  .
         5| .  .  .  .  .
 

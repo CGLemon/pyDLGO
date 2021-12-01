@@ -74,16 +74,19 @@ class GTP_ENGINE:
             self.board_history.pop()
             self.board = self.board_history[-1].copy()
 
-    # For GTP command "boardsize". Set variant board size.
+    # For GTP command "boardsize". Set a variant board size.
     def boardsize(self, bsize):
         self.board.reset(bsize, self.board.komi)
         self.board_history = [self.board.copy()]
 
-    # For GTP command "boardsize". Set variant komi.
+    # For GTP command "boardsize". Set a variant komi.
     def komi(self, k):
         self.board.komi = k
 
-    # For GTP command "time_settings". Set initial time settings.
+    # For GTP command "time_settings". Set initial time settings and restart it.
+    # 'main time' is basic thinking time.
+    # 'byo time' is byo yomi time.
+    # 'byo stones' is byo yomi stone.
     def time_settings(self, main_time, byo_time, byo_stones):
         if not main_time.isdigit() or \
                not byo_time.isdigit() or \
