@@ -15,7 +15,7 @@
 以下的 python 依賴庫是必須的（請注意本程式使用 python3）
 1. PyTorch (1.x 版本，如果要使用 GPU 請下載對應的 CUDA/cuDNN 版本)
 2. NumPy
-3. Matplotlib (僅訓練時需要)
+3. Matplotlib (僅訓練時需要，或是訓練時使用 --noplot 禁用此庫)
 
 以下程式需要 Java
 1. KGS GTP
@@ -37,7 +37,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | BLOCK_SIZE        | 殘差網路的 block 的數目，數目越大網路越大 |
 | FILTER_SIZE       | 卷積網路 filter 的數目，數目越大網路越大  |
 | BOARD_SIZE        | 棋盤大小，必須和棋譜的大小一致            |
-| USE_GPU           | 是否用使用 GPU 訓練。如果為 True ，會自動檢查是否有可用的 GPU ，如果沒有檢測到 GPU ，則會使用 CPU 訓練，如果為 False ，則強制使用 CPU 訓練。此參數建議使用 True |
+| USE_GPU           | 是否使用 GPU 訓練。如果為 True ，會自動檢查是否有可用的 GPU ，如果沒有檢測到 GPU ，則會使用 CPU 訓練，如果為 False ，則強制使用 CPU 訓練。此參數建議使用 True |
 
 
 #### 第三步、開始訓練
@@ -48,24 +48,17 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | :---------------:    | :---------------: | :---------------: |
 | -d, --dir            | string            | 要訓練的 SGF 檔案夾|
 | -s, --step           | integer           | 要訓練的步數，越多訓練時間越久 |
-| -b, --batch-size     | integer           | 訓練的 batch size，建議至少大於 128 |
+| -b, --batch-size     | integer           | 訓練的 batch size，建議至少大於 128 ，太低會無法訓練 |
 | -l, --learning-rate  | float             | 學習率大小 ，建議從 0.001 開始|
 | -w, --weights-name   | string            | 要輸出的網路權重名稱 |
 | --load-weights       | string            | 載入其它權重，可以從此權重繼續開始訓練 |
+| --noplot             | NA                | 訓練完後不要使用 Matplotlib 繪圖 |
 
 以下是訓練範例命令
 
     $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
 
-在一台有配備獨立顯示卡的電腦，大概數個小時內可以完成訓練，如果用 CPU 訓練大概需要幾天時間。當網路權重出現後，就完成第一步的訓練了，如果你覺得此時網路還沒有訓練完成，可以選擇載入網路再次訓練此權重
-
-    $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.001 --load-weights preweights --weights-name outweights
-    
-或是你覺得 loss 已經無法下降了，你可以調整學習率，再次訓練此權重
-
-    $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.0001 --load-weights preweights --weights-name outweights
-
-如果你好奇強度大概如何的話？使用附上的棋譜和預設的網路大小（2 blocks, 64 filters），其強度大概可以到棋協四、五段左右的強度，用上更大的網路（4 blocks, 128 filters），可以達到棋協六段的強度。
+在一台有配備獨立顯示卡的電腦，大概數個小時內可以完成訓練，如果用 CPU 訓練大概需要幾天時間，當網路權重出現後，就完成第一步的訓練了。如果你對當前的訓練結果不滿意，可到[這裏](docs/Trainig.md)查看一些訓練時的小技巧。
 
 ## 二、啟動引擎
 
