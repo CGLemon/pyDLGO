@@ -8,7 +8,7 @@
 
 ### MailBox
 
-我們知道如果程式中分支條件越多，性能就會越低，假設我要找棋盤上某一點四周的氣，那就必須用四個中分支條確保不會搜尋到到棋盤外，而且搜尋四周邊是使用次數非常多的功能，為了解決這個問題，我們要使用一個常用的資料結構，MailBox 。我假設有一個大小為五棋盤如下
+我們知道如果程式中分支條件越多，性能就會越低，假設我要找棋盤上某一點四周的氣，那就必須用四個中分支條確保不會搜尋到到棋盤外，而且搜尋四周邊是使用次數非常多的功能，為了解決這個問題，我們要使用一個棋盤遊戲中常用的資料結構，MailBox 。我假設有一個大小為五棋盤如下
 
        a b c d e
     1  . . . . .
@@ -36,9 +36,7 @@
                 type_count[type] += 1
 
 
-
-
-MailBox 的核心概念就是在棋盤外圍加一圈無效區域，這樣就不用判斷是否超出邊界
+MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 '-' 的位置），這樣就不用特別判斷是否超出邊界
 
         a b c d e
       - - - - - - -
@@ -63,11 +61,11 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域，這樣就不
             type_count[type] += 1
 
 
-在本程式的實做當中，如果是使用改進前版本的座標表示，則稱為 index ，一般用於輸出盤面資料給他人使用。如果是使用改進後版本的座標表示，則稱為 vertex，，一般用於內部棋盤搜尋。
+在本程式的實做當中，如果是使用改進前版本的座標表示法，則稱為 index ，一般用於輸出盤面資料給外部使用。如果是使用改進後版本的座標表示法，則稱為 vertex，，一般用於內部棋盤搜尋。
 
 ### 棋串（string）
 
-棋串可以看成是整個棋盤中的子圖（sub-graph）而且它是一個節點循環的圖，我們看看下列結構，board position 是當前盤面，可以看到有兩個黑棋棋串，vertex position 是當前 vertex 的座標數值（一維陣列），string identity 是棋串的 identity，這邊注意的是 identity 指到的位置是整個棋串的 root vertex 位置，像是 identity 為 16 的棋串，其 16 的 vertex 座標必在此棋串內，此位置也為此棋串的根節點，為甚麼要這樣做，稍後再來討論，最後 next position 指向下一個節點位置，而且它們是循環的，像是 identity 為 16 的棋串，他的 next position 串接起來為 (17->18->16) -> (17->18->16) -> ... 無限循環
+棋串可以看成是整個棋盤中的子圖（sub-graph），而且它是一個節點循環的圖，我們看看下列結構，board position 是當前盤面，可以看到有兩個黑棋棋串，vertex position 是當前 vertex 的座標數值（一維陣列），string identity 是棋串的 identity，這邊注意的是 identity 指到的位置是整個棋串的 root vertex 位置，像是 identity 為 16 的棋串，其 16 的 vertex 座標必在此棋串內，此位置也為此棋串的根節點，至於為甚麼要這樣做，稍後再來討論，最後 next position 指向下一個節點位置，而且它們是循環的，像是 identity 為 16 的棋串，他的 next position 串接起來為 (17->18->16) -> (17->18->16) -> ... 無限循環
 
     board position
        a b c d e
@@ -105,22 +103,24 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域，這樣就不
 假設今天我們要找一個棋串的氣，只要從一個節點開始走下去，依序計算直到走到原位置，虛擬碼如下
 
     conut_liberty(vertex):
-        liberty = 0
-        start_pos = identity[vertex] # get start vertex postion
+        start_pos = identity[vertex] # get the start vertex postion
 
         next_pos = start_pos
+        liberty_set = set()
         {
             for adjacent in next_pos
                 if board[adjacent] == EMPTY
-                    liberty += 1
+                    liberty_set.add(adjacent) # add the adjacent vertex to set
 
             next_pos = next[next_pos] # go to next vertex postion
         } while(next_pos != start_pos)
 
+        liberties = length(liberty_set)
+
 
 ### 儲存棋串（string）資訊
 
-剛剛講了 identity 指向棋串的 root vertex，這 root vertex 可以儲存棋串的狀態資訊，當需要用到這些資訊時，不必每次都重算，像是棋串棋子數目，或是棋串氣數等等。資料結構如下
+剛剛講了 identity 指向棋串的 root vertex，這 root vertex 可以儲存棋串的狀態資訊，當需要用到這些資訊時，不必每次都重算，像是棋串棋子數目，或是棋串氣數等等。本程式實做的資料結構如下
 
 
     string identity
@@ -140,13 +140,21 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域，這樣就不
     4| .  2  .  .  .
     5| .  .  .  .  .
 
+    string liberty set
+       a  b  c  d  e
+    1| .  .  .  .  .
+    2| .  A  .  .  .
+    3| .  .  .  .  .      # A = liberty set of string 16
+    4| .  B  .  .  .      # B = liberty set of string 30
+    5| .  .  .  .  .
+
 
 ### 合併棋串（string）
 
-兩個棋串合併時，只要簡單的交換雙方接觸點的 next position，並把 string identity 和 string stones 更新即可
+兩個棋串合併時，只要簡單的交換雙方接觸點的 next position，並把 string identity 、string stones 和 string liberty set 更新即可，如下所示。如果是多個棋串合併，只要簡單的把兩兩棋串一個個合併就好。
 
     board position
-    a  b  c  d  e
+       a  b  c  d  e
     1| .  .  .  .  .
     2| .  x  x  x  .
     3| . [x] .  .  .
@@ -177,6 +185,15 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域，這樣就不
     2| .  3  .  .  .          2| .  5  .  .  .
     3| .  .  .  .  .    >>    3| .  .  .  .  .
     4| .  2  .  .  .          4| .  .  .  .  .
+    5| .  .  .  .  .          5| .  .  .  .  .
+
+
+    string liberty set
+       a  b  c  d  e             a  b  c  d  e
+    1| .  .  .  .  .          1| .  .  .  .  .
+    2| .  A  .  .  .          2| .  C  .  .  .
+    3| .  .  .  .  .    >>    3| .  .  .  .  .    # set C = set A + set B
+    4| .  B  .  .  .          4| .  .  .  .  .
     5| .  .  .  .  .          5| .  .  .  .  .
 
 

@@ -175,7 +175,7 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 * 如果想利用 board.py 檔案重新製作其它圍棋軟體，可到[這裏](docs/dlgoAPI.md)查看。
 * 如果想知道 SGF 格式的訊息，和如何使用 sgf.py，可到[這裏](docs/SmartGameFormat.md)查看。
 * 如果想知道 GTP 有哪些實用的擴展指令，可到[這裏](docs/dlgoGTP.md)查看。
-* 如果想知道實做原理，可到[這裏](docs/Methods.md)查看。
+* 如果想知道實做原理與其演算法，可到[這裏](docs/Methods.md)查看。
 * dlgo 實做的規則是 [Tromp-Taylor](https://senseis.xmp.net/?TrompTaylorRules)（不同的是禁止自殺）。
 
 ## License
