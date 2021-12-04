@@ -74,8 +74,6 @@ class DataSet:
             self.buffer.extend(temp)
             if step % verbose_step == 0:
                 print("parsed {:.2f}% games".format(100 * step/total))
-            if step == 100:
-                break
         if total % verbose_step != 0:
             print("parsed {:.2f}% games".format(100 * step/total))
 
