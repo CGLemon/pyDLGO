@@ -2,8 +2,8 @@
 
 自從 AlphaGo 打敗世界冠軍後，電腦圍棋儼然變成深度學習的代名詞，讓不少同學對於電腦圍棋有不小的興趣，但實做一個完整的圍棋引擎並不是只有深度學習而已，還包含許許多多枯燥乏味且需花費大量時間的部份，這令多數同學望而卻步。dlgo 實做一個最低要求的圍棋引擎，它包含圍棋的基本演算法、GTP 界面和 SGF 格式解析器，讓同學可以先跳過這些部份，專注於深度學習，體驗電腦圍棋的魅力。最終目標是希望幫助同學製造屬於自己的圍棋引擎，並參加 TCGA 電腦對局競賽。
 
-#### (黑) GNU Go 3.8 vs (白) dlgo 0.1
-![vs_gnugo](https://github.com/CGLemon/pyDLGO/blob/master/img/b_gungo_vs_w_dlgo.gif)
+#### (黑) dlgo 0.1 vs (白) Leela-0.11 (黑中盤勝) 
+![vs_leela](https://github.com/CGLemon/pyDLGO/blob/master/img/dlgo_vs_leela.gif)
 
 ## 零、依賴與來源
 
@@ -58,7 +58,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
     $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
 
-在一台有配備獨立顯示卡的電腦，大概數個小時內可以完成訓練，如果用 CPU 訓練大概需要幾天時間，當網路權重出現後，就完成第一步的訓練了。如果你對當前的訓練結果不滿意，可到[這裏](docs/Trainig.md)查看一些訓練時的小技巧。
+在一台有配備獨立顯示卡的電腦，大概數個小時內可以完成訓練，如果使用 CPU 訓練大概需要幾天時間。當網路權重出現後，就完成第一步的訓練了。如果你對當前的訓練結果不滿意，可到[這裏](docs/Trainig.md)查看一些訓練時的小技巧。
 
 ## 二、啟動引擎
 
@@ -77,6 +77,23 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
     $ chmod 777 dlgo.py
     $ ./dlgo.py --weights weights-name --playouts 1600 -r 0.25
 
+啟動之後，可以試試輸入 GTP 指令 'showboard' ，看看是否有正常運作，順利的話可以看到以下輸出
+
+    showboard
+       A  B  C  D  E  F  G  H  J 
+     9 .  .  .  .  .  .  .  .  .  9
+     8 .  .  .  .  .  .  .  .  .  8
+     7 .  .  .  .  .  .  .  .  .  7
+     6 .  .  .  .  .  .  .  .  .  6
+     5 .  .  .  .  .  .  .  .  .  5
+     4 .  .  .  .  .  .  .  .  .  4
+     3 .  .  .  .  .  .  .  .  .  3
+     2 .  .  .  .  .  .  .  .  .  2
+     1 .  .  .  .  .  .  .  .  .  1
+       A  B  C  D  E  F  G  H  J 
+
+    = 
+    
 
 ### Windows
 
@@ -176,6 +193,7 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 board.py 和 sgf.py 依照原作者為 MIT License 條款，剩餘程式也皆為 MIT License 條款。
 
 ## TODO
+* 內建 GUI
 * 增加可改進的列表
 * 增加圍棋基本的演算法
 * 增加新版本 sabaki 的使用方法
