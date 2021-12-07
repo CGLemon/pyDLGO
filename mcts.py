@@ -160,7 +160,7 @@ class Search:
             # Search the next node.
             value = self._play_simulation(color, curr_board, next_node)
         else:
-            # This is the termainated node. Now to expand it. 
+            # This is the termainated node. Now try to expand it. 
             value = node.expand_children(curr_board, self.network)
 
         assert value is not None, ""

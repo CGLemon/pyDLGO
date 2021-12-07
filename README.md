@@ -195,7 +195,6 @@ board.py 和 sgf.py 依照原作者為 MIT License 條款，剩餘程式也皆�
 ## TODO
 * 內建 GUI
 * 增加可改進的列表
-* 增加圍棋基本的演算法
 * 增加新版本 sabaki 的使用方法
 * 增加 Tromp-Taylor 規則的解釋
 * 增加深度學習和蒙蒂卡羅在圍棋上的應用、原理

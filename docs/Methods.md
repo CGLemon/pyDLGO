@@ -2,7 +2,7 @@
 
 持續施工中...
 
-## 棋盤資料結構
+## 一、棋盤資料結構
 
 如果同學們以前有自己嘗試實做圍棋棋盤，可以發現圍棋棋盤和圖論有莫大的關係，首先棋盤大部份點和點之間都是等價的，二來棋盤是一個平面圖，這些圖論性質暗示者在棋盤上找特定元素可能會非常困難，像是找出棋盤上活棋棋串，有些甚至無法保證可以找出來，像是雙活。但慶幸的是，基本常用的資料結構是有定論的，接下來我們要討論如何快速計算棋盤上每一塊棋串的狀態
 
@@ -196,6 +196,116 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 '-
     4| .  B  .  .  .          4| .  .  .  .  .
     5| .  .  .  .  .          5| .  .  .  .  .
 
+
+### 偵測合法手
+
+依據不同的圍棋規則，合法手會有不同定義，為了方便討論問題，這裡本程式的實做給予合法手兩個基本條件
+
+1. 此手棋下下去後，最終結果不為零氣，簡單來講就是不能自殺
+2. 禁止同一盤棋出現相同盤面（super ko）
+
+先討論第一點不能自殺，避免自殺有三種方式
+
+1. 四周有至少一點為空
+2. 四周與自身相同的顏色的棋串，至少一塊棋不為一氣
+3. 四周與自身相異的顏色的棋串，至少一塊棋為一氣
+
+    is_suicide(vertex):
+        for adjacent in vertex
+            if board[adjacent] == EMPTY
+                return false
+
+            if board[adjacent] == MY_COLOR &&
+                   string_liberties[adjacent] > 1:
+                return false
+
+            if board[adjacent] == OPP_COLOR &&
+                   string_liberties[adjacent] == 1:
+                return false
+        return true
+
+以上其中一個條件滿足，則必不是自殺手。接著討論禁止相同盤面，由於偵測相同盤面會比較消耗計算力，而且相同盤面的情況其實相對罕見，一般我們會用偵測熱子來代替，如果出現吃掉熱子棋況，則為非法手。熱子的定義為
+
+1. 吃到一顆對方的棋子
+2. 下的棋子最終結果只有一氣
+2. 下的棋子最終結果只有一顆子
+
+    is_ko(vertex):
+        if captured_count == 1 &&
+               string_stones[vertex] == 1 &&
+               string_liberties[vertex] == 1
+            return true
+        return false
+
+此三項都滿足，則必為熱子。
+
+## 二、蒙地卡羅樹搜索（Monte Carlo Tree Search）
+
+### 簡介
+
+蒙地卡羅樹搜索是一種基於啟發式算法，最早由 Crazy Stone 的作者 Rémi Coulom 在 2006 年在他的論文 [<Efficient Selectivity and Backup Operators in Monte-Carlo Tree Search>](https://hal.inria.fr/inria-00116992/document) 中提出，他成功結合 [negamax](http://rportal.lib.ntnu.edu.tw/bitstream/20.500.12235/106643/4/n069347008204.pdf) 和合蒙地卡羅方法，此方法最大的突破點在於，不同以往的圍棋程式，它僅須少量的圍棋知識就可以實做。時至今日，蒙地卡羅樹搜索經歷多次的公式修正和加入更多的啟發式搜索，如傳統的 UCT（Upper Confidence bounds applied to Trees）和 RAVE，和本次程式實做的 [PUCT](https://www.chessprogramming.org/Christopher_D._Rosin#PUCT) （'Predictor' + UCT ）。
+
+### 基本方法
+
+<div align=center>
+<img src="https://github.com/CGLemon/pyDLGO/blob/master/img/mcts.png" align=center/>
+</div>
+
+傳統的 MCTS 的每輪迭代更新會經歷基本的四個步驟
+
+1. 選擇
+由根節點開始，根據一定的選擇算法，找到一個葉節點（終端節點），傳統的 MCTS 會使用 UCT 作為選擇的依序，它的公式如下
+
+![ucb](https://github.com/CGLemon/pyDLGO/blob/master/img/ucb.gif)
+
+其中 
+<img src="https://render.githubusercontent.com/render/math?math=\Large w_i"> 表示節點累積的分數（或勝利次數）
+<img src="https://render.githubusercontent.com/render/math?math=\Large n_i"> 表示節點訪問次數
+<img src="https://render.githubusercontent.com/render/math?math=\Large C"> 表示探勘的參數
+<img src="https://render.githubusercontent.com/render/math?math=\Large N"> 表示父節點的訪問次數
+
+2. 擴張
+將被選到的葉節點，生長新的子節點。新的子節點代表新的走步
+
+3. 模擬
+使用蒙地卡羅（Monte Carlo Method）方法，計算第一步驟中被選到的葉節點的分數（或勝率）
+
+4. 迭代
+延著被選擇的路徑，依序迭代路徑更新分數（或勝率），迭代的節點訪問次數加一
+
+如果有仔細看的話，會發現我對於四個步驟的描述和圖片稍有不一樣，但其實只是敘述方式不太一樣，計算結果會是一樣的。
+
+### PUCT 的改進
+
+<div align=center>
+<img src="https://github.com/CGLemon/pyDLGO/blob/master/img/alphago_zero_mcts.jpg" align=center/>
+</div>
+
+2017 年的 AlphaGo Zero 提出改進過的 MCTS 演算法，主要兩點不同，第一點是用 PUCT 取代 UCT 找尋節點，第二就是移除模擬的過程，所以只會重複三個步驟。
+
+1. 選擇
+由根節點開始，根據 PUCT 選擇算法，找到一個葉節點（終端節點，此節點尚無價值數值）
+
+![puct](https://github.com/CGLemon/pyDLGO/blob/master/img/puct.gif)
+
+其中 
+<img src="https://render.githubusercontent.com/render/math?math=\Large w_i"> 表示節點累積的價值數值（即累積的勝率）
+<img src="https://render.githubusercontent.com/render/math?math=\Large n_i"> 表示節點訪問次數
+<img src="https://render.githubusercontent.com/render/math?math=\Large C_{puct}"> 表示探勘的參數
+<img src="https://render.githubusercontent.com/render/math?math=\Large N"> 表示父節點的訪問次數
+<img src="https://render.githubusercontent.com/render/math?math=\Large P"> 表示節點的策略數值（即父節點走此節點的機率）
+
+2. 擴張
+將被選到的葉節點，生長新的子節點。新的子節點代表新的走步，並將神經網路策略數值加入新的子節點，價值數值加到第一步驟中被選到的葉節點上
+
+3. 迭代
+延著被選擇的路徑，依序迭代路徑更新價值數值（即勝率），迭代的節點訪問次數加一
+
+AlphaGo Zero 版本的 MCTS 相當簡解，而且去除了模擬步驟，可以說是和跟蒙地卡羅方法毫無關係，所以理論上，此演算法不包含隨機性，由於本程式也是實做此版本的 MCTS 演算法，所以本程式在同個盤面上給相同的計算量時，每次的計算結果都會一致。
+
+### 落子
+
+最後 n 輪的 MCTS 結束後，找根節點上訪問次數最多的子節點當做最佳手輸出。
 
 ## 影片
 
