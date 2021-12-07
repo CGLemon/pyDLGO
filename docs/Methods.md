@@ -210,19 +210,20 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 '-
 2. 四周與自身相同的顏色的棋串，至少一塊棋不為一氣
 3. 四周與自身相異的顏色的棋串，至少一塊棋為一氣
 
-    is_suicide(vertex):
-        for adjacent in vertex
-            if board[adjacent] == EMPTY
-                return false
-
-            if board[adjacent] == MY_COLOR &&
-                   string_liberties[adjacent] > 1:
-                return false
-
-            if board[adjacent] == OPP_COLOR &&
-                   string_liberties[adjacent] == 1:
-                return false
-        return true
+    
+       is_suicide(vertex):
+           for adjacent in vertex
+               if board[adjacent] == EMPTY
+                   return false
+       
+               if board[adjacent] == MY_COLOR &&
+                      string_liberties[adjacent] > 1:
+                   return false
+       
+               if board[adjacent] == OPP_COLOR &&
+                      string_liberties[adjacent] == 1:
+                   return false
+           return true
 
 以上其中一個條件滿足，則必不是自殺手。接著討論禁止相同盤面，由於偵測相同盤面會比較消耗計算力，而且相同盤面的情況其實相對罕見，一般我們會用偵測熱子來代替，如果出現吃掉熱子棋況，則為非法手。熱子的定義為
 
@@ -230,12 +231,12 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 '-
 2. 下的棋子最終結果只有一氣
 2. 下的棋子最終結果只有一顆子
 
-    is_ko(vertex):
-        if captured_count == 1 &&
-               string_stones[vertex] == 1 &&
-               string_liberties[vertex] == 1
-            return true
-        return false
+       is_ko(vertex):
+           if captured_count == 1 &&
+                  string_stones[vertex] == 1 &&
+                  string_liberties[vertex] == 1
+               return true
+           return false
 
 此三項都滿足，則必為熱子。
 
@@ -259,9 +260,13 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 '-
 ![ucb](https://github.com/CGLemon/pyDLGO/blob/master/img/ucb.gif)
 
 其中 
+
 <img src="https://render.githubusercontent.com/render/math?math=\Large w_i"> 表示節點累積的分數（或勝利次數）
+
 <img src="https://render.githubusercontent.com/render/math?math=\Large n_i"> 表示節點訪問次數
+
 <img src="https://render.githubusercontent.com/render/math?math=\Large C"> 表示探勘的參數
+
 <img src="https://render.githubusercontent.com/render/math?math=\Large N"> 表示父節點的訪問次數
 
 2. 擴張
@@ -289,10 +294,15 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 '-
 ![puct](https://github.com/CGLemon/pyDLGO/blob/master/img/puct.gif)
 
 其中 
+
 <img src="https://render.githubusercontent.com/render/math?math=\Large w_i"> 表示節點累積的價值數值（即累積的勝率）
+
 <img src="https://render.githubusercontent.com/render/math?math=\Large n_i"> 表示節點訪問次數
+
 <img src="https://render.githubusercontent.com/render/math?math=\Large C_{puct}"> 表示探勘的參數
+
 <img src="https://render.githubusercontent.com/render/math?math=\Large N"> 表示父節點的訪問次數
+
 <img src="https://render.githubusercontent.com/render/math?math=\Large P"> 表示節點的策略數值（即父節點走此節點的機率）
 
 2. 擴張
