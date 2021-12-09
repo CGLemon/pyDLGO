@@ -199,7 +199,7 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 '-
 
 ### 偵測合法手
 
-依據不同的圍棋規則，合法手會有不同定義，為了方便討論問題，這裡本程式的實做給予合法手兩個基本條件
+依據不同的圍棋規則，合法手會有不同定義，為了方便討論問題，這裡依據本程式的實做給予合法手兩個基本條件
 
 1. 此手棋下下去後，最終結果不為零氣，簡單來講就是不能自殺
 2. 禁止同一盤棋出現相同盤面（super ko）
@@ -225,7 +225,7 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 '-
                    return false
            return true
 
-以上其中一個條件滿足，則必不是自殺手。接著討論禁止相同盤面，由於偵測相同盤面會比較消耗計算力，而且相同盤面的情況其實相對罕見，一般我們會用偵測熱子來代替，如果出現吃掉熱子棋況，則為非法手。熱子的定義為
+以上其中一個條件滿足，則必不是自殺手。接著討論禁止相同盤面，由於偵測相同盤面會比較消耗計算力，而且相同盤面的情況其實相對罕見，一般我們以偵測熱子為主，如果出現吃掉熱子棋況，則為非法手。熱子的定義為
 
 1. 吃到一顆對方的棋子
 2. 下的棋子最終結果只有一氣
@@ -238,13 +238,25 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 '-
                return true
            return false
 
-此三項都滿足，則必為熱子。
+此三項都滿足，則必為熱子。如果必須偵測相同盤面，這個沒有特別的算法，只能實際將棋子擺到棋盤上後，再看是否當前盤面和歷史盤面有重複。
 
-## 二、蒙地卡羅樹搜索（Monte Carlo Tree Search）
+## 二、審局函數
 
-### 簡介
+最早期的圍棋程式是沒有審局函數的，這是由於圍棋局勢多變缺乏明顯特徵，致使製作審局函數一直以來都是一個大難題，但自從深度學習開始興起，審局函數的問題便迎刃而解。這裡主要是對審局函數的一些基本描述，並不會涉及大多深度學習的部份，有興趣者可自行上網查詢。
 
-蒙地卡羅樹搜索是一種基於啟發式算法，最早由 Crazy Stone 的作者 Rémi Coulom 在 2006 年在他的論文 [<Efficient Selectivity and Backup Operators in Monte-Carlo Tree Search>](https://hal.inria.fr/inria-00116992/document) 中提出，他成功結合 [negamax](http://rportal.lib.ntnu.edu.tw/bitstream/20.500.12235/106643/4/n069347008204.pdf) 和合蒙地卡羅方法，此方法最大的突破點在於，不同以往的圍棋程式，它僅須少量的圍棋知識就可以實做。時至今日，蒙地卡羅樹搜索經歷多次的公式修正和加入更多的啟發式搜索，如傳統的 UCT（Upper Confidence bounds applied to Trees）和 RAVE，和本次程式實做的 [PUCT](https://www.chessprogramming.org/Christopher_D._Rosin#PUCT) （'Predictor' + UCT ）。
+### 基本狀態
+
+假設今天有一個狀態 <img src="https://render.githubusercontent.com/render/math?math=\Large S"> （當前盤面），它擁有數個動作 <img src="https://render.githubusercontent.com/render/math?math=\Large A_i"> （合法手），執行動作者為代理人 <img src="https://render.githubusercontent.com/render/math?math=\Large Agent"> （程式本體），我們會希望從當前狀態會去兩類資訊，第一類是策略（policy）資訊，告訴代理人哪些動作值得被執行或是搜尋，第二類為價值（value）資訊，告訴代理人當前狀態的分數或是每個動作的分數。在 AlphaGo 的實做中，直接利用神經網路獲取合法手的機率分佈，和當前的盤面分數（勝率），如下所示
+
+![policy_value](https://github.com/CGLemon/pyDLGO/blob/master/img/policy_value.gif)
+
+### 訓練審局函數
+
+我們收集當前盤面、下一步棋和本局的勝負當作訓練的資料，而網路優化的目標為輸入當前盤面，輸出輸贏和下一手位置，假設資料在狀態 <img src="https://render.githubusercontent.com/render/math?math=\Large S"> ，下一手棋的位置在 25 且最終結果是自己勝利，則會希望網路輸出的結果為 25 有最高的機率且最終結果為數值 1。誤差函數方面，policy 採用 Cross-Entropy ，value 採用 MSE。 
+
+## 三、蒙地卡羅樹搜索（Monte Carlo Tree Search）
+
+蒙地卡羅樹搜索是一種啟發式算法，最早由 Crazy Stone 的作者 Rémi Coulom 在 2006 年在他的論文 [Efficient Selectivity and Backup Operators in Monte-Carlo Tree Search](https://hal.inria.fr/inria-00116992/document) 中提出，他成功結合 [negamax](http://rportal.lib.ntnu.edu.tw/bitstream/20.500.12235/106643/4/n069347008204.pdf) 和蒙地卡羅方法，此方法最大的突破點在於，不同以往的圍棋程式，它僅須少量的圍棋知識就可以實做。時至今日，蒙地卡羅樹搜索經歷多次的公式修正和加入更多的啟發式搜索，如傳統的 UCT（Upper Confidence bounds applied to Trees）和 RAVE，和本次程式實做的 [PUCT](https://www.chessprogramming.org/Christopher_D._Rosin#PUCT) （'Predictor' + UCT ）。
 
 ### 基本方法
 
@@ -311,7 +323,7 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 '-
 3. 迭代：
 延著被選擇的路徑，依序迭代路徑更新價值數值（即勝率），迭代的節點訪問次數加一
 
-AlphaGo Zero 版本的 MCTS 相當簡解，而且去除了模擬步驟，可以說是和跟蒙地卡羅方法毫無關係，所以理論上，此演算法不包含隨機性，由於本程式也是實做此版本的 MCTS 演算法，所以本程式在同個盤面上給相同的計算量時，每次的計算結果都會一致。
+AlphaGo Zero 版本的 MCTS 相當精簡，並且去除了模擬步驟，整體來講可以說是和跟蒙地卡羅方法毫無關係，因此理論上，此演算法不包含隨機性，由於本程式也是實做此版本的 MCTS 演算法，所以本程式在同個盤面上給相同的計算量時，每次的計算結果都會一致。
 
 ### 落子
 
