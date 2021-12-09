@@ -71,6 +71,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | -w, --weights  | string            | 要使用的網路權重名稱，如果沒給則使用 random 的權重|
 | -p, --playouts | integer           | MCTS 的 playouts，數目越多越強。預設值是 400 |
 | -r, --resign-threshold | float     | 投降的門檻，0.1 代表勝率低於 10% 就會投降。預設值是 0.1 |
+| -g, --gui      | NA                | 使用內建的圖形界面。|
 
 注意再啟動以前，必須確定你有權限打開 dlgo.py ，如果沒有，請先使用 chmod 指令更改權限，以下是啟動的範例
 
@@ -94,6 +95,9 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
     = 
     
+也可以選用內建的圖型圖形界面直接打開
+
+    $ ./dlgo.py --weights weights-name --playouts 1600 -r 0.25
 
 ### Windows
 

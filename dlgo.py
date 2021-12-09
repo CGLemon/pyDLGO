@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from gtp import GTP_LOOP
+from gui import GUI_LOOP
 import argparse
 
 if __name__ == "__main__":
@@ -15,6 +16,11 @@ if __name__ == "__main__":
                         help="Dump some search verbose", action="store_true")
     parser.add_argument("-k", "--kgs",
                         help="Dump some hit verbose on KGS.", action="store_true")
+    parser.add_argument("-g", "--gui",
+                        help="Open with GUI.", action="store_true")
 
     args = parser.parse_args()
-    loop = GTP_LOOP(args)
+    if args.gui:
+        loop = GUI_LOOP(args)
+    else:
+        loop = GTP_LOOP(args)
