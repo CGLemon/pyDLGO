@@ -5,7 +5,7 @@ from config import BOARD_SIZE, KOMI
 import time
 import argparse
 import tkinter as tk
-from threading import Thread, Lock
+from threading import Thread
 from tkinter import scrolledtext
 
 class GUI_LOOP(GTP_ENGINE):
@@ -34,13 +34,13 @@ class GUI_LOOP(GTP_ENGINE):
         self.canvas = tk.Canvas(self.window, bg='#CD853F', height=435, width=435)
         self.scroll_rext = scrolledtext.ScrolledText(self.window, width=38, height=24)
 
-        self.bt_black_start = tk.Button(self.window, text='黑棋', command=lambda :self.start_new_game(BLACK))
+        self.bt_black_start = tk.Button(self.window, text="執黑", command=lambda :self.start_new_game(BLACK))
         self.bt_black_start.place(x=480, y=10)
 
-        self.bt_white_start = tk.Button(self.window, text='白棋', command=lambda :self.start_new_game(WHITE))
+        self.bt_white_start = tk.Button(self.window, text="執白", command=lambda :self.start_new_game(WHITE))
         self.bt_white_start.place(x=540, y=10)
 
-        self.bt_pass_start = tk.Button(self.window, text='PASS', command=lambda :self.acquire_move(PASS))
+        self.bt_pass_start = tk.Button(self.window, text="虛手", command=lambda :self.acquire_move(PASS))
         self.bt_pass_start.place(x=480, y=50)
 
         self.draw_canvas((30, 30))
@@ -222,20 +222,3 @@ class GUI_LOOP(GTP_ENGINE):
 
     def acquire_move(self, vtx):
         self.acquire_vtx = vtx
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--playouts", metavar="<integer>",
-                        help="The number of playouts", type=int, default=400)
-    parser.add_argument("-w", "--weights", metavar="<string>",
-                        help="The weights file name", type=str)
-    parser.add_argument("-r", "--resign-threshold", metavar="<float>",
-                        help="Resign when winrate is less than x.", type=float, default=0.1)
-    parser.add_argument("-v", "--verbose",
-                        help="Dump some search verbose", action="store_true")
-    parser.add_argument("-k", "--kgs",
-                        help="Dump some hit verbose on KGS.", action="store_true")
-
-    args = parser.parse_args()
-    loop = GUI_LOOP(args)

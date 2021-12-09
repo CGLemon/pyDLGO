@@ -97,7 +97,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
     
 也可以選用內建的圖型圖形界面直接打開
 
-    $ ./dlgo.py --weights weights-name --playouts 1600 -r 0.25
+    $ ./dlgo.py --weights weights-name --gui
 
 ### Windows
 
@@ -197,7 +197,8 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 board.py 和 sgf.py 依照原作者為 MIT License 條款，剩餘程式也皆為 MIT License 條款。
 
 ## TODO
-* 內建 GUI
+* 重新排版
+* 修復 GUI 的 bug
 * 增加可改進的列表
 * 增加新版本 sabaki 的使用方法
 * 增加 Tromp-Taylor 規則的解釋
