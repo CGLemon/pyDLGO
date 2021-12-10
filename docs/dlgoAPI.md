@@ -2,7 +2,7 @@
 
 ## board.py 的可用 API
 
-注意，此檔案依賴於 config.py 和 numpy
+注意，此檔案依賴於 config.py 和 NumPy
 
 #### Functions
    * `void Board.__init__(size: int, komi: float)`

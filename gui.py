@@ -26,19 +26,15 @@ class GUI_LOOP(GTP_ENGINE):
         self.init_layerout()
         self.window.mainloop()
 
-    def __del__(self):
-        self.running = False
-
-
     def init_layerout(self):
         self.canvas = tk.Canvas(self.window, bg='#CD853F', height=435, width=435)
         self.scroll_rext = scrolledtext.ScrolledText(self.window, width=38, height=24)
 
-        self.bt_black_start = tk.Button(self.window, text="執黑", command=lambda :self.start_new_game(BLACK))
+        self.bt_black_start = tk.Button(self.window, text="執黑開始", command=lambda :self.start_new_game(BLACK))
         self.bt_black_start.place(x=480, y=10)
 
-        self.bt_white_start = tk.Button(self.window, text="執白", command=lambda :self.start_new_game(WHITE))
-        self.bt_white_start.place(x=540, y=10)
+        self.bt_white_start = tk.Button(self.window, text="執白開始", command=lambda :self.start_new_game(WHITE))
+        self.bt_white_start.place(x=580, y=10)
 
         self.bt_pass_start = tk.Button(self.window, text="虛手", command=lambda :self.acquire_move(PASS))
         self.bt_pass_start.place(x=480, y=50)
@@ -122,13 +118,9 @@ class GUI_LOOP(GTP_ENGINE):
         return r, c
 
     def start_new_game(self, color):
-        self.running = True
         if self.game_thread != None:
-            self.running = False
             self.game_thread = None
 
-
-        self.running = True
         self.turns = ["compute", "compute"]
         self.turns[color] = "player"
 
@@ -142,7 +134,7 @@ class GUI_LOOP(GTP_ENGINE):
         resignd = None
         self.flag_player_click = False
 
-        while self.running:
+        while True:
             time.sleep(0.1)
 
             to_move = self.board.to_move

@@ -79,8 +79,8 @@ dlgo 僅支援少量的 GTP 指令，主要是為了滿足 TCGA 比賽的基本�
    * `list_commands`
       * 顯示所有此程式支援的 GTP 指令。
 
-   * `play [black|white] <vertex: string, eg. 'a1', 'a2', 'pass', 'resign'>`
-      * 走一手棋到盤面上，必須是合法手。
+   * `play [black|white] <vertex: string>`
+      * 走一手棋到盤面上，必須是合法手。參數中的 vertex 為 [GTP vertex](https://www.lysator.liu.se/~gunnar/gtp/gtp2-spec-draft2/gtp2-spec.html#SECTION00042000000000000000) ，例如 'a1'、'a2'、'e5' 等座標位置或是 pass 代表虛手，resign 代表投降。
 
    * `genmove [black|white]`
       * 讓引擎思考並產生下一手棋到盤面上。
