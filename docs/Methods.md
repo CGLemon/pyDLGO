@@ -256,7 +256,11 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 '-
 
 蒙地卡羅樹搜索是一種啟發式算法，最早由 Crazy Stone 的作者 Rémi Coulom 在 2006 年在他的論文 [Efficient Selectivity and Backup Operators in Monte-Carlo Tree Search](https://hal.inria.fr/inria-00116992/document) 中提出，他成功結合 [negamax](http://rportal.lib.ntnu.edu.tw/bitstream/20.500.12235/106643/4/n069347008204.pdf) 和蒙地卡羅方法，此方法最大的突破點在於，不同以往的圍棋程式，它僅須少量的圍棋知識就可以實做。時至今日，蒙地卡羅樹搜索經歷多次的公式修正和加入更多的啟發式搜索，如傳統的 UCT（Upper Confidence bounds applied to Trees）和 RAVE，和本次程式實做的 [PUCT](https://www.chessprogramming.org/Christopher_D._Rosin#PUCT) （'Predictor' + UCT ）。
 
-### 基本方法
+### 蒙地卡羅方法（Monte Carlo Method）
+
+蒙地卡羅方法的核心慨念非常簡單，要知道某件事情發生的機率，我們只要模擬數次就可以得到近似發生的機率，但為何需要如此費力且不完全準確的方法呢？我以擲筊為例，大家應該都對筊杯不陌生，當生活遇到瓶頸時，或多或少都會有人擲筊請示神明，但不知道是否有人想過，擲出聖杯的機率到底是多少，依照古典算法，假設擲出正反兩面的機率是二分之一，那麼聖杯的機率是二分之一（笑杯也加入計算），但很顯然的，由於筊杯兩面不是對稱的，所以機率絕對不是二分之一。在一般情況下，擲出聖杯的機率是沒有辦法僅依靠計算得出的，此時蒙地卡羅方法就展現他的威力的，我只需要重複投擲一萬次，再計算共幾次聖杯即可。同樣的在圍棋上，由於圍棋的複雜性，早期圍棋是很難得出較為準確的勝率，但通過蒙地卡羅方法，讓同一個盤隨機模擬數次，即可算出一個相對來說較為可靠的勝率。
+
+### 基本的 UCT
 
 <div align=center>
 <img src="https://github.com/CGLemon/pyDLGO/blob/master/img/mcts.png" align=center/>

@@ -46,4 +46,3 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 * 增加可改進的實做列表
 * 增加新版本 sabaki 的使用方法
 * 增加 Tromp-Taylor 規則的解釋
-* 增加深度學習和蒙蒂卡羅在圍棋上的應用、原理

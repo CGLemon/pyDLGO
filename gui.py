@@ -17,10 +17,10 @@ class GUI_LOOP(GTP_ENGINE):
         self.window.title('Deep Learning Go')
         self.window.geometry('810x500')
 
-        self.rect = None
         self.oval_buffer = [None] * self.board.num_intersections
         self.text_buffer = [None] * self.board.num_intersections
         self.game_thread = None
+        self.suspend = False
         self.acquire_vtx = None
 
         self.init_layerout()
@@ -78,13 +78,14 @@ class GUI_LOOP(GTP_ENGINE):
         self.scroll_rext.delete(1.0, tk.END)
         self.draw_canvas((30, 30))
         self.canvas.bind("<Button-1>", self.scan_move)
+        self.rect = None
 
     def draw_stone(self, player, rc_pos, Index, RADIUS=15):
         r, c = rc_pos
         x, y = self.convert_rc_to_xy(rc_pos)
-        colorText  = 'black' if player == 1 else 'white'
-        colorPiece = 'white' if player == 1 else 'black'
-        self.oval_buffer[self.board.get_index(r,c)] = self.canvas.create_oval(x-RADIUS, y-RADIUS, x + RADIUS, y+RADIUS, fill=colorPiece, outline=colorPiece)
+        color_stone = "black" if player == BLACK else "white"
+        color_index = "white" if player == BLACK else "black"
+        self.oval_buffer[self.board.get_index(r,c)] = self.canvas.create_oval(x-RADIUS, y-RADIUS, x + RADIUS, y+RADIUS, fill=color_stone, outline=color_stone)
 
         if self.rect == None:
             OFFSET = 20
@@ -98,7 +99,7 @@ class GUI_LOOP(GTP_ENGINE):
             self.canvas.move(self.rect, dx, dy)
             self.rect_xy_pos = (new_x, new_y)
 
-        self.text_buffer[self.board.get_index(r,c)] = self.canvas.create_text(x,y, text=str(Index), fill=colorText,)
+        self.text_buffer[self.board.get_index(r,c)] = self.canvas.create_text(x,y, text=str(Index), fill=color_index,)
         self.canvas.update()
 
     def convert_rc_to_xy(self, rc_pos):
@@ -118,24 +119,28 @@ class GUI_LOOP(GTP_ENGINE):
         return r, c
 
     def start_new_game(self, color):
-        if self.game_thread != None:
-            self.game_thread = None
-
+        self.suspend = True
         self.turns = ["compute", "compute"]
         self.turns[color] = "player"
+        self.reset_canvas()
+        self.game_over = False
 
-        self.game_thread = Thread(target=self.process_game,)
-        self.game_thread.setDaemon(True) 
-        self.game_thread.start()
+        if self.game_thread == None:
+            self.game_thread = Thread(target=self.process_game,)
+            self.game_thread.setDaemon(True) 
+            self.game_thread.start()
+        self.suspend = False
+
 
     def process_game(self):
-        self.reset_canvas()
-
         resignd = None
         self.flag_player_click = False
 
         while True:
             time.sleep(0.1)
+
+            if self.suspend or self.game_over:
+                continue
 
             to_move = self.board.to_move
             move_num = self.board.move_num
@@ -152,6 +157,7 @@ class GUI_LOOP(GTP_ENGINE):
                     x = self.board.get_x(vtx)
                     y = self.board.get_y(vtx)
                 self.update_canvas(vtx, (x,y), to_move,  move_num+1)
+                self.acquire_vtx = None
             else:
                 if self.acquire_vtx != None:
                     if self.acquire_vtx == PASS:
@@ -170,7 +176,7 @@ class GUI_LOOP(GTP_ENGINE):
                     self.draw_scroll_text("黑棋投降")
                 else:
                     self.draw_scroll_text("白棋投降")
-                break
+                self.game_over = True
             elif self.board.num_passes >= 2:
                 score = self.board.final_score()
                 if abs(score) <= 0.01:
@@ -179,7 +185,7 @@ class GUI_LOOP(GTP_ENGINE):
                     self.draw_scroll_text("黑勝{}目".format(score))
                 elif score < 0:
                     self.draw_scroll_text("白勝{}目".format(-score))
-                break
+                self.game_over = True
 
     def update_canvas(self, vtx, rc_pos, to_move, move_num):
         r, c = rc_pos
