@@ -25,6 +25,14 @@ class Node:
         return 1 - v;
 
     def expand_children(self, board: Board, network: Network):
+        if board.last_move == PASS:
+            score = board.final_score()
+            if (board.to_move == BLACK and score > 0) or \
+                    (board.to_move == WHITE and score < 0):
+                # Play pass move if we win the game.
+                self.children[PASS] = Node(1.0)
+                return 1;
+
         # Compute the Net results.
         policy, value = network.get_outputs(board.get_features())
 
@@ -79,9 +87,21 @@ class Node:
         self.values += v
         self.visits += 1
 
-    def get_best_move(self, resign_threshold):
-        # Get best move by number of node visits.
+    def get_best_prob_move(self):
+        gather_list = []
+        for vtx, child in self.children.items():
+            gather_list.append((child.policy, vtx))
+        return max(gather_list)[1]
 
+    def get_best_move(self, resign_threshold):
+        # Return best probability move if there are no playouts.
+        if self.visits == 1:
+            if self.values < resign_threshold:
+                return 0;
+            else:
+                return self.get_best_prob_move()
+
+        # Get best move by number of node visits.
         gather_list = []
         for vtx, child in self.children.items():
             gather_list.append((child.visits, vtx))
@@ -89,18 +109,18 @@ class Node:
         vtx = max(gather_list)[1]
         child = self.children[vtx]
 
-        # Do resin move if we think we have already lost.
+        # Play resin move if we think we have already lost.
         if self.inverse(child.values / child.visits) < resign_threshold:
             return RESIGN
+
         return vtx
 
     def to_string(self, board: Board):
         # Collect some node information in order to debug.
 
         out = str()
-        out += "Root -> W: {:.2f}%, P: {:.2f}%, V: {}\n".format(
-                    self.values/self.visits,
-                    self.policy,
+        out += "Root -> W: {:5.2f}%, V: {}\n".format(
+                    100.0 * self.values/self.visits,
                     self.visits)
 
         gather_list = []
@@ -108,13 +128,13 @@ class Node:
             gather_list.append((child.visits, vtx))
         gather_list.sort(reverse=True)
 
-        for _, vtx in  gather_list:
+        for _, vtx in gather_list:
             child = self.children[vtx]
             if child.visits is not 0:
-                out += "  {:4} -> W: {:.2f}%, P: {:.2f}%, V: {}\n".format(
+                out += "  {:4} -> W: {:5.2f}%, P: {:5.2f}%, V: {}\n".format(
                            board.vertex_to_text(vtx),
-                           self.inverse(child.values/child.visits),
-                           child.policy,
+                           100.0 * self.inverse(child.values/child.visits),
+                           100.0 * child.policy,
                            child.visits)
         return out
 
