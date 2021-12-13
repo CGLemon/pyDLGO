@@ -17,7 +17,7 @@
     $ python3 dlgo.py --weights nn_2x64.pt --gui
 
 ## 文件目錄
-1. [完整的操作方法和使用教學](https://github.com/CGLemon/pyDLGO/blob/master/docs/Tutorial.md)
+1. [完整的操作教學和 TCGA 比賽](https://github.com/CGLemon/pyDLGO/blob/master/docs/Tutorial.md)
 2. [演算法實做和原理（持續施工中）](https://github.com/CGLemon/pyDLGO/blob/master/docs/Methods.md)
 3. [GTP 界面原理](https://github.com/CGLemon/pyDLGO/blob/master/docs/dlgoGTP.md)
 4. [SGF 格式說明](https://github.com/CGLemon/pyDLGO/blob/master/docs/SmartGameFormat.md)

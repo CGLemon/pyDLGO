@@ -244,13 +244,55 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 '-
 
 ### 基本狀態
 
-假設今天有一個狀態 <img src="https://render.githubusercontent.com/render/math?math=\Large S"> （當前盤面），它擁有數個動作 <img src="https://render.githubusercontent.com/render/math?math=\Large A_i"> （合法手），執行動作者為代理人 <img src="https://render.githubusercontent.com/render/math?math=\Large Agent"> （程式本體），我們會希望從當前狀態會去兩類資訊，第一類是策略（policy）資訊，告訴代理人哪些動作值得被執行或是搜尋，第二類為價值（value）資訊，告訴代理人當前狀態的分數或是每個動作的分數。在 AlphaGo 的實做中，直接利用神經網路獲取合法手的機率分佈，和當前的盤面分數（勝率），如下所示
+假設今天有一個狀態 <img src="https://render.githubusercontent.com/render/math?math=\Large S"> （當前盤面），它擁有數個動作 <img src="https://render.githubusercontent.com/render/math?math=\Large A_i"> （合法手），執行動作者為代理人 <img src="https://render.githubusercontent.com/render/math?math=\Large Agent"> （程式本體），我們會希望從當前狀態得到兩類資訊，第一類是策略（policy）資訊，告訴代理人哪些動作值得被執行或是搜尋，在 AlphaGo 的實做中，此為合法手的機率分佈，第二類為價值（value）資訊，告訴代理人當前狀態的分數或是每個動作的分數在 AlphaGo 的實做中，此為當前盤面的分數（也能視為勝率），如下所示
 
 ![policy_value](https://github.com/CGLemon/pyDLGO/blob/master/img/policy_value.gif)
 
 ### 訓練審局函數
 
-我們收集當前盤面、下一步棋和本局的勝負當作訓練的資料，而網路優化的目標為輸入當前盤面，輸出輸贏和下一手位置，假設資料在狀態 <img src="https://render.githubusercontent.com/render/math?math=\Large S"> ，下一手棋的位置在 25 且最終結果是自己勝利，則會希望網路輸出的結果為 25 有最高的機率且最終結果為數值 1。誤差函數方面，policy 採用 Cross-Entropy ，value 採用 MSE。 
+我們收集當前狀態、下一步棋和本局的勝負當作訓練的資料，收集的結果為下
+
+| 當前狀態       | 落子座標           | 勝負結果          |
+| :------------: | :---------------: | :---------------: |
+| S1（換黑棋落子）| 'e5'              | 黑棋獲勝          |
+| S2（換白棋落子）| 'd3'              | 黑棋獲勝          |
+| S3（換黑棋落子）| 'e5'              | 白棋獲勝          |
+| S4（換白棋落子）| 'd3'              | 白棋獲勝          |
+
+
+接下來將資料轉換成網路看得懂的資料，在本實做中，當前狀態過去的八手棋（每手棋包含黑白兩個 planes）和當前盤面做編碼（兩個 planes），編碼成 18 個 planes（可到 board.py 裡的 get_features() 查看如何實做），落子座標轉成一維陣列，勝負結果如果是當前玩家獲勝則是 1，如果落敗則為 -1。轉換的結果如下
+
+| 當前狀態       | 落子座標           | 勝負結果          |
+| :------------: | :---------------: | :---------------: |
+| Inputs 1       | 40                | 1                 |
+| Inputs 2       | 21                | -1                |
+| Inputs 3       | 40                | -1                |
+| Inputs 4       | 21                | 1                 |
+
+網路希望的優化結果為下
+
+![loss](https://github.com/CGLemon/pyDLGO/blob/master/img/loss.gif)
+
+其中 
+
+<img src="https://render.githubusercontent.com/render/math?math=\Large R_t"> 為資料的勝負結果
+
+<img src="https://render.githubusercontent.com/render/math?math=\Large R_o"> 為網路數出的 value
+
+<img src="https://render.githubusercontent.com/render/math?math=\Large P_t"> 為資料的落子座標陣列
+
+<img src="https://render.githubusercontent.com/render/math?math=\Large P_o"> 為網路數出的 policy
+
+<img src="https://render.githubusercontent.com/render/math?math=\Large WeightDecay"> 為對網路參數的懲罰項
+
+當然這不是唯一的資料編碼方式，像是 ELF Open Go 的勝負結果只看黑棋的一方，像是下方
+
+| 當前狀態       | 落子座標           | 勝負結果          |
+| :------------: | :---------------: | :---------------: |
+| Inputs 1       | 40                | 1                 |
+| Inputs 2       | 21                | 1                 |
+| Inputs 3       | 40                | -1                |
+| Inputs 4       | 21                | -1                |
 
 ## 三、蒙地卡羅樹搜索（Monte Carlo Tree Search）
 
