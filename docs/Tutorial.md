@@ -12,7 +12,7 @@
 1. PyTorch（1.x 版本，如果要使用 GPU 請下載對應的 CUDA/cuDNN 版本）
 2. NumPy
 3. Tkinter（僅使用內建的圖形界面需要，默認是不需要的）
-3. Matplotlib（僅訓練時需要，或是訓練時使用 --noplot 禁用此庫）
+3. Matplotlib（僅訓練時需要）
 
 以下程式需要 Java
 1. KGS GTP
