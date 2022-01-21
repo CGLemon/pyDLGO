@@ -7,8 +7,8 @@ WHITE = 1
 EMPTY = 2
 INVLD = 3
 
-NUM_VERTICES = (BOARD_SIZE+2) ** 2
-NUM_INTESECTIONS = BOARD_SIZE ** 2
+NUM_VERTICES = (BOARD_SIZE+2) ** 2 # max vertex number
+NUM_INTESECTIONS = BOARD_SIZE ** 2 # max intersections number
 
 PASS = -1  # pass
 RESIGN = -2 # resign
@@ -46,7 +46,7 @@ class StoneLiberty(object):
             self.lib_cnt -= 1
 
     def merge(self, other):
-        # Merge itself with aother stone.
+        # Merge itself with another stone.
         self.libs |= other.libs
         self.lib_cnt = len(self.libs)
         if self.lib_cnt == 1:
@@ -102,10 +102,10 @@ class Board(object):
         self.diag4 = [1 + ebsize, ebsize - 1, -ebsize - 1, 1 - ebsize]
 
         for vtx in range(self.num_vertices):
-            self.state[vtx] = INVLD  # set invalid
+            self.state[vtx] = INVLD  # set invalid for out border
 
         for idx in range(self.num_intersections):
-            self.state[self.index_to_vertex(idx)] = EMPTY  # set empty
+            self.state[self.index_to_vertex(idx)] = EMPTY  # set empty for intersetions
 
         '''
         self.id, self,next, self.stones are basic data struct for strings. By
@@ -338,14 +338,14 @@ class Board(object):
                 atr_cnt[self.to_move] < stone_cnt[self.to_move]) # That means we have enough liberty to live.
 
     def play(self, v):
-        # play the move and update board data if the move is legal.
+        # Play the move and update board data if the move is legal.
 
         if not self.legal(v):
             return False
         else:
             if v == PASS:
                 # We should be stop it if the number of passes is bigger than 2.
-                # Be sure the to check the number of passes before playing it.
+                # Be sure to check the number of passes before playing it.
                 self.num_passes += 1
                 self.ko = NULL_VERTEX
             else:
@@ -359,7 +359,6 @@ class Board(object):
                     # by opponent's stones.
                     self.ko = self.sl[id].v_atr
                 self.num_passes = 0
-
 
         self.last_move = v
         self.to_move = int(self.to_move == 0) # switch side
@@ -384,7 +383,7 @@ class Board(object):
                 buf[v] = True
                 queue.append(v)
 
-        # Now start the BFS algorithm to get reachable point.
+        # Now start the BFS algorithm to search all reachable positions.
         while len(queue) != 0:
             v = queue.pop()
             for d in self.dir4:
@@ -396,7 +395,7 @@ class Board(object):
         return reachable
 
     def final_score(self):
-        # Compute the final score by Tromp-Taylor rule.
+        # Scored the board area with Tromp-Taylor rule.
         return self._compute_reach_color(BLACK) - self._compute_reach_color(WHITE) - self.komi
 
     def get_x(self, v):
@@ -437,16 +436,16 @@ class Board(object):
         return "".join([chr(x + ord('A') + offset), str(y+1)])
 
     def get_features(self):
-        # 1~ 16, odd planes:  My side to move current and past boards stones
+        # 1~ 16, odd planes : My side to move current and past boards stones
         # 1~ 16, even planes: Other side to move current and past boards stones
-        # 17 plane:           Set one if the side to move is black.
-        # 18 plane:           Set one if the side to move is white.  
+        # 17 plane          : Set one if the side to move is black.
+        # 18 plane          : Set one if the side to move is white.  
         my_color = self.to_move
         opp_color = (self.to_move + 1) % 2
-        past = min(PAST_MOVES, len(self.history))
+        past_moves = min(PAST_MOVES, len(self.history))
         
         features = np.zeros((INPUT_CHANNELS, self.num_intersections), dtype=np.int8)
-        for p in range(past):
+        for p in range(past_moves):
             # Fill past board positions features.
             h = self.history[len(self.history) - p - 1]
             for v in range(self.num_vertices):

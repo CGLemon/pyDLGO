@@ -61,8 +61,9 @@ class DataSet:
         self.buffer = []
         self._load_data(dir_name)
 
-    # Collect training data from sgf dirctor.
     def _load_data(self, dir_name):
+        # Collect training data from sgf dirctory.
+
         sgf_games = sgf.parse_from_dir(dir_name)
         total = len(sgf_games)
         step = 0
@@ -77,8 +78,9 @@ class DataSet:
         if total % verbose_step != 0:
             print("parsed {:.2f}% games".format(100 * step/total))
 
-    # Collect training data from one sgf game.
     def _process_one_game(self, game):
+        # Collect training data from one sgf game.
+
         temp = []
         winner = None
         board = Board(BOARD_SIZE)
@@ -114,6 +116,8 @@ class DataSet:
         return temp
 
     def _do_text_move(self, board, color, move):
+        # Play next move and return the policy data.
+
         board.to_move = color
         policy = None
         vtx = None
@@ -128,7 +132,9 @@ class DataSet:
         board.play(vtx)
         return policy
 
-    def get_batch(self, batch_size):
+    def get_batches(self, batch_size):
+        # Get the trainig batches from data pool.
+
         s = random.sample(self.buffer, k=batch_size)
         inputs_batch = []
         policy_batch = []
@@ -166,7 +172,7 @@ class TrainingPipe:
 
         for step in range(max_step):
             # First, get the batch data.
-            inputs, target_p, target_v = self.data_set.get_batch(batch_size)
+            inputs, target_p, target_v = self.data_set.get_batches(batch_size)
 
             # Second, Move the data to GPU memory if we use it.
             if self.network.use_gpu:
@@ -262,12 +268,17 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--step", metavar="<integer>",
                         help="The training step", type=int)
     parser.add_argument("-v", "--verbose-step", metavar="<integer>",
-                        help="Dump verbose in every X steps." , type=int, default=1000)
-    parser.add_argument("-b", "--batch-size", metavar="<integer>", type=int)
-    parser.add_argument("-l", "--learning-rate", metavar="<float>", type=float)
-    parser.add_argument("-w", "--weights-name", metavar="<string>", type=str)
-    parser.add_argument("--load-weights", metavar="<string>", type=str)
-    parser.add_argument("--noplot", action="store_true", default=False)
+                        help="Dump verbose on every X steps.", type=int, default=1000)
+    parser.add_argument("-b", "--batch-size", metavar="<integer>",
+                        help="The batch size number.", type=int)
+    parser.add_argument("-l", "--learning-rate", metavar="<float>",
+                        help="The learning rate.", type=float)
+    parser.add_argument("-w", "--weights-name", metavar="<string>",
+                        help="The output weights name.", type=str)
+    parser.add_argument("--load-weights", metavar="<string>",
+                        help="The inputs weights name.", type=str)
+    parser.add_argument("--noplot", action="store_true",
+                        help="Disable plotting.", default=False)
 
     args = parser.parse_args()
     if valid_args(args):

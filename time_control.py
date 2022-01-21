@@ -45,18 +45,18 @@ class TimeControl:
         self.clock_time = time.time()
 
     def took_time(self, color):
-        remaing_took_time = time.time() - self.clock_time
+        remaining_took_time = time.time() - self.clock_time
         if not self.in_byo[color]:
-            if self.maintime_left[color] > remaing_took_time:
-                self.maintime_left[color] -= remaing_took_time
-                remaing_took_time = -1
+            if self.maintime_left[color] > remaining_took_time:
+                self.maintime_left[color] -= remaining_took_time
+                remaining_took_time = -1
             else:
-                remaing_took_time -= self.maintime_left[color]
+                remaining_took_time -= self.maintime_left[color]
                 self.maintime_left[color] = 0
                 self.in_byo[color] = True
 
-        if self.in_byo[color] and remaing_took_time > 0:
-            self.byotime_left[color] -= remaing_took_time
+        if self.in_byo[color] and remaining_took_time > 0:
+            self.byotime_left[color] -= remaining_took_time
             self.stones_left[color] -= 1
             if self.stones_left[color] == 0:
                 self.stones_left[color] = self.byo_stones

@@ -12,11 +12,11 @@ if __name__ == "__main__":
                         help="The weights file name", type=str)
     parser.add_argument("-r", "--resign-threshold", metavar="<float>",
                         help="Resign when winrate is less than x.", type=float, default=0.1)
-    parser.add_argument("-v", "--verbose",
+    parser.add_argument("-v", "--verbose", default=False,
                         help="Dump some search verbose", action="store_true")
-    parser.add_argument("-k", "--kgs",
-                        help="Dump some hit verbose on KGS.", action="store_true")
-    parser.add_argument("-g", "--gui",
+    parser.add_argument("-k", "--kgs", default=False,
+                        help="Dump some hint verbose on KGS.", action="store_true")
+    parser.add_argument("-g", "--gui", default=False,
                         help="Open with GUI.", action="store_true")
 
     args = parser.parse_args()

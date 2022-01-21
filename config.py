@@ -1,12 +1,12 @@
-BOARD_SIZE = 9 # The default board size. We can reset the value later.
+BOARD_SIZE = 9 # The default and max board size. We can reset the value later.
 
 KOMI = 7 # The default komi. We can reset the value later.
 
-USE_GPU = True # The network use the gpu or do not.
+USE_GPU = True # Set true if we want to use GPU.
 
-INPUT_CHANNELS = 18 # The network input layers.
+INPUT_CHANNELS = 18 #  Number of the network input layers.
 
-PAST_MOVES = 8 # Number of past move encode to the planes.
+PAST_MOVES = 8 # Number of past move encoding to the planes.
 
 BLOCK_SIZE = 2 # The network residual block size.
 
