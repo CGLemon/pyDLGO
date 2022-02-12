@@ -6,7 +6,7 @@
 1. sgf.py 修改自 [jtauber/sgf](https://github.com/jtauber/sgf)
 2. board.py 修改自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
 3. sgf.zip 來源自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
-4. gui.py 修改自 [ymgaq/AlphaGo-Zero-Gobang](https://github.com/YoujiaZhang/AlphaGo-Zero-Gobang)
+4. gui.py 修改自 [YoujiaZhang/AlphaGo-Zero-Gobang](https://github.com/YoujiaZhang/AlphaGo-Zero-Gobang)
 
 以下的 python 依賴庫需要安裝（請注意本程式使用 python3）
 1. PyTorch（1.x 版本，如果要使用 GPU 請下載對應的 CUDA/cuDNN 版本）

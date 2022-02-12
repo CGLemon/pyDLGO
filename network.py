@@ -126,6 +126,8 @@ class Network(nn.Module):
                        use_gpu=USE_GPU):
         super().__init__()
 
+        self.nn_cache = {}
+
         self.tensor_collector = []
         self.block_size = block_size
         self.residual_channels = filter_size
@@ -218,12 +220,23 @@ class Network(nn.Module):
         return pol, torch.tanh(val)
         
     def get_outputs(self, planes):
+        h = hash(planes.tostring())
+        res = self.nn_cache.get(h) # search the NN computation
+
+        if res is not None:
+            p, v = res
+            return p, v
+
         m = nn.Softmax(dim=1)
         x = torch.unsqueeze(torch.tensor(planes, dtype=torch.float32), dim=0)
         if self.use_gpu:
             x = x.to(self.gpu_device)
         p, v = self.forward(x)
-        return m(p).data.tolist()[0], v.data.tolist()[0]
+        p, v = m(p).data.tolist()[0], v.data.tolist()[0]
+
+        self.nn_cache[h] = (p, v) # save the NN computation
+
+        return p, v
 
     def trainable(self, t=True):
         torch.set_grad_enabled(t)

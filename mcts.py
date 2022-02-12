@@ -14,7 +14,7 @@ class Node:
         self.values = 0 # The accumulate winrate.
         self.visits = 0 # The accumulate node visits.
                         # The Q value must be equal to (self.values / self.visits)
-        self.children = {}
+        self.children = {} # Next node.
 
     def clamp(self, v):
         # Map the winrate 1 ~ -1 to 1 ~ 0.
@@ -33,7 +33,7 @@ class Node:
                 self.children[PASS] = Node(1.0)
                 return 1;
 
-        # Compute the Net results.
+        # Compute the net results.
         policy, value = network.get_outputs(board.get_features())
 
         for idx in range(board.num_intersections):
@@ -65,11 +65,8 @@ class Node:
             self.children.pop(vtx)
 
     def puct_select(self):
-        parent_visits = 1 # We set the initial value is 1 because we want to get the 
-                          # best policy value in the first selection.
-        for _, child in self.children.items():
-            parent_visits += child.visits
-
+        parent_visits = max(self.visits, 1) # The parent visits must great than 1 because we want to get the
+                                            # best policy value if the first selection.
         numerator = math.sqrt(parent_visits)
 
         puct_list = []
@@ -155,7 +152,7 @@ class Search:
         self.root_node.remove_superko(self.root_board)
         self.root_node.update(val)
 
-    def _play_simulation(self, color, curr_board, node):
+    def _descend(self, color, curr_board, node):
         value = None
         if curr_board.num_passes >= 2:
             # The game is over.
@@ -178,7 +175,7 @@ class Search:
             next_node = node.children[vtx]
 
             # Search the next node.
-            value = self._play_simulation(color, curr_board, next_node)
+            value = self._descend(color, curr_board, next_node)
         else:
             # This is the termainated node. Now try to expand it. 
             value = node.expand_children(curr_board, self.network)
@@ -219,8 +216,8 @@ class Search:
             curr_board = self.root_board.copy()
             color = curr_board.to_move
 
-            # Start the Monte carlo tree search.
-            self._play_simulation(color, curr_board, self.root_node)
+            # Start the Monte Carlo tree search.
+            self._descend(color, curr_board, self.root_node)
 
         # Reduce the remaining time. 
         self.time_control.took_time(to_move)
