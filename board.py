@@ -7,7 +7,7 @@ WHITE = 1
 EMPTY = 2
 INVLD = 3
 
-NUM_VERTICES = (BOARD_SIZE+2) ** 2 # max vertex number
+NUM_VERTICES = (BOARD_SIZE+2) ** 2 # max vertices number
 NUM_INTESECTIONS = BOARD_SIZE ** 2 # max intersections number
 
 PASS = -1  # pass
