@@ -7,14 +7,14 @@
 4. Matplotlib
 
 
-## Open With Built-in CUI
+## Open With Built-in GUI
 
 You may download the pre-training model from release section named 預先訓練好的小型權重. Then put the pt file to the dlgo directory and enter following commands. 
 
     $ python3 dlgo.py --weights nn_2x64.pt --gui
 
 
-## Open with GTP Interface
+## Open With GTP GUI
 
 The dlgo support for the GTP GUI. [Sabaki](https://sabaki.yichuanshen.de) is recommanded. Some helpful optional arguments are here.
 
@@ -31,7 +31,7 @@ The dlgo support for the GTP GUI. [Sabaki](https://sabaki.yichuanshen.de) is rec
 
 Some simple steps to train a new weights
 
-1. Preparing the sgf files. You may just use the sgf.zip. The zip including 35000 9x9 games.
+1. Preparing the sgf files. You may just use the sgf.zip. The zip including around 35000 9x9 games.
 2. Set the network parametes in the config.py. Including BOARD_SIZE, BLOCK_SIZE, FILTER_SIZE.
 3. Start training.
 

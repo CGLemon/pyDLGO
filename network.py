@@ -220,6 +220,8 @@ class Network(nn.Module):
         return pol, torch.tanh(val)
         
     def get_outputs(self, planes):
+        # TODO: Limit the nn cache size.
+
         h = hash(planes.tostring())
         res = self.nn_cache.get(h) # search the NN computation
 

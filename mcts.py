@@ -155,7 +155,7 @@ class Search:
     def _descend(self, color, curr_board, node):
         value = None
         if curr_board.num_passes >= 2:
-            # The game is over.
+            # The game is over. Compute the final score.
             score = curr_board.final_score()
             if score > 1e-4:
                 # The black player is winner.
@@ -174,7 +174,7 @@ class Search:
             color = (color + 1) % 2
             next_node = node.children[vtx]
 
-            # Search the next node.
+            # go to the next node.
             value = self._descend(color, curr_board, next_node)
         else:
             # This is the termainated node. Now try to expand it. 
@@ -204,8 +204,7 @@ class Search:
         # Compute thinking time limit.
         max_time = self.time_control.get_thinking_time(to_move, bsize, move_num)
 
-        # Try to expand the root node first. We assume that the time will
-        # be not over.
+        # Try to expand the root node first.
         self._prepare_root_node()
 
         for _ in range(playouts):

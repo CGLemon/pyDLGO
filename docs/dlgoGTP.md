@@ -95,7 +95,7 @@ dlgo 僅支援少量的 GTP 指令，主要是為了滿足 TCGA 比賽的基本�
       * 設定不同的盤面大小。注意，dlgo 的神經網路接受的盤面大小是固定的，隨意調整可能使程式崩貴退出。
 
    * `komi <komi: float>`
-      * 設定不同的貼目。注意，dlgo 的勝率不會因貼目改變而動態調整。
+      * 設定不同的貼目。注意，dlgo 的網路輸出勝率不會因貼目改變而動態調整。
 
    * `time_settings <main time: integer> <byo time: integer> <byo stones: integer>`
       * 設定初始的時限。
@@ -115,9 +115,6 @@ dlgo 僅支援少量的 GTP 指令，主要是為了滿足 TCGA 比賽的基本�
       
    * `set_free_handicap <list of vertex: string>`
       * 使用者告所電腦讓子的位置。
-
-   * `kgs-chat [game|private] <Name: string> <message: string>`
-      * KGS 專用對話的指令。
       
    * `kgs-genmove_cleanup [black|white]`
       * KGS 專用的生成合法手的指令，禁止虛手直到盤面沒有死棋為止，用以清除盤面死棋。
