@@ -12,7 +12,7 @@ class GUI_LOOP(GTP_ENGINE):
     def __init__(self, args):
         super(GUI_LOOP, self).__init__(args)
 
-        self.init_layouts(1600, 1000)
+        self.init_layouts(1200, 800)
 
         self.window = tk.Tk()
         self.window.resizable(0, 0)

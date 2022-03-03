@@ -64,10 +64,10 @@ class StoneLiberty(object):
         4  . . . . .
         5  . . . . .
 
- We define the coordinate as index, from a1 to e5. This is some problem to shife the index, The
+ We define the coordinate as index, from a1 to e5. There is some problem to shife the index. The
  shift operation may out of the board. For example, we want to find all positions of adjacent a1
  index. There are two positions out of the board. One way to deal with it is to check out the
- boundary. A fast way to deal with it is mail-box struct. Here is the mail-box looks like
+ boundary. Another fast way to deal with it is mail-box struct. Here is the mail-box looks like
 
            a b c d e
          - - - - - - -
@@ -78,9 +78,9 @@ class StoneLiberty(object):
        5 - . . . . . -
          - - - - - - -
 
- We can see that the board size from 5 to 7. We define the new coordinate as vertex . With mail-box,
- We don't need to waste time to check out the boundary any more. Notice that '-' is out
- of board position.
+ The board size is changed from 5 to 7. We define the new coordinate as vertex. With mail-box,
+ we don't need to waste time to check out the boundary any more. Notice that '-' is out of board
+ position.
 
 '''
 
@@ -93,7 +93,7 @@ class Board(object):
     def reset(self, board_size, komi):
         # Initialize all board data with current board size and komi.
 
-        self.board_size = board_size;
+        self.board_size = min(board_size, BOARD_SIZE)
         self.num_intersections = self.board_size ** 2
         self.num_vertices = (self.board_size+2) ** 2
         self.komi = komi
@@ -109,8 +109,8 @@ class Board(object):
 
         '''
         self.id, self,next, self.stones are basic data struct for strings. By
-        these struct, we can search a whole string more fast. For exmple, we have
-        a board looks like
+        these structs, we can search a whole string more fast. For exmple, we
+        have the boards looks like
         
         board position
            a b c d e
@@ -234,11 +234,13 @@ class Board(object):
         5| .  .  .  .  .
 
         Merge two strings...
+        
+            [before]        >>         [after]
 
         self.id
            a  b  c  d  e             a  b  c  d  e
         1| .  .  .  .  .          1| .  .  .  .  .
-        2| .  16 16 16 .          2| .  16 16 16 . 
+        2| .  16 16 16 .          2| .  16 16 16 .
         3| .  30 .  .  .    >>    3| .  16 .  .  .
         4| .  30 .  .  .          4| .  16 .  .  .
         5| .  .  .  .  .          5| .  .  .  .  .

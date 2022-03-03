@@ -6,12 +6,13 @@
 3. Tkinter
 4. Matplotlib
 
-
 ## Open With Built-in GUI
 
-You may download the pre-training model from release section named 預先訓練好的小型權重. Then put the pt file to the dlgo directory and enter following commands. 
+You may download the pre-training model from release section named 預先訓練好的小型權重. Then put the pt file to the dlgo directory and enter following command. 
 
     $ python3 dlgo.py --weights nn_2x64.pt --gui
+
+The dlgo will use your GPU automatically. If you want to disable GPU, set the value 'USE_GPU' False.
 
 
 ## Open With GTP GUI
@@ -26,10 +27,13 @@ The dlgo support for the GTP GUI. [Sabaki](https://sabaki.yichuanshen.de) is rec
       -r <float>, --resign-threshold <float>
                             Resign when winrate is less than x.
 
+The sample command is here.
+
+    $ dlgo.py --weights nn_2x64.pt -p 1600 -r 0.25
 
 ## Training
 
-Some simple steps to train a new weights
+Following above simple steps to train a new weights
 
 1. Preparing the sgf files. You may just use the sgf.zip. The zip including around 35000 9x9 games.
 2. Set the network parametes in the config.py. Including BOARD_SIZE, BLOCK_SIZE, FILTER_SIZE.

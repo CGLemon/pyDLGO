@@ -7,6 +7,8 @@
 
 ## 快速開始
 
+The simple English tutorial is [Here](https://github.com/CGLemon/pyDLGO/blob/master/docs/English.md)
+
 開始前請先安裝以下的 python 依賴庫（請注意本程式使用 python3）
 1. PyTorch（1.x 版本，如果要使用 GPU 請下載對應的 CUDA/cuDNN 版本）
 2. NumPy
@@ -22,7 +24,6 @@
 3. [GTP 界面原理](https://github.com/CGLemon/pyDLGO/blob/master/docs/dlgoGTP.md)
 4. [SGF 格式說明](https://github.com/CGLemon/pyDLGO/blob/master/docs/SmartGameFormat.md)
 5. [Sayuri: 一個高強度的 9 路圍棋引擎](https://github.com/CGLemon/Sayuri)
-6. [Simple English Tutorial](https://github.com/CGLemon/pyDLGO/blob/master/docs/English.md)
 
 ## License
 
@@ -47,4 +48,3 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 * 修復 GUI 的 bug 並優化之
 * 增加可改進的實做列表
 * 增加新版本 sabaki 的使用方法
-* 增加 Tromp-Taylor 規則的解釋

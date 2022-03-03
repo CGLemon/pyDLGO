@@ -11,7 +11,7 @@
 以下的 python 依賴庫需要安裝（請注意本程式使用 python3）
 1. PyTorch（1.x 版本，如果要使用 GPU 請下載對應的 CUDA/cuDNN 版本）
 2. NumPy
-3. Tkinter（僅使用內建的圖形界面需要，默認是不需要的）
+3. Tkinter
 4. Matplotlib（僅訓練時需要）
 
 以下程式需要 Java
@@ -23,7 +23,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
 #### 第一步、收集棋譜
 
-需要收集訓練的棋譜，如果你沒有可使用的棋譜，可以使用附的 sgf.zip，裡面包含三萬五千盤左右的九路棋譜。也可以到 [Aya](http://www.yss-aya.com/ayaself/ayaself.html) 上找到更多可訓練的棋譜。
+需要收集訓練的棋譜，如果你沒有可使用的棋譜，可以使用附的 sgf.zip，裡面包含三萬五千盤左右的九路棋譜。也可以到 [Aya](http://www.yss-aya.com/ayaself/ayaself.html) 或是 [KGS](https://www.u-go.net/gamerecords/) 上找到更多可訓練的棋譜。需要注意的是，dlgo 不能解析讓子棋棋譜。
 
 #### 第二步、設定網路大小
 
@@ -70,7 +70,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | -r, --resign-threshold | float     | 投降的門檻，0.1 代表勝率低於 10% 就會投降。預設值是 0.1 |
 | -g, --gui      | NA                | 使用內建的圖形界面。|
 
-注意再啟動以前，必須確定你有權限打開 dlgo.py ，如果沒有，請先使用 chmod 指令更改權限，以下是啟動的範例
+注意再啟動以前，必須確定你有權限執行 dlgo.py ，如果沒有，請先使用 chmod 指令更改權限，以下是啟動的範例
 
     $ chmod 777 dlgo.py
     $ ./dlgo.py --weights weights-name --playouts 1600 -r 0.25
@@ -107,7 +107,7 @@ Windows 系統是無法直接使用此程式，這裏需要更改的部分是 dl
 
 ## 三、使用 GTP 介面
 
-dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比如用 [Sabaki](https://sabaki.yichuanshen.de) 將 dlgo 掛載上去，使用的參數參考第二部份。以下是如何在 Sabaki 上使用的教學。
+dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比如用 [Sabaki](https://sabaki.yichuanshen.de) 或是 [gogui](https://github.com/Remi-Coulom/gogui) 將 dlgo 掛載上去，使用的參數參考第二部份。以下是如何在 Sabaki 上使用的教學。
 
 #### 第一步、打開引擎選項
 
@@ -180,7 +180,3 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 | 比賽                                             |時間                | 狀態               |
 | :------------:                                   | :---------------: | :---------------: |
 | [TAAI 2021](https://www.tcga.tw/taai2021/zh_TW/) | 11 月 20 號比賽 | 結束   |
-
-
-## 六、其他
-* dlgo 實做的規則是 [Tromp-Taylor](https://senseis.xmp.net/?TrompTaylorRules)（不同的是禁止自殺）。
