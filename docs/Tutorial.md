@@ -70,7 +70,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | -r, --resign-threshold | float     | 投降的門檻，0.1 代表勝率低於 10% 就會投降。預設值是 0.1 |
 | -g, --gui      | NA                | 使用內建的圖形界面。|
 
-注意再啟動以前，必須確定你有權限執行 dlgo.py ，如果沒有，請先使用 chmod 指令更改權限，以下是啟動的範例
+注意在啟動以前，必須確定你有權限執行 dlgo.py ，如果沒有，請先使用 chmod 指令更改權限，以下是啟動的範例
 
     $ chmod 777 dlgo.py
     $ ./dlgo.py --weights weights-name --playouts 1600 -r 0.25
@@ -95,15 +95,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
 ### Windows
 
-Windows 系統是無法直接使用此程式，這裏需要更改的部分是 dlgo.py 內的第一行，需要改成當前環境所執行 python 路徑位置，此行就是
-
-    #!/usr/bin/env python3
-
-由於此路徑是基於 Linux/MacOS ，所以無法直接在 Windows 上使用，這裏有[討論串](https://superuser.com/questions/378477/making-usr-bin-env-python-work-on-windows)教導如何在 Windows 上可以 work，請跟據你的電腦的 python 執行檔路徑更改此行，以下是範例
-
-    #!c:/Python/python.exe
-    
-接下來參考上方 Linux/MacOS 的部分啟動引擎。
+Windows 系統是無法直接使用此程式的，必須先將 dlgo 打包成 exe 執行檔，可以使用 pyinstaller 打包此程式。
 
 ## 三、使用 GTP 介面
 

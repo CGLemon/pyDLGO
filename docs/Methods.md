@@ -394,7 +394,7 @@ Tromp-Taylor 規則為中國規則的變體，計點方式也為子地皆目，�
 
 ![score_board](https://github.com/CGLemon/pyDLGO/blob/master/img/score_board.png)
 
-dlgo 基本實作所有的 Tromp-Taylor 規則，但不同之處禁止自殺手。
+dlgo 基本實作所有的 Tromp-Taylor 規則，不同之處是 digo 禁止自殺手。
 
 ## 六、影片
 

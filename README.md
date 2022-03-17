@@ -46,5 +46,4 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 ## TODO
 * 修復 GUI 的 bug 並優化之
-* 增加可改進的實做列表
-* 增加新版本 sabaki 的使用方法
+* 訓練十九路權重
