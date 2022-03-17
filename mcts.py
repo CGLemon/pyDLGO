@@ -74,7 +74,7 @@ class Node:
         # Select the best node by PUCT algorithm. 
         for vtx, child in self.children.items():
             q_value = self.clamp(0) # Fair winrate if the node is no visit.
-            if child.visits is not 0:
+            if child.visits != 0:
                 q_value = self.inverse(child.values / child.visits)
             puct = q_value + self.CPUCT * child.policy * (numerator / (1+child.visits))
             puct_list.append((puct, vtx))
@@ -127,7 +127,7 @@ class Node:
 
         for _, vtx in gather_list:
             child = self.children[vtx]
-            if child.visits is not 0:
+            if child.visits != 0:
                 out += "  {:4} -> W: {:5.2f}%, P: {:5.2f}%, V: {}\n".format(
                            board.vertex_to_text(vtx),
                            100.0 * self.inverse(child.values/child.visits),
@@ -166,7 +166,7 @@ class Search:
             else:
                 # The game is draw
                 value = 0.5
-        elif len(node.children) is not 0:
+        elif len(node.children) != 0:
             # Select the next node by PUCT algorithm. 
             vtx = node.puct_select()
             curr_board.to_move = color
@@ -180,7 +180,7 @@ class Search:
             # This is the termainated node. Now try to expand it. 
             value = node.expand_children(curr_board, self.network)
 
-        assert value is not None, ""
+        assert value != None, ""
         node.update(value)
 
         return node.inverse(value)

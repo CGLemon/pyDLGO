@@ -1,15 +1,16 @@
 from network import Network
-from config import BOARD_SIZE, KOMI, INPUT_CHANNELS, PAST_MOVES
-from board import Board, PASS, BLACK, WHITE, EMPTY, INVLD, NUM_INTESECTIONS
+from config import BOARD_SIZE, INPUT_CHANNELS
+from board import Board, PASS, BLACK, WHITE, INVLD, NUM_INTESECTIONS
 
 import sgf, argparse
-import copy, random, time
+import copy, random, time, os, shutil, glob
 import numpy as np
 import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.utils.data import DataLoader
 
 def get_currtime():
     lt = time.localtime(time.time())
@@ -28,7 +29,7 @@ def get_symmetry_plane(symm, plane):
         transformed = np.flip(transformed, 1)
     return transformed
 
-class Chunk:
+class Data:
     def __init__(self):
         self.inputs = None
         self.policy = None
@@ -56,30 +57,102 @@ class Chunk:
             buf = get_symmetry_plane(symm, np.reshape(buf, (BOARD_SIZE, BOARD_SIZE)))
             self.policy = int(np.argmax(buf))
 
-class DataSet:
-    def  __init__(self, dir_name):
+
+class DataSource:
+    def  __init__(self):
+        self.cache_dir = "data-cache"
         self.buffer = []
-        self._load_data(dir_name)
+        self.chunks = []
+        self.done = glob.glob(os.path.join(self.cache_dir, "*"))
 
-    def _load_data(self, dir_name):
-        # Collect training data from sgf dirctory.
+    def _chunk_to_buf(self, chunk):
+        inputs_buf = chunk['i']
+        policy_buf = chunk['p']
+        value_buf = chunk['v']
+        to_move_buf = chunk['t']
 
+        size = to_move_buf.shape[0]
+        for i in range(size):
+            data = Data()
+            data.inputs = inputs_buf[i]
+            data.policy = policy_buf[i]
+            data.value = value_buf[i]
+            data.to_move = to_move_buf[i]
+            self.buffer.append(data)
+
+    def next(self):
+        if len(self.buffer) == 0:
+            if len(self.chunks) == 0:
+                self.chunks, self.done = self.done, self.chunks
+                random.shuffle(self.chunks)
+
+            filename = self.chunks.pop()
+            self.done.append(filename)
+
+            chunk = np.load(filename)
+            self._chunk_to_buf(chunk)
+        return self.buffer.pop()
+
+class DataChopper:
+    def  __init__(self, dir_name):
+        self.cache_dir = "data-cache"
+        self._chop_data(dir_name)
+
+    def __del__(self):
+        pass
+
+    def _chop_data(self, dir_name):
         sgf_games = sgf.parse_from_dir(dir_name)
         total = len(sgf_games)
-        step = 0
-        verbose_step = 1000
-        print("total {} games".format(total))
+
+        print("imported {} SGF files".format(total))
+
+        if os.path.isdir(self.cache_dir):
+            shutil.rmtree(self.cache_dir, ignore_errors=True)
+
+        os.mkdir(self.cache_dir)
+
+        cnt = 0
+        steps = 0
+        chop_steps = max(total//100, 1)
+        buf = []
+
         for game in sgf_games:
-            step += 1
+            steps += 1
             temp = self._process_one_game(game)
-            self.buffer.extend(temp)
-            if step % verbose_step == 0:
-                print("parsed {:.2f}% games".format(100 * step/total))
-        if total % verbose_step != 0:
-            print("parsed {:.2f}% games".format(100 * step/total))
+
+            buf.extend(temp)
+
+            if steps % chop_steps == 0:
+                print("parsed {:.2f}% games".format(100 * steps/total))
+                self._save_chunk(buf, cnt)
+                cnt += 1
+                buf = []
+
+        if len(buf) != 0:
+            print("parsed {:.2f}% games".format(100 * steps/total))
+            self._save_chunk(buf, cnt)
+
+    def _save_chunk(self, buf, cnt):
+        size = len(buf)
+
+        inputs_buf = np.zeros((size, INPUT_CHANNELS, BOARD_SIZE, BOARD_SIZE))
+        policy_buf = np.zeros((size))
+        value_buf = np.zeros((size, 1))
+        to_move_buf = np.zeros((size))
+
+        for i in range(size):
+            data = buf[i]
+            inputs_buf[i, :] = data.inputs[:]
+            policy_buf[i] = data.policy
+            value_buf[i, 0] = data.value
+            to_move_buf[i] = data.to_move
+
+        filenmae = os.path.join(self.cache_dir, "chunk_{}.npz".format(cnt))
+        np.savez_compressed(filenmae, i=inputs_buf, p=policy_buf, v=value_buf, t=to_move_buf)
 
     def _process_one_game(self, game):
-        # Collect training data from one sgf game.
+        # Collect training data from one SGF game.
 
         temp = []
         winner = None
@@ -100,19 +173,19 @@ class DataSet:
                 elif "W+" in result:
                     winner = WHITE
             if color != INVLD:
-                chunk = Chunk()
-                chunk.inputs = board.get_features()
-                chunk.to_move = color
-                chunk.policy = self._do_text_move(board, color, move)
-                temp.append(chunk)
+                data = Data()
+                data.inputs = board.get_features()
+                data.to_move = color
+                data.policy = self._do_text_move(board, color, move)
+                temp.append(data)
 
-        for chunk in temp:
+        for data in temp:
             if winner == None:
-                chunk.value = 0
-            elif winner == chunk.to_move:
-                chunk.value = 1
-            elif winner != chunk.to_move:
-                chunk.value = -1
+                data.value = 0
+            elif winner == data.to_move:
+                data.value = 1
+            elif winner != data.to_move:
+                data.value = -1
         return temp
 
     def _do_text_move(self, board, color, move):
@@ -132,89 +205,120 @@ class DataSet:
         board.play(vtx)
         return policy
 
-    def get_batches(self, batch_size):
-        # Get the trainig batches from data pool.
 
-        s = random.sample(self.buffer, k=batch_size)
-        inputs_batch = []
-        policy_batch = []
-        value_batch = []
-        for chunk in s:
-            chunk.do_symmetry()
-            inputs_batch.append(chunk.inputs)
-            policy_batch.append(chunk.policy)
-            value_batch.append([chunk.value])
-        inputs_batch = np.array(inputs_batch)
-        policy_batch = np.array(policy_batch)
-        value_batch = np.array(value_batch)
+class DataSet:
+    def __init__(self, num_workers):
+        self.dummy_size = 0
+        self.data_loaders = []
+        self.data_scrs = []
+
+        num_workers = max(num_workers, 1)
+        for _ in range(num_workers):
+            self.data_scrs.append(DataSource())
+
+    def __getitem__(self, idx):
+        worker_info = torch.utils.data.get_worker_info()
+        worker_id = None
+        if worker_info == None:
+            worker_id = 0
+        else:
+            worker_id = worker_info.id
+
+        data = self.data_scrs[worker_id].next()
         return (
-            torch.tensor(inputs_batch).float(),
-            torch.tensor(policy_batch).long(),
-            torch.tensor(value_batch).float()
+            torch.tensor(data.inputs).float(),
+            torch.tensor(data.policy).long(),
+            torch.tensor(data.value).float()
         )
 
+
+    def __len__(self):
+        return self.dummy_size
+
 class TrainingPipe:
-    def __init__(self, dir_name):
+    def __init__(self, dir_name, use_cache):
         self.network = Network(BOARD_SIZE)
         self.network.trainable()
 
-        # Prepare the data set from sgf files.
-        self.data_set = DataSet(dir_name)
+        self.num_workers = max(os.cpu_count() - 2, 0)
+        self.steps_per_epoch = 2000
+
+        if not use_cache:
+            self.data_chopper = DataChopper(dir_name)
+        self.data_set = DataSet(self.num_workers)
         
-    def running(self, max_step, verbose_step, batch_size, learning_rate, noplot):
+    def running(self, max_steps, verbose_steps, batch_size, learning_rate, noplot):
         cross_entry = nn.CrossEntropyLoss()
         mse_loss = nn.MSELoss()
         optimizer = optim.Adam(self.network.parameters(), lr=learning_rate, weight_decay=1e-4)
         p_running_loss = 0
         v_running_loss = 0
+        steps = 0
+        keep_running = True
         running_loss_record = []
         clock_time = time.time()
 
-        for step in range(max_step):
-            # First, get the batch data.
-            inputs, target_p, target_v = self.data_set.get_batches(batch_size)
+        while keep_running:
+            self.data_set.dummy_size = self.steps_per_epoch * batch_size
 
-            # Second, Move the data to GPU memory if we use it.
-            if self.network.use_gpu:
-                inputs = inputs.to(self.network.gpu_device)
-                target_p = target_p.to(self.network.gpu_device)
-                target_v = target_v.to(self.network.gpu_device)
+            train_data = DataLoader(
+                self.data_set,
+                num_workers=self.num_workers,
+                batch_size=batch_size
+            )
 
-            # Third, compute network result.
-            p, v = self.network(inputs)
+            for _, batch in enumerate(train_data):
+                # First, get the batch data.
+                inputs, target_p, target_v = batch
 
-            # Fourth, compute loss result and update network.
-            p_loss = cross_entry(p, target_p)
-            v_loss = mse_loss(v, target_v)
-            loss = p_loss + v_loss
+                # Second, Move the data to GPU memory if we use it.
+                if self.network.use_gpu:
+                    inputs = inputs.to(self.network.gpu_device)
+                    target_p = target_p.to(self.network.gpu_device)
+                    target_v = target_v.to(self.network.gpu_device)
 
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+                # Third, compute network result.
+                p, v = self.network(inputs)
 
-            p_running_loss += p_loss.item()
-            v_running_loss += v_loss.item()
+                # Fourth, compute loss result and update network.
+                p_loss = cross_entry(p, target_p)
+                v_loss = mse_loss(v, target_v)
+                loss = p_loss + v_loss
 
-            # Fifth, dump verbose.
-            if (step+1) % verbose_step == 0:
-                elapsed = time.time() - clock_time
-                rate = verbose_step/elapsed
-                remaining_step = max_step - step
-                estimate_remaining_time = int(remaining_step/rate)
-                print("{} steps: {}/{}, {:.2f}% -> policy loss: {:.4f}, value loss: {:.4f} | rate: {:.2f}(step/sec), estimate: {}(sec)".format(
-                          get_currtime(),
-                          step+1,
-                          max_step,
-                          100 * ((step+1)/max_step),
-                          p_running_loss/verbose_step,
-                          v_running_loss/verbose_step,
-                          rate,
-                          estimate_remaining_time))
-                running_loss_record.append((step+1, p_running_loss/verbose_step, v_running_loss/verbose_step))
-                p_running_loss = 0
-                v_running_loss = 0
-                clock_time = time.time()
-        print("Trainig is over.");
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+                p_running_loss += p_loss.item()
+                v_running_loss += v_loss.item()
+
+
+                # Fifth, dump verbose.
+                if (steps+1) % verbose_steps == 0:
+                    elapsed = time.time() - clock_time
+                    rate = verbose_steps/elapsed
+                    remaining_steps = max_steps - steps
+                    estimate_remaining_time = int(remaining_steps/rate)
+                    print("{} steps: {}/{}, {:.2f}% -> policy loss: {:.4f}, value loss: {:.4f} | rate: {:.2f}(steps/sec), estimate: {}(sec)".format(
+                              get_currtime(),
+                              steps+1,
+                              max_steps,
+                              100 * ((steps+1)/max_steps),
+                              p_running_loss/verbose_steps,
+                              v_running_loss/verbose_steps,
+                              rate,
+                              estimate_remaining_time))
+                    running_loss_record.append((steps+1, p_running_loss/verbose_steps, v_running_loss/verbose_steps))
+                    p_running_loss = 0
+                    v_running_loss = 0
+                    clock_time = time.time()
+
+                steps += 1
+                if steps >= max_steps:
+                    keep_running = False
+                    break
+
+        print("Training is over.");
         if not noplot:
             self.plot_loss(running_loss_record)
 
@@ -226,10 +330,14 @@ class TrainingPipe:
             p_running_loss.append(p)
             v_running_loss.append(v)
             step.append(s)
+
+        y_upper = max(max(p_running_loss), max(v_running_loss))
+
         plt.plot(step, p_running_loss, label="policy loss")
         plt.plot(step, v_running_loss, label="value loss")
         plt.ylabel("loss")
         plt.xlabel("steps")
+        plt.ylim([0, y_upper * 1.1])
         plt.legend()
         plt.show()
 
@@ -249,8 +357,8 @@ def valid_args(args):
     if args.weights_name == None:
         print("Must to give the argument --weights-name <string>")
         result = False
-    if args.step == None:
-        print("Must to give the argument --step <integer>")
+    if args.steps == None:
+        print("Must to give the argument --steps <integer>")
         result = False
     if args.batch_size == None:
         print("Must to give the argument --batch-size <integer>")
@@ -264,10 +372,10 @@ def valid_args(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dir", metavar="<string>",
-                        help="The input directory", type=str)
-    parser.add_argument("-s", "--step", metavar="<integer>",
-                        help="The training step", type=int)
-    parser.add_argument("-v", "--verbose-step", metavar="<integer>",
+                        help="The input SGF files directory", type=str)
+    parser.add_argument("-s", "--steps", metavar="<integer>",
+                        help="Terminate after these steps", type=int)
+    parser.add_argument("-v", "--verbose-steps", metavar="<integer>",
                         help="Dump verbose on every X steps.", type=int, default=1000)
     parser.add_argument("-b", "--batch-size", metavar="<integer>",
                         help="The batch size number.", type=int)
@@ -275,6 +383,8 @@ if __name__ == "__main__":
                         help="The learning rate.", type=float)
     parser.add_argument("-w", "--weights-name", metavar="<string>",
                         help="The output weights name.", type=str)
+    parser.add_argument("-c", "--cache", action="store_true",
+                        help="Use the data cache without parsing new SGF files.", default=False)
     parser.add_argument("--load-weights", metavar="<string>",
                         help="The inputs weights name.", type=str)
     parser.add_argument("--noplot", action="store_true",
@@ -282,7 +392,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     if valid_args(args):
-        pipe = TrainingPipe(args.dir)
+        pipe = TrainingPipe(args.dir, args.cache)
         pipe.load_weights(args.load_weights)
-        pipe.running(args.step, args.verbose_step, args.batch_size, args.learning_rate, args.noplot)
+        pipe.running(args.steps, args.verbose_steps, args.batch_size, args.learning_rate, args.noplot)
         pipe.save_weights(args.weights_name)
