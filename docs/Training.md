@@ -4,6 +4,7 @@
 
 依照訓練範例輸入一下指令，終端機會出現一系列訊息，幫助掌握目前學習的進度和情況，第一部份是程式在載入解析 sgf 當案並產生訓練資料，並存入 ```data-cache``` 裡，當出現 ```parsed 100.00% games``` 時，代表棋譜已經全處理完成。第二部份就開始訓練網路，大部份資訊我想理解上不是問題，其中 ```rate``` 代表每秒訓練幾個 steps ，```estimate``` 代表完成訓練估計的剩餘秒數
 
+    $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
     imported 34572 SGF files
     parsed 1.00% games
     parsed 2.00% games
