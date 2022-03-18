@@ -230,7 +230,6 @@ class DataSet:
             torch.tensor(data.value).float()
         )
 
-
     def __len__(self):
         return self.dummy_size
 
