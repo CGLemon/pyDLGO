@@ -12,7 +12,7 @@ You may download the pre-training model from release section named 預先訓練�
 
     $ python3 dlgo.py --weights nn_2x64.pt --gui
 
-The dlgo will use your GPU automatically. If you want to disable GPU, set the value 'USE_GPU' False.
+The dlgo will use your GPU automatically. If you want to disable GPU, set the value ```USE_GPU``` False.
 
 
 ## Open With GTP GUI

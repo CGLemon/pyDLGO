@@ -205,7 +205,6 @@ class DataChopper:
         board.play(vtx)
         return policy
 
-
 class DataSet:
     def __init__(self, num_workers):
         self.dummy_size = 0
@@ -240,7 +239,7 @@ class TrainingPipe:
         self.network = Network(BOARD_SIZE)
         self.network.trainable()
 
-        self.num_workers = max(os.cpu_count() - 2, 0)
+        self.num_workers = max(min(os.cpu_count(), 16) - 2 , 0)
         self.steps_per_epoch = 2000
 
         if not use_cache:

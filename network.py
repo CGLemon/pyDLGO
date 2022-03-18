@@ -142,7 +142,7 @@ class Network(nn.Module):
 
         self.set_layers()
         if self.use_gpu:
-            self.gpu_device = torch.device('cuda:0')
+            self.gpu_device = torch.device('cuda')
             self.to_gpu_device()
 
     def to_gpu_device(self):

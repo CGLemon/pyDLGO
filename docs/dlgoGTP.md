@@ -1,7 +1,7 @@
 # dlgo GTP
 
 ## ㄧ、GTP 簡介
-GTP 為 Go Text Protocol 最早為 GNU Go 團隊為了簡化當時的圍棋協定 Go Model Protocol，在 GNU Go 3.0 時引入，到了現代 GTP 以成為圍棋軟體普遍的溝通方式。GTP 運作的原理相當簡單，就是界面向引擎送出一條指令，引擎根據指令做出相應的動作，並且回覆訊息給界面。回覆的格式分成兩種，一種是執行成功，此時回覆的第一個字元是 '='，另一種是執行失敗，此時回覆的第一個字元是 '?'，回覆完結時要換兩行表示結束。以下是 dlgo 的範例，此範例要注意的是 showboard 並不是標準的 GTP 指令
+GTP 為 Go Text Protocol 最早為 GNU Go 團隊為了簡化當時的圍棋協定 Go Model Protocol，在 GNU Go 3.0 時引入，到了現代 GTP 以成為圍棋軟體普遍的溝通方式。GTP 運作的原理相當簡單，就是界面向引擎送出一條指令，引擎根據指令做出相應的動作，並且回覆訊息給界面。回覆的格式分成兩種，一種是執行成功，此時回覆的第一個字元是 ```=```，另一種是執行失敗，此時回覆的第一個字元是 ```?```，回覆完結時要換兩行表示結束。以下是 dlgo 的範例，此範例要注意的是 showboard 並不是標準的 GTP 指令
 
     name
     = dlgo
@@ -80,7 +80,7 @@ dlgo 僅支援少量的 GTP 指令，主要是為了滿足 TCGA 比賽的基本�
       * 顯示所有此程式支援的 GTP 指令。
 
    * `play [black|white] <vertex: string>`
-      * 走一手棋到盤面上，必須是合法手。參數中的 vertex 為 [GTP vertex](https://www.lysator.liu.se/~gunnar/gtp/gtp2-spec-draft2/gtp2-spec.html#SECTION00042000000000000000) ，例如 'a1'、'a2'、'e5' 等座標位置或是 pass 代表虛手，resign 代表投降。
+      * 走一手棋到盤面上，必須是合法手。參數中的 vertex 為 [GTP vertex](https://www.lysator.liu.se/~gunnar/gtp/gtp2-spec-draft2/gtp2-spec.html#SECTION00042000000000000000) ，例如 ```a1```、```a2```、```e5``` 等座標位置或是 pass 代表虛手，resign 代表投降。
 
    * `genmove [black|white]`
       * 讓引擎思考並產生下一手棋到盤面上。
@@ -108,7 +108,7 @@ dlgo 僅支援少量的 GTP 指令，主要是為了滿足 TCGA 比賽的基本�
 有些指令在 KGS 上有特殊效果，或是可以提供更多功能，如果有興趣的話，可以優先實作下列指令，指令的參數和效果可到 [GTP 英文文檔](https://www.gnu.org/software/gnugo/gnugo_19.html)查看
 
    * `final_status_list [alive|dead]`
-      * 顯示當前盤面的死棋和活棋棋串。GNU Go 還有實做其它種類的判斷，如 "seki"、 "white_territory"、 "black_territory" 和 "dame"。
+      * 顯示當前盤面的死棋和活棋棋串。GNU Go 還有實做其它種類的判斷，如 ```seki```、 ```white_territory```、 ```black_territory``` 和 ```dame```。
 
    * `place_free_handicap <number of handicap: integer>`
       * 讓引擎自己生成讓子的位置。
