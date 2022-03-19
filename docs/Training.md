@@ -166,6 +166,12 @@
 
 ![loss_plot](https://github.com/CGLemon/pyDLGO/blob/master/img/loss_plot.png)
 
+## 指定訓練的 GPU
+
+在 ```python3``` 輸入環境參數 ```CUDA_VISIBLE_DEVICES``` ，可以指定要用哪個 GPU 訓練網路，GPU 的編號從 0 開始，如果有 4 個 GPU 則編號從 0 到 3，數字 0 代表使用預設的。
+
+    $ CUDA_VISIBLE_DEVICES=0 python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.0001 --load-weights preweights --weights-name outweights --cache
+
 ## 訓練技巧
 
 事實上，訓練圍棋的網路，持續的降低學習率是很重要的，相同訓練資料，有降低學習率和沒有學習率的網路，其強度可以差距三段以上，這個差距在讓子棋中尤其明顯，未降低學習率的網路在前期通常無法有效辨識當前盤面的好壞。dlgo 提供重新載入網路的的功能，輸入下列指令即可調整學習率重新訓練。這邊可以輸入指令 ```--cache``` ，可以避免重新解析棋譜，加速訓練流程
