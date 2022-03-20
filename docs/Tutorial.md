@@ -23,7 +23,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
 #### 第一步、收集棋譜
 
-需要收集訓練的棋譜，如果你沒有可使用的棋譜，可以使用附的 sgf.zip，裡面包含三萬五千盤左右的九路棋譜。也可以到 [Aya](http://www.yss-aya.com/ayaself/ayaself.html) 或是 [KGS](https://www.u-go.net/gamerecords/) 上找到更多可訓練的棋譜。需要注意的是，dlgo 不能解析讓子棋棋譜。
+需要收集訓練的棋譜，如果你沒有可使用的棋譜，可以使用附的 sgf.zip，裡面包含三萬五千盤左右的九路棋譜。也可以到 [Aya](http://www.yss-aya.com/ayaself/ayaself.html) 、 [KGS](https://www.u-go.net/gamerecords/) 或是 [leela zero](https://leela.online-go.com/zero/) 上找到更多可訓練的棋譜。需要注意的是，dlgo 不能解析讓子棋棋譜。
 
 #### 第二步、設定網路大小
 
@@ -44,7 +44,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | 參數                 |參數類別            | 說明              |
 | :---------------:    | :---------------: | :---------------: |
 | -d, --dir            | string            | 要訓練的 SGF 檔案夾|
-| -s, --step           | integer           | 要訓練的步數，越多訓練時間越久 |
+| -s, --steps          | integer           | 要訓練的步數，越多訓練時間越久 |
 | -b, --batch-size     | integer           | 訓練的 batch size，建議至少大於 128 ，太低會無法訓練 |
 | -l, --learning-rate  | float             | 學習率大小 ，建議從 0.001 開始|
 | -w, --weights-name   | string            | 要輸出的網路權重名稱 |
@@ -54,7 +54,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
 以下是訓練範例命令
 
-    $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
+    $ python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
 
 在一台有配備獨立顯示卡的電腦，大概數個小時內可以完成訓練，如果使用 CPU 訓練大概需要幾天時間。當網路權重出現後，就完成第一步的訓練了。如果你對當前的訓練結果不滿意，可到[這裏](https://github.com/CGLemon/pyDLGO/blob/master/docs/Training.md)查看一些訓練時的小技巧。
 
@@ -62,7 +62,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
 ### Linux/MacOS
 
-啟動引擎有三個參數是比較重要的
+啟動引擎有四個參數是比較重要的
 
 | 參數             |參數類別          | 說明                |
 | :------------: | :---------------: | :---------------: |

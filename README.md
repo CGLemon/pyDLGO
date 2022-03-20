@@ -23,7 +23,6 @@ The simple English tutorial is [Here](https://github.com/CGLemon/pyDLGO/blob/mas
 2. [演算法實做和原理（持續施工中）](https://github.com/CGLemon/pyDLGO/blob/master/docs/Methods.md)
 3. [GTP 界面原理](https://github.com/CGLemon/pyDLGO/blob/master/docs/dlgoGTP.md)
 4. [SGF 格式說明](https://github.com/CGLemon/pyDLGO/blob/master/docs/SmartGameFormat.md)
-5. [Sayuri: 一個高強度的 9 路圍棋引擎](https://github.com/CGLemon/Sayuri)
 
 ## License
 

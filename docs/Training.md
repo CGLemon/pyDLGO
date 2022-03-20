@@ -2,9 +2,9 @@
 
 ## 訓練的資訊
 
-依照訓練範例輸入一下指令，終端機會出現一系列訊息，幫助掌握目前學習的進度和情況，第一部份是程式在載入解析 sgf 當案並產生訓練資料，並存入 ```data-cache``` 裡，當出現 ```parsed 100.00% games``` 時，代表棋譜已經全處理完成。第二部份就開始訓練網路，大部份資訊我想理解上不是問題，其中 ```rate``` 代表每秒訓練幾個 steps ，```estimate``` 代表完成訓練估計的剩餘秒數
+依照訓練範例輸入下列指令，終端機會出現一系列訊息，幫助掌握目前學習的進度和情況，第一部份是程式在載入解析 sgf 當案並產生訓練資料，並存入 ```data-cache``` 裡，當出現 ```parsed 100.00% games``` 時，代表棋譜已經全處理完成。第二部份就開始訓練網路，大部份資訊我想理解上不是問題，其中 ```rate``` 代表每秒訓練幾個 steps ，```estimate``` 代表完成訓練估計的剩餘秒數。
 
-    $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
+    $ python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
     imported 34572 SGF files
     parsed 1.00% games
     parsed 2.00% games
@@ -170,12 +170,12 @@
 
 在 ```python3``` 輸入環境參數 ```CUDA_VISIBLE_DEVICES``` ，可以指定要用哪個 GPU 訓練網路，GPU 的編號從 0 開始，如果有 4 個 GPU 則編號從 0 到 3，數字 0 代表使用預設的。
 
-    $ CUDA_VISIBLE_DEVICES=0 python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.0001 --load-weights preweights --weights-name outweights --cache
+    $ CUDA_VISIBLE_DEVICES=0 python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.0001 --load-weights preweights --weights-name outweights --cache
 
 ## 訓練技巧
 
 事實上，訓練圍棋的網路，持續的降低學習率是很重要的，相同訓練資料，有降低學習率和沒有學習率的網路，其強度可以差距三段以上，這個差距在讓子棋中尤其明顯，未降低學習率的網路在前期通常無法有效辨識當前盤面的好壞。dlgo 提供重新載入網路的的功能，輸入下列指令即可調整學習率重新訓練。這邊可以輸入指令 ```--cache``` ，可以避免重新解析棋譜，加速訓練流程
 
-    $ python3 train.py --dir sgf-directory-name --step 128000 --batch-size 512 --learning-rate 0.0001 --load-weights preweights --weights-name outweights --cache
+    $ python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.0001 --load-weights preweights --weights-name outweights --cache
 
 你可能會好奇，每次降低學習大概需要多少個 steps ，以經驗來看，範例給的 128000 steps 配合 512 batch 的訓練量就非常足夠，依照上面的訓練資訊，loss 已經很難再降低了。當然如果你不放心，可以選用更大 step 數來訓練，以確到達到完全訓練，只要訓練集夠大，過度訓練並不會影響網路強度。最後學習率大概要降低到多少，這沒有一定值，但一般來講 loss 不再降低時就可以停止了。
