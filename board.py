@@ -387,7 +387,7 @@ class Board(object):
 
         # Now start the BFS algorithm to search all reachable positions.
         while len(queue) != 0:
-            v = queue.pop()
+            v = queue.pop(0)
             for d in self.dir4:
                 nv = v + d
                 if self.state[nv] == EMPTY and buf[nv] == False:
