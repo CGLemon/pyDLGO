@@ -96,23 +96,14 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 
 ### Windows
 
-Windows 系統是無法直接使用此程式的，必須先將 dlgo 打包成 exe 執行檔，可以使用 pyinstaller 打包此程式。
-首先通過Pip安裝pyinstaller，在執行如下指令即可。
-```
-C:\Users\administrator> pip install pyinstaller
-C:\Users\administrator> pyinstaller -D  dlgo.py
-```
+Windows 系統是無法直接使用此程式的，必須先將 dlgo 打包成 exe 執行檔，可以使用 pyinstaller 打包此程式。首先通過 pip 安裝 pyinstaller，再執行如下指令
 
-另外，最好不要使用pyinstaller -F指令進行操作，否則很可能在運行程式後，C盤下產生大量的臨時文件，導致C盤爆滿！並且每次啟動前需要解壓，導致啟動緩慢。
-當打包成功之後的操作與下面相同，引擎選中目標文件夾下dist文件夾中的dlgo.exe即可。
 
-但是還有一個問題是，因為config文件也是py的格式，也就是說，每一次修改config後，都需要重新打包一遍。
+    C:\Users\administrator> pip3 install pyinstaller
+    C:\Users\administrator> pyinstaller -D dlgo.py
 
-解決方法有兩個：
-1.修改代碼，直接從文本文件裡讀入config的數據，而不是通過import的方式。
-2.更直接一點，可以為dlgo.py寫一個接口。
 
-不過由於本人技術有限，兩者目前都沒有實現，希望能有人補充。
+另外，最好不要使用 pyinstaller -F 指令進行操作，否則很可能在運行程式後，C 盤下產生大量的臨時文件，導致 C 盤爆滿！並且每次啟動前需要解壓，導致啟動緩慢。當打包成功之後的操作與下面相同，引擎選中目標文件夾下 dist 文件夾中的 dlgo.exe 即可。
 
 ## 三、使用 GTP 介面
 
