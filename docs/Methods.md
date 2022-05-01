@@ -240,11 +240,11 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 ``
 
 ## 二、審局函數
 
-最早期的圍棋程式是沒有審局函數的，這是由於圍棋局勢多變缺乏明顯特徵，致使一直以來製作審局函數都是一個大難題，但自從深度學習開始興起，審局函數的問題便迎刃而解。這裡主要是對審局函數的一些基本描述，並不會涉及大多深度學習的部份，有興趣者可自行上網查詢。
+最早期的圍棋程式是沒有審局函數的，這是由於圍棋局勢多變缺乏明顯特徵，致使一直以來製作良好的審局函數都是一個大難題，一般而言都是以預測下一手棋的位置為主，通過快速落子評估當前局面的好壞。但自從深度學習開始興起，審局函數的問題便迎刃而解。這裡主要是對審局函數的一些基本描述，並不會涉及大多深度學習的部份，有興趣者可自行上網查詢。
 
 ### 基本狀態
 
-假設今天有一個狀態 <img src="https://render.githubusercontent.com/render/math?math=\Large S"> （當前盤面），它擁有數個動作 <img src="https://render.githubusercontent.com/render/math?math=\Large A_i"> （合法手），執行動作者為代理人 <img src="https://render.githubusercontent.com/render/math?math=\Large Agent"> （程式本體），我們會希望從當前狀態得到兩類資訊，第一類是策略（policy）資訊，告訴代理人哪些動作值得被執行或是搜尋，在 AlphaGo 的實做中，此為合法手的機率分佈，第二類為價值（value）資訊，告訴代理人當前狀態的分數或是每個動作的分數在 AlphaGo 的實做中，此為當前盤面的分數（也能視為勝率），如下所示
+假設今天有一個狀態 <img src="https://render.githubusercontent.com/render/math?math=\Large S"> （當前盤面），它擁有數個動作 <img src="https://render.githubusercontent.com/render/math?math=\Large A_i"> （合法手），執行動作者為代理人 <img src="https://render.githubusercontent.com/render/math?math=\Large Agent"> （程式本體），我們會希望從當前狀態得到兩類資訊，第一類是策略（policy）資訊，告訴代理人哪些動作值得被執行或是搜尋，在 AlphaGo 的實做中，此為合法手的分佈機率，第二類為價值（value）資訊，告訴代理人當前狀態的分數或是每個動作的分數在 AlphaGo 的實做中，此為當前盤面的分數（也能視為勝率），如下所示
 
 ![policy_value](https://github.com/CGLemon/pyDLGO/blob/master/img/policy_value.gif)
 
@@ -260,7 +260,7 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 ``
 | S4（換白棋落子）| ```d3```          | 白棋獲勝          |
 
 
-接下來將資料轉換成網路看得懂的資料，在本實做中，當前狀態過去的八手棋（每手棋包含黑白兩個 planes）和當前盤面做編碼（兩個 planes），編碼成 18 個 planes（可到 board.py 裡的 get_features() 查看如何實做），落子座標轉成一維陣列，勝負結果如果是當前玩家獲勝則是 1，如果落敗則為 -1。轉換的結果如下
+接下來將資料轉換成網路看得懂的資料，在本實做中，當前狀態為過去的八手棋（每手棋包含黑白兩個 planes）和當前盤面做編碼（兩個 planes），編碼成 18 個 planes（可到 board.py 裡的 get_features() 查看實做細節），落子座標轉成一維陣列，只有落子處為 1 ，未落子處為 0 ，勝負結果如果是當前玩家獲勝則是 1，如果落敗則為 -1。轉換的結果如下
 
 | 當前狀態       | 落子座標           | 勝負結果          |
 | :------------: | :---------------: | :---------------: |
@@ -269,7 +269,7 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 ``
 | Inputs 3       | 40                | -1                |
 | Inputs 4       | 21                | 1                 |
 
-網路希望的優化結果為下
+網路希望的優化策略為下
 
 ![loss](https://github.com/CGLemon/pyDLGO/blob/master/img/loss.gif)
 
@@ -376,8 +376,7 @@ AlphaGo Zero 版本的 MCTS 相當精簡，並且去除了模擬步驟，整體�
 
 ## 四、 NN Cache
 
-2018 年 Leela Zero 團隊提出 nn cache 並實作，它將每次的網路運算結果存入 cache ，下次要再使用時，就不需要重新運算，直接從 cache 中拿出即可。由於每次蒙地卡羅會有部分的節點會重複計算，因此它可以加速蒙蒂卡羅迭代的速度。
-
+2018 年 Leela Zero 團隊提出 nn cache 並實作，它將每次的網路運算結果存入 cache ，下次要再使用時，就不需要重新運算，直接從 cache 中拿出即可。由於每次 MCTS 會有部分的節點會重複計算，因此它可以加速 MCTS 迭代的速度。
 
 ## 五、Tromp-Taylor 規則
 

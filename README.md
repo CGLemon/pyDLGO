@@ -23,6 +23,7 @@ The simple English tutorial is [Here](https://github.com/CGLemon/pyDLGO/blob/mas
 2. [演算法實做和原理（持續施工中）](https://github.com/CGLemon/pyDLGO/blob/master/docs/Methods.md)
 3. [GTP 界面原理](https://github.com/CGLemon/pyDLGO/blob/master/docs/dlgoGTP.md)
 4. [SGF 格式說明](https://github.com/CGLemon/pyDLGO/blob/master/docs/SmartGameFormat.md)
+5. [board.py 內的 functions](https://github.com/CGLemon/pyDLGO/blob/master/docs/dlgoAPI.md)
 
 ## License
 
@@ -31,3 +32,4 @@ MIT License
 ## TODO
 * 修復 GUI 的 bug 並優化之
 * 訓練十九路權重
+

@@ -66,7 +66,7 @@ class Node:
 
     def puct_select(self):
         parent_visits = max(self.visits, 1) # The parent visits must great than 1 because we want to get the
-                                            # best policy value if the first selection.
+                                            # best policy value if it is the first selection.
         numerator = math.sqrt(parent_visits)
 
         puct_list = []
@@ -186,8 +186,8 @@ class Search:
         return node.inverse(value)
 
     def think(self, playouts, resign_threshold, verbose):
-        # Get the best move by Monte carlo tree. The time controller and max playout limit
-        # the search. Stonger search result by more time and more playouts.
+        # Get the best move with Monte carlo tree. The time controller and max playouts limit
+        # the search. More thinking time or playouts is stronger.
 
         if self.root_board.num_passes >= 2:
             return PASS

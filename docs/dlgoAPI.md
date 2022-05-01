@@ -1,8 +1,8 @@
 # dlgo API
 
-## board.py 的可用 API
+## board.py
 
-注意，此檔案依賴於 config.py 和 NumPy
+以下是棋盤裡可用的 functions 和參數，此檔案依賴於 config.py 和 NumPy，只需要少量修改，就可以遷移進入你的專案。
 
 #### Functions
    * `void Board.__init__(size: int, komi: float)`
@@ -72,5 +72,3 @@
 
    * `list[nparray] Board.history`
       * 歷史的盤面。
-
-

@@ -10,4 +10,4 @@ FILTER_SIZE = 64 # The network residual filter size.
 
 INPUT_CHANNELS = 18 # Number of the network input layers.
 
-PAST_MOVES = 8 # Number of past move encoding to the planes.
+PAST_MOVES = 8 # Number of past moves encoding to the planes.
