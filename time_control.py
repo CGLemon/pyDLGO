@@ -33,8 +33,6 @@ class TimeControl:
     def time_left(self, color, time, stones):
         if stones == 0:
             self.maintime_left[color] = time
-            self.byotime_left[color] = 0
-            self.stones_left[color] = 0
         else:
             self.maintime_left[color] = 0
             self.byotime_left[color] = time
