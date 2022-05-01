@@ -2,16 +2,16 @@ import time
 
 class TimeControl:
     def __init__(self):
-        self.main_time = 7 * 24 * 60 * 60 # one week
-        self.byo_time = 0
-        self.byo_stones = 0
+        self.main_time = 0
+        self.byo_time = 7 * 24 * 60 * 60 # one week per move
+        self.byo_stones = 1
 
         self.maintime_left = [0, 0]
         self.byotime_left = [0, 0]
         self.stones_left = [0, 0]
         self.in_byo = [False, False]
         
-        self.clock_time = None
+        self.clock_time = time.time()
         self.reset()
 
     def check_in_byo(self):
@@ -62,9 +62,11 @@ class TimeControl:
 
     def get_thinking_time(self, color, board_size, move_num):
         estimate_moves_left = max(4, int(board_size * board_size * 0.4) - move_num)
+        lag_buffer = 1 # Remaining some time for network hiccups or GUI lag 
+        remaining_time = self.maintime_left[color] + self.byotime_left[color] - lag_buffer
         if self.byo_stones == 0:
-            return (self.maintime_left[color] + self.byotime_left[color]) / estimate_moves_left
-        return (self.maintime_left[color] + self.byotime_left[color]) / self.stones_left[color]
+            return remaining_time / estimate_moves_left
+        return remaining_time / self.stones_left[color]
 
     def should_stop(self, max_time):
         elapsed = time.time() - self.clock_time

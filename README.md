@@ -32,4 +32,4 @@ MIT License
 ## TODO
 * 修復 GUI 的 bug 並優化之
 * 訓練十九路權重
-
+* 支援 analyze 和 genmove_analyze 指令，利於分析

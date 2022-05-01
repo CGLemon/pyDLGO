@@ -98,7 +98,7 @@ dlgo 僅支援基本的 GTP 指令集，主要是為了滿足 TCGA 比賽的基�
       * 設定不同的貼目。注意，dlgo 的網路輸出勝率不會因貼目改變而動態調整。
 
    * `time_settings <main time: integer> <byo time: integer> <byo stones: integer>`
-      * 設定初始的時限並重新計時， ```main time``` 為基本思考時間，```byo time``` 為讀秒思考時間，```byo stones``` 為讀秒內要下的棋手數。
+      * 設定初始的時限並重新計時， ```main time``` 為基本思考時間，```byo time``` 為讀秒思考時間，```byo stones``` 為讀秒內要下的棋手數，僅支援加拿大讀秒（Canadian byo-yomi）規則。
 
    * `time_left [black|white] <main time: integer> <byo time: integer> <byo stones: integer>`
       * 設定某方剩餘的時限。
@@ -120,7 +120,7 @@ dlgo 僅支援基本的 GTP 指令集，主要是為了滿足 TCGA 比賽的基�
       * KGS 專用的生成合法手的指令，禁止虛手直到盤面沒有死棋為止，用以清除盤面死棋。
       
    * `kgs-time_settings ...`
-      * KGS 專用的時間控制指令，相比原版的支援更多種類的讀秒規則。
+      * KGS 專用的時間控制指令，相比原版的多支援 Byo-Yomi 讀秒規則，詳情請看[這裡](https://www.gokgs.com/help/timesystems.html)。
       
    * `kgs-game_over`
       * 當每盤對戰結束，會發出此指令。

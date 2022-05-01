@@ -143,6 +143,7 @@ class GTP_LOOP:
             self.process(cmd)
 
     def process(self, cmd):
+        # TODO: Support analyze and genmove_analyze commands.
         main = cmd[0]
         
         if main == "name":

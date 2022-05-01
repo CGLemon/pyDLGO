@@ -6,7 +6,8 @@ from time_control import TimeControl
 import math
 
 class Node:
-    CPUCT = 0.5 # The PUCT hyperparameter.
+    # TODO: Tnue C_PUCT parameter.
+    C_PUCT = 0.5 # The PUCT hyperparameter.
     def __init__(self, p):
         self.policy = p  # The network raw policy from its parents node.
         self.nn_eval = 0 # The network raw eval from this node.
@@ -76,7 +77,7 @@ class Node:
             q_value = self.clamp(0) # Fair winrate if the node is no visit.
             if child.visits != 0:
                 q_value = self.inverse(child.values / child.visits)
-            puct = q_value + self.CPUCT * child.policy * (numerator / (1+child.visits))
+            puct = q_value + self.C_PUCT * child.policy * (numerator / (1+child.visits))
             puct_list.append((puct, vtx))
         return max(puct_list)[1]
 
