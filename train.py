@@ -12,6 +12,8 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
+CACHE_DIR = "data-cache"
+
 def get_currtime():
     lt = time.localtime(time.time())
     return "[{y}-{m}-{d} {h:02d}:{mi:02d}:{s:02d}]".format(
@@ -60,7 +62,7 @@ class Data:
 
 class DataSource:
     def  __init__(self):
-        self.cache_dir = "data-cache"
+        self.cache_dir = CACHE_DIR
         self.buffer = []
         self.chunks = []
         self.done = glob.glob(os.path.join(self.cache_dir, "*"))
@@ -95,7 +97,7 @@ class DataSource:
 
 class DataChopper:
     def  __init__(self, dir_name):
-        self.cache_dir = "data-cache"
+        self.cache_dir = CACHE_DIR
         self._chop_data(dir_name)
 
     def __del__(self):
@@ -248,7 +250,11 @@ class TrainingPipe:
     def running(self, max_steps, verbose_steps, batch_size, learning_rate, noplot):
         cross_entry = nn.CrossEntropyLoss()
         mse_loss = nn.MSELoss()
+
+        # TODO: SGD instead of Adam. Seemd the SGD performance
+        #       is better Adam.
         optimizer = optim.Adam(self.network.parameters(), lr=learning_rate, weight_decay=1e-4)
+
         p_running_loss = 0
         v_running_loss = 0
         steps = 0

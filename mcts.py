@@ -3,6 +3,7 @@ from board import Board, PASS, RESIGN, BLACK, WHITE
 from network import Network
 from time_control import TimeControl
 
+from sys import stderr
 import math
 
 class Node:
@@ -136,6 +137,9 @@ class Node:
                            child.visits)
         return out
 
+#TODO: The MCTS performance is bad. Maybe the recursive is much
+#      slower than loop. Or self.children do too many times mapping
+#      operator. Try to fix it.
 class Search:
     def __init__(self, board: Board, network: Network, time_control: TimeControl):
         self.root_board = board # Root board positions, all simulation boards will fork from it.
@@ -195,7 +199,9 @@ class Search:
 
         self.time_control.clock()
         if verbose:
-            print(self.time_control)
+            stderr.write(str(self.time_control))
+            stderr.write("\n")
+            stderr.flush()
 
         # Prepare some basic information.
         to_move = self.root_board.to_move
@@ -219,9 +225,14 @@ class Search:
             # Start the Monte Carlo tree search.
             self._descend(color, curr_board, self.root_node)
 
-        # Reduce the remaining time. 
+        # Eat the remaining time. 
         self.time_control.took_time(to_move)
+
         if verbose:
-            print(self.root_node.to_string(self.root_board))
-            print(self.time_control)
+            # Dump verbose to stderr because we want to debug it on GTP
+            # interface(sabaki).
+            stderr.write(self.root_node.to_string(self.root_board))
+            stderr.write(str(self.time_control))
+            stderr.flush()
+
         return self.root_node.get_best_move(resign_threshold)
