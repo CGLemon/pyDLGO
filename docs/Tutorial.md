@@ -218,7 +218,7 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 | 比賽                                             |時間                | 狀態               |
 | :------------:                                   | :---------------: | :---------------: |
 | [2021 TAAI](https://www.tcga.tw/taai2021/zh_TW/) | 11 月 20 號比賽 | 結束   |
-| [2022 TCGA](https://sites.google.com/mail.ncnu.edu.tw/2022-tcga/%E5%A4%A7%E6%9C%83%E7%B0%A1%E4%BB%8B) | 暫定 5 月 7 號報名截止 | 開放報名   |
+| [2022 TCGA](https://sites.google.com/mail.ncnu.edu.tw/2022-tcga/%E5%A4%A7%E6%9C%83%E7%B0%A1%E4%BB%8B) | 5 月 14 號比賽 | 報名截止   |
 
 
 ### 聯絡資訊
