@@ -59,7 +59,7 @@ class Data:
             buf = get_symmetry_plane(symm, np.reshape(buf, (BOARD_SIZE, BOARD_SIZE)))
             self.policy = int(np.argmax(buf))
 
-
+# DataSource will load the training data from disk.
 class DataSource:
     def  __init__(self):
         self.cache_dir = CACHE_DIR
@@ -95,15 +95,19 @@ class DataSource:
             self._chunk_to_buf(chunk)
         return self.buffer.pop()
 
+# Load the SGF files and save the training data to the disk.
 class DataChopper:
     def  __init__(self, dir_name):
         self.cache_dir = CACHE_DIR
-        self._chop_data(dir_name)
+        self.__chop_data(dir_name)
 
     def __del__(self):
+        # Do not delete the cache training data. We may
+        # use them next time.
         pass
 
-    def _chop_data(self, dir_name):
+    def __chop_data(self, dir_name, num_chunks=100):
+        # Load the SGF files and tranfer them to training data.
         sgf_games = sgf.parse_from_dir(dir_name)
         total = len(sgf_games)
 
@@ -116,27 +120,31 @@ class DataChopper:
 
         cnt = 0
         steps = 0
-        chop_steps = max(total//100, 1)
+        chop_steps = max(total//num_chunks, 1)
         buf = []
 
         for game in sgf_games:
             steps += 1
-            temp = self._process_one_game(game)
+            temp = self.__process_one_game(game)
 
             buf.extend(temp)
 
             if steps % chop_steps == 0:
-                print("parsed {:.2f}% games".format(100 * steps/total))
-                self._save_chunk(buf, cnt)
+                print("parsed {:.2f}% games".format(num_chunks * steps/total))
+                self.__save_chunk(buf, cnt)
                 cnt += 1
                 buf = []
 
         if len(buf) != 0:
-            print("parsed {:.2f}% games".format(100 * steps/total))
-            self._save_chunk(buf, cnt)
+            print("parsed {:.2f}% games".format(num_chunks * steps/total))
+            self.__save_chunk(buf, cnt)
 
-    def _save_chunk(self, buf, cnt):
+    def __save_chunk(self, buf, cnt):
+        # Save the training data to the disk.
         size = len(buf)
+
+        # Shuffle it.
+        random.shuffle(buf)
 
         inputs_buf = np.zeros((size, INPUT_CHANNELS, BOARD_SIZE, BOARD_SIZE))
         policy_buf = np.zeros((size))
@@ -153,7 +161,7 @@ class DataChopper:
         filenmae = os.path.join(self.cache_dir, "chunk_{}.npz".format(cnt))
         np.savez_compressed(filenmae, i=inputs_buf, p=policy_buf, v=value_buf, t=to_move_buf)
 
-    def _process_one_game(self, game):
+    def __process_one_game(self, game):
         # Collect training data from one SGF game.
 
         temp = []
@@ -178,7 +186,7 @@ class DataChopper:
                 data = Data()
                 data.inputs = board.get_features()
                 data.to_move = color
-                data.policy = self._do_text_move(board, color, move)
+                data.policy = self.__do_text_move(board, color, move)
                 temp.append(data)
 
         for data in temp:
@@ -190,7 +198,7 @@ class DataChopper:
                 data.value = -1
         return temp
 
-    def _do_text_move(self, board, color, move):
+    def __do_text_move(self, board, color, move):
         # Play next move and return the policy data.
 
         board.to_move = color
@@ -251,9 +259,13 @@ class TrainingPipe:
         cross_entry = nn.CrossEntropyLoss()
         mse_loss = nn.MSELoss()
 
-        # TODO: SGD instead of Adam. Seemd the SGD performance
-        #       is better Adam.
-        optimizer = optim.Adam(self.network.parameters(), lr=learning_rate, weight_decay=1e-4)
+        # SGD instead of Adam. Seemd the SGD performance
+        # is better Adam.
+        optimizer = optim.SGD(self.network.parameters(),
+                              lr=learning_rate,
+                              momentum=0.9,
+                              nesterov=True,
+                              weight_decay=1e-4)
 
         p_running_loss = 0
         v_running_loss = 0
@@ -293,11 +305,11 @@ class TrainingPipe:
                 loss.backward()
                 optimizer.step()
 
+                # Accumulate running loss.
                 p_running_loss += p_loss.item()
                 v_running_loss += v_loss.item()
 
-
-                # Fifth, dump verbose.
+                # Fifth, dump training verbose.
                 if (steps+1) % verbose_steps == 0:
                     elapsed = time.time() - clock_time
                     rate = verbose_steps/elapsed
@@ -324,6 +336,7 @@ class TrainingPipe:
 
         print("Training is over.");
         if not noplot:
+            # Six plot the running loss graph.
             self.plot_loss(running_loss_record)
 
     def plot_loss(self, record):

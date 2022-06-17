@@ -168,7 +168,7 @@
 
 ## 指定訓練的 GPU
 
-在 ```python3``` 輸入環境參數 ```CUDA_VISIBLE_DEVICES``` ，可以指定要用哪個 GPU 訓練網路，GPU 的編號從 0 開始，如果有 4 個 GPU 則編號從 0 到 3，數字 0 代表使用預設的。
+在 ```python3``` 輸入環境參數 ```CUDA_VISIBLE_DEVICES``` ，可以指定要用哪個 GPU 訓練網路，GPU 的編號從 0 開始，如果有 4 個 GPU 則編號從 0 到 3，數字 0 代表使用預設的。如果不指定，則默認使用所有的 GPU。
 
     $ CUDA_VISIBLE_DEVICES=0 python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.0001 --load-weights preweights --weights-name outweights --cache
 

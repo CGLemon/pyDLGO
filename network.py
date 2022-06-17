@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from config import INPUT_CHANNELS, BLOCK_SIZE, FILTER_SIZE, USE_GPU
+from config import INPUT_CHANNELS, BLOCK_SIZE, FILTER_SIZE, USE_GPU, USE_SE
 
 class FullyConnect(nn.Module):
     def __init__(self, in_size,
@@ -82,13 +82,13 @@ class ResBlock(nn.Module):
         if se_size != None:
             self.with_se = True
             self.avg_pool = nn.AdaptiveAvgPool2d(1)
-            self.extend = FullyConnect(
+            self.squeeze = FullyConnect(
                 in_size=channels,
                 out_size=se_size,
                 relu=True,
                 collector=collector
             )
-            self.squeeze = FullyConnect(
+            self.excite = FullyConnect(
                 in_size=se_size,
                 out_size=2 * channels,
                 relu=False,
@@ -105,8 +105,8 @@ class ResBlock(nn.Module):
             b, c, _, _ = out.size()
             seprocess = self.avg_pool(out)
             seprocess = torch.flatten(seprocess, start_dim=1, end_dim=3)
-            seprocess = self.extend(seprocess)
             seprocess = self.squeeze(seprocess)
+            seprocess = self.excite(seprocess)
 
             gammas, betas = torch.split(seprocess, self.channels, dim=1)
             gammas = torch.reshape(gammas, (b, c, 1, 1))
@@ -123,6 +123,7 @@ class Network(nn.Module):
                        input_channels=INPUT_CHANNELS,
                        block_size = BLOCK_SIZE,
                        filter_size = FILTER_SIZE,
+                       use_se=USE_SE,
                        use_gpu=USE_GPU):
         super().__init__()
 
@@ -137,10 +138,14 @@ class Network(nn.Module):
         self.board_size = board_size
         self.spatial_size = self.board_size ** 2
         self.input_channels = input_channels
+        self.use_se = use_se
         self.use_gpu = True if torch.cuda.is_available() and use_gpu else False
         self.gpu_device = torch.device('cpu')
 
-        self.set_layers()
+        if self.use_se:
+            assert self.residual_channels // 2 == 0, "FILTER_SIZE must be divided by 2."
+
+        self.construct_layers()
         if self.use_gpu:
             self.gpu_device = torch.device('cuda')
             self.to_gpu_device()
@@ -148,7 +153,7 @@ class Network(nn.Module):
     def to_gpu_device(self):
         self = self.to(self.gpu_device)
 
-    def set_layers(self):
+    def construct_layers(self):
         self.input_conv = ConvBlock(
             in_channels=self.input_channels,
             out_channels=self.residual_channels,
@@ -160,8 +165,11 @@ class Network(nn.Module):
         # residual tower
         nn_stack = []
         for s in range(self.block_size):
+            se_size = None
+            if self.use_se:
+                se_size = self.residual_channels // 2
             nn_stack.append(ResBlock(self.residual_channels,
-                                     None,
+                                     se_size,
                                      self.tensor_collector))
         self.residual_tower = nn.Sequential(*nn_stack)
 

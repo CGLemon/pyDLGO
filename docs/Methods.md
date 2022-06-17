@@ -380,7 +380,7 @@ AlphaGo Zero 版本的 MCTS 相當精簡，並且去除了模擬步驟，整體�
 
 ## 五、 NN Cache
 
-2018 年 Leela Zero 團隊提出 nn cache 並實作，它將每次的網路運算結果存入 cache ，下次要再使用時，就不需要重新運算，直接從 cache 中拿出即可。由於每次 MCTS 會有部分的節點會重複計算，因此它可以加速 MCTS 迭代的速度。
+2018 年 Leela Zero 團隊提出 nn cache 並實作，它將每次的網路運算結果存入 cache table ，下次要再使用時，就不需要重新運算，直接從 cache 中拿出即可。由於每次 MCTS 會有部分的節點會重複計算，因此它可以加速 MCTS 迭代的速度。
 
 ## 六、Tromp-Taylor 規則
 

@@ -34,6 +34,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | BLOCK_SIZE        | 殘差網路的 block 的數目，數目越大網路越大 |
 | FILTER_SIZE       | 卷積網路 filter 的數目，數目越大網路越大  |
 | BOARD_SIZE        | 棋盤大小，必須和棋譜的大小一致            |
+| USE_SE            | 是否啟用 SE 網路結構                         |
 | USE_GPU           | 是否使用 GPU 訓練。如果為 True ，會自動檢查是否有可用的 GPU ，如果沒有檢測到 GPU ，則會使用 CPU 訓練，如果為 False ，則強制使用 CPU 訓練。此參數建議使用 True |
 
 
@@ -46,7 +47,7 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | -d, --dir            | string            | 要訓練的 SGF 檔案夾|
 | -s, --steps          | integer           | 要訓練的步數，越多訓練時間越久 |
 | -b, --batch-size     | integer           | 訓練的 batch size，建議至少大於 128 ，太低會無法訓練 |
-| -l, --learning-rate  | float             | 學習率大小 ，建議從 0.001 開始|
+| -l, --learning-rate  | float             | 學習率大小 ，建議從 0.01 開始|
 | -w, --weights-name   | string            | 要輸出的網路權重名稱 |
 | --load-weights       | string            | 載入其它權重，可以從此權重繼續開始訓練 |
 | -c, --cacge          | NA                | 直接使用 ```data-cache``` 的訓練資料 |
@@ -218,8 +219,8 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 | 比賽                                             |時間                | 狀態               |
 | :------------:                                   | :---------------: | :---------------: |
 | [2021 TAAI](https://www.tcga.tw/taai2021/zh_TW/) | 11 月 20 號比賽 | 結束   |
-| [2022 TCGA](https://sites.google.com/mail.ncnu.edu.tw/2022-tcga/%E5%A4%A7%E6%9C%83%E7%B0%A1%E4%BB%8B) | 5 月 14 號比賽 | 報名截止   |
-
+| [2022 TCGA](https://sites.google.com/mail.ncnu.edu.tw/2022-tcga/%E5%A4%A7%E6%9C%83%E7%B0%A1%E4%BB%8B) | 5 月 14 號比賽 | 結束   |
+| [2022 ICGA](https://icga.org/?page_id=3468) |  7 月 23 號到 29 號間比賽 | 開始報名  |
 
 ### 聯絡資訊
 
