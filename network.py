@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from config import INPUT_CHANNELS, BLOCK_SIZE, FILTER_SIZE, USE_GPU, USE_SE
+from config import *
+from transformer import TransformerEncoderOnly 
 
 class FullyConnect(nn.Module):
     def __init__(self, in_size,
@@ -153,6 +154,15 @@ class Network(nn.Module):
         self.residual_tower = nn.Sequential(*nn_stack)
 
         # policy head
+        if USE_POLICY_ATTENTION:
+            self.encoder_layers = TransformerEncoderOnly(
+                d_model=self.residual_channels,
+                n_head=4,
+                dim_feedforward=2*self.residual_channels,
+                num_layer=1,
+                drop_rate=0
+            )
+
         self.policy_conv = ConvBlock(
             in_channels=self.residual_channels,
             out_channels=self.policy_channels,
@@ -191,7 +201,20 @@ class Network(nn.Module):
         x = self.residual_tower(x)
 
         # policy head
-        pol = self.policy_conv(x)
+        pol = x
+
+        if USE_POLICY_ATTENTION:
+            n, c, h, w = pol.size()
+
+            pol = torch.reshape(pol, (n, c, h*w))
+            pol = pol.transpose(1,2)
+
+            pol = self.encoder_layers(pol)
+
+            pol = pol.transpose(1,2)
+            pol = torch.reshape(pol, (n, c, h, w))
+
+        pol = self.policy_conv(pol)
         pol = self.policy_fc(torch.flatten(pol, start_dim=1, end_dim=3))
 
         # value head
