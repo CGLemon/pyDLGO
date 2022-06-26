@@ -233,6 +233,7 @@ class Search:
             # interface(sabaki).
             stderr.write(self.root_node.to_string(self.root_board))
             stderr.write(str(self.time_control))
+            stderr.write("\n")
             stderr.flush()
 
         return self.root_node.get_best_move(resign_threshold)

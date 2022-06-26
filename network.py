@@ -7,15 +7,10 @@ from config import INPUT_CHANNELS, BLOCK_SIZE, FILTER_SIZE, USE_GPU, USE_SE
 class FullyConnect(nn.Module):
     def __init__(self, in_size,
                        out_size,
-                       relu=True,
-                       collector=None):
+                       relu=True):
         super().__init__()
         self.relu = relu
         self.linear = nn.Linear(in_size, out_size)
-
-        if collector != None:
-            collector.append(self.linear.weight)
-            collector.append(self.linear.bias)
 
     def forward(self, x):
         x = self.linear(x)
@@ -25,8 +20,7 @@ class ConvBlock(nn.Module):
     def __init__(self, in_channels,
                        out_channels,
                        kernel_size,
-                       relu=True,
-                       collector=None):
+                       relu=True):
         super().__init__()
  
         assert kernel_size in (1, 3)
@@ -43,14 +37,6 @@ class ConvBlock(nn.Module):
             eps=1e-5
         )
 
-        if collector != None:
-            collector.append(self.conv.weight)
-            collector.append(self.conv.bias)
-            collector.append(self.bn.weight)
-            collector.append(self.bn.bias)
-            collector.append(self.bn.running_mean)
-            collector.append(self.bn.running_var)
-
         nn.init.kaiming_normal_(self.conv.weight,
                                 mode="fan_out",
                                 nonlinearity="relu")
@@ -60,7 +46,7 @@ class ConvBlock(nn.Module):
         return F.relu(x, inplace=True) if self.relu else x
 
 class ResBlock(nn.Module):
-    def __init__(self, channels, se_size=None, collector=None):
+    def __init__(self, channels, se_size=None):
         super().__init__()
         self.with_se=False
         self.channels=channels
@@ -68,15 +54,13 @@ class ResBlock(nn.Module):
         self.conv1 = ConvBlock(
             in_channels=channels,
             out_channels=channels,
-            kernel_size=3,
-            collector=collector
+            kernel_size=3
         )
         self.conv2 = ConvBlock(
             in_channels=channels,
             out_channels=channels,
             kernel_size=3,
-            relu=False,
-            collector=collector
+            relu=False
         )
 
         if se_size != None:
@@ -85,14 +69,12 @@ class ResBlock(nn.Module):
             self.squeeze = FullyConnect(
                 in_size=channels,
                 out_size=se_size,
-                relu=True,
-                collector=collector
+                relu=True
             )
             self.excite = FullyConnect(
                 in_size=se_size,
                 out_size=2 * channels,
-                relu=False,
-                collector=collector
+                relu=False
             )
 
     def forward(self, x):
@@ -129,7 +111,6 @@ class Network(nn.Module):
 
         self.nn_cache = {}
 
-        self.tensor_collector = []
         self.block_size = block_size
         self.residual_channels = filter_size
         self.policy_channels = 8
@@ -158,8 +139,7 @@ class Network(nn.Module):
             in_channels=self.input_channels,
             out_channels=self.residual_channels,
             kernel_size=3,
-            relu=True,
-            collector=self.tensor_collector
+            relu=True
         )
 
         # residual tower
@@ -168,9 +148,8 @@ class Network(nn.Module):
             se_size = None
             if self.use_se:
                 se_size = self.residual_channels // 2
-            nn_stack.append(ResBlock(self.residual_channels,
-                                     se_size,
-                                     self.tensor_collector))
+            nn_stack.append(ResBlock(self.residual_channels, se_size))
+
         self.residual_tower = nn.Sequential(*nn_stack)
 
         # policy head
@@ -178,14 +157,12 @@ class Network(nn.Module):
             in_channels=self.residual_channels,
             out_channels=self.policy_channels,
             kernel_size=1,
-            relu=True,
-            collector=self.tensor_collector
+            relu=True
         )
         self.policy_fc = FullyConnect(
             in_size=self.policy_channels * self.spatial_size,
             out_size=self.spatial_size + 1,
-            relu=False,
-            collector=self.tensor_collector
+            relu=False
         )
 
         # value head
@@ -193,21 +170,18 @@ class Network(nn.Module):
             in_channels=self.residual_channels,
             out_channels=self.value_channels,
             kernel_size=1,
-            relu=True,
-            collector=self.tensor_collector
+            relu=True
         )
 
         self.value_fc = FullyConnect(
             in_size=self.value_channels * self.spatial_size,
             out_size=self.value_layers,
-            relu=True,
-            collector=self.tensor_collector
+            relu=True
         )
         self.winrate_fc = FullyConnect(
             in_size=self.value_layers,
             out_size=1,
-            relu=False,
-            collector=self.tensor_collector
+            relu=False
         )
 
     def forward(self, planes):
