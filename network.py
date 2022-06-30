@@ -107,6 +107,7 @@ class Network(nn.Module):
                        block_size = BLOCK_SIZE,
                        filter_size = FILTER_SIZE,
                        use_se=USE_SE,
+                       use_policy_attention=USE_POLICY_ATTENTION,
                        use_gpu=USE_GPU):
         super().__init__()
 
@@ -121,6 +122,7 @@ class Network(nn.Module):
         self.spatial_size = self.board_size ** 2
         self.input_channels = input_channels
         self.use_se = use_se
+        self.use_policy_attention = use_policy_attention
         self.use_gpu = True if torch.cuda.is_available() and use_gpu else False
         self.gpu_device = torch.device('cpu')
 
@@ -154,7 +156,7 @@ class Network(nn.Module):
         self.residual_tower = nn.Sequential(*nn_stack)
 
         # policy head
-        if USE_POLICY_ATTENTION:
+        self.use_policy_attention:
             self.encoder_layers = TransformerEncoderOnly(
                 d_model=self.residual_channels,
                 n_head=4,
@@ -203,7 +205,7 @@ class Network(nn.Module):
         # policy head
         pol = x
 
-        if USE_POLICY_ATTENTION:
+        self.use_policy_attention:
             n, c, h, w = pol.size()
 
             pol = torch.reshape(pol, (n, c, h*w))
