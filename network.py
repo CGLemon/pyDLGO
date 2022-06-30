@@ -156,7 +156,7 @@ class Network(nn.Module):
         self.residual_tower = nn.Sequential(*nn_stack)
 
         # policy head
-        self.use_policy_attention:
+        if self.use_policy_attention:
             self.encoder_layers = TransformerEncoderOnly(
                 d_model=self.residual_channels,
                 n_head=4,
@@ -205,7 +205,7 @@ class Network(nn.Module):
         # policy head
         pol = x
 
-        self.use_policy_attention:
+        if self.use_policy_attention:
             n, c, h, w = pol.size()
 
             pol = torch.reshape(pol, (n, c, h*w))
