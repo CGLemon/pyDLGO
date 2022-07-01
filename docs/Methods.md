@@ -294,9 +294,17 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 ``
 | Inputs 3       | 40                | -1                |
 | Inputs 4       | 21                | -1                |
 
-## 三、殘差神經網路
+## 三、殘差神經網路（Residual Networks）
 
-Coming soon...
+理論而言，越深的網路可以有更強的擬合能力和更好的準確性，但實際上，直接疊加網路並不能有更好的結果，反而可能有過擬合（overfitting）現象或是網路退化等問題，Resnet 作者認為這是由於深度過深，梯度無法順利傳遞下去導致的梯度消失/爆炸。下圖顯示 56 層的捲積層不論在訓練時或推論時，其準確度都比 34 層的表現更差。
+
+![overfitting](https://github.com/CGLemon/pyDLGO/blob/master/img/overfitting.png)
+
+為了解決此問題，作者提出 shortcut 結構，簡單粗暴的將最初的輸入加到最後的輸出中，此結構能夠讓梯度直接穿透多層網路，很好的避免了梯度消失/爆炸的問題，此種應用 shortcut 結構堆疊的網路稱為 Residual Networks（簡稱 Resnet）。Resnet 最大的好處和突破為，它可堆疊的層數幾乎沒有上限，基本上越深準度會越好，甚至在原論文中使用超過 1000 層的網路，也不會發生退化問題。通常我們稱一個 shortcut 結構為一個 block。
+
+![shortcut](https://github.com/CGLemon/pyDLGO/blob/master/img/shortcut.png)
+
+雖然在原本論文中，作者實做了多種不同變體的 block，但一般應用在棋盤遊戲的 Resnet 比較簡單，每層使用的 kernel size 固定為 3，每一個 block 使用兩個捲積層和兩個正規層，不使用 Max Pooling。
 
 ## 四、蒙地卡羅樹搜索（Monte Carlo Tree Search）
 
