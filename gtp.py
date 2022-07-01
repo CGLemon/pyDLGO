@@ -13,6 +13,7 @@ class GTP_ENGINE:
         self.time_control = TimeControl()
         self.network.trainable(False)
         self.board_history = [self.board.copy()]
+        self.last_verbose = str()
 
         if self.args.weights != None:
             self.network.load_pt(self.args.weights)
@@ -34,7 +35,9 @@ class GTP_ENGINE:
 
         self.board.to_move = c
         search = Search(self.board, self.network, self.time_control)
-        move = search.think(self.args.playouts, self.args.resign_threshold, self.args.verbose)
+
+        # Collect the search verbose for the built-in GUI.
+        move, self.last_verbose = search.think(self.args.playouts, self.args.resign_threshold, self.args.verbose)
         if self.board.play(move):
             self.board_history.append(self.board.copy())
 

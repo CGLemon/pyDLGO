@@ -236,4 +236,6 @@ class Search:
             stderr.write("\n")
             stderr.flush()
 
-        return self.root_node.get_best_move(resign_threshold)
+        out_verbose = self.root_node.to_string(self.root_board)
+
+        return self.root_node.get_best_move(resign_threshold), out_verbose

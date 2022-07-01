@@ -209,6 +209,10 @@ class GUI_LOOP(GTP_ENGINE):
 
                 if vtx != PASS or vtx != RESIGN:
                     self.update_canvas(vtx, to_move,  move_num+1)
+
+                    # Dump the search verbose.
+                    if self.args.verbose:
+                        self.insert_scroll_text(self.last_verbose)
                 self.acquire_vtx = None
             else:
                 if self.acquire_vtx != None:
