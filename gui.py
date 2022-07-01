@@ -231,6 +231,7 @@ class GUI_LOOP(GTP_ENGINE):
                     self.insert_scroll_text("白棋投降")
                 resignd = None
                 self.game_over = True
+                self.network.clear_cache()
             elif self.board.num_passes >= 2:
                 score = self.board.final_score()
                 if abs(score) <= 0.01:
@@ -240,6 +241,7 @@ class GUI_LOOP(GTP_ENGINE):
                 elif score < 0:
                     self.insert_scroll_text("白勝{}目".format(-score))
                 self.game_over = True
+                self.network.clear_cache()
 
     def update_canvas(self, vtx, to_move, move_num):
         # Update the board canvas.

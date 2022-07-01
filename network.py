@@ -247,6 +247,9 @@ class Network(nn.Module):
 
         return p, v
 
+    def clear_cache(self):
+        self.nn_cache.clear()
+
     def trainable(self, t=True):
         torch.set_grad_enabled(t)
         if t==True:

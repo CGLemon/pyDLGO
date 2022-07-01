@@ -23,6 +23,7 @@ class GTP_ENGINE:
     def clear_board(self):
         self.board.reset(self.board.board_size, self.board.komi)
         self.board_history = [self.board.copy()]
+        self.network.clear_cache()
 
     # For GTP command "genmove". The engine returns the best move and play it. 
     def genmove(self, color):
