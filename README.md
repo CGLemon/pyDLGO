@@ -24,12 +24,18 @@ The simple English tutorial is [Here](https://github.com/CGLemon/pyDLGO/blob/mas
 3. [GTP 界面原理](https://github.com/CGLemon/pyDLGO/blob/master/docs/dlgoGTP.md)
 4. [SGF 格式說明](https://github.com/CGLemon/pyDLGO/blob/master/docs/SmartGameFormat.md)
 5. [board.py 內的 functions](https://github.com/CGLemon/pyDLGO/blob/master/docs/dlgoAPI.md)
+6. [Python 圍棋引擎列表（歡迎添加）](https://github.com/CGLemon/pyDLGO/blob/master/docs/PyGoEngine.md)
+7. [一個 C++ 圍棋引擎實做](https://github.com/CGLemon/Sayuri)
 
 ## License
 
 MIT License
 
-## TODO
+## Todo
 * 修復 GUI 的 bug 並優化之
 * 訓練十九路權重
-* 支援 analyze 和 genmove_analyze 指令，利於分析
+* 支援 ```analyze``` 和 ```genmove_analyze``` 指令，利於分析
+
+### 聯絡資訊
+
+如果有任何問題或是建議，可以通過 ```cglemon000@gmail.com``` 聯繫我。

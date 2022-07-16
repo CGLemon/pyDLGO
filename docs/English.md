@@ -17,13 +17,13 @@ The dlgo will use your GPU automatically. If you want to disable GPU, set the va
 
 ## Open With GTP GUI
 
-The dlgo support for the GTP GUI. [Sabaki](https://sabaki.yichuanshen.de) is recommanded. Some helpful optional arguments are here.
+The dlgo support the GTP GUI. [Sabaki](https://sabaki.yichuanshen.de) is recommanded. Some helpful optional arguments are here.
 
     optional arguments:
       -p <integer>, --playouts <integer>
-                            The number of playouts
+                            The number of playouts.
       -w <string>, --weights <string>
-                            The weights file name
+                            The weights file name.
       -r <float>, --resign-threshold <float>
                             Resign when winrate is less than x.
 
@@ -46,9 +46,9 @@ Some helpful optional arguments are here.
     optional arguments:
       -h, --help            show this help message and exit
       -d <string>, --dir <string>
-                            The input SGF files directory
+                            The input SGF files directory. Will use data cache if set None.
       -s <integer>, --steps <integer>
-                            Terminate after these steps
+                            Terminate after these steps.
       -v <integer>, --verbose-steps <integer>
                             Dump verbose on every X steps.
       -b <integer>, --batch-size <integer>
@@ -57,10 +57,6 @@ Some helpful optional arguments are here.
                             The learning rate.
       -w <string>, --weights-name <string>
                             The output weights name.
-      -c, --cache           Use the data cache without parsing new SGF files.
       --load-weights <string>
                             The inputs weights name.
       --noplot              Disable plotting.
-
-
-

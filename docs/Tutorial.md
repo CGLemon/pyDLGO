@@ -19,11 +19,11 @@
 
 ## ㄧ、訓練網路
 
-dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一個網路，通過以下步驟可以訓練出一個基本網路。
+dlgo 包含 SGF 解析器，可以解析此格式的棋譜，並將棋譜作為訓練資料訓練一個網路，通過以下步驟可以訓練出一個基本網路。
 
 #### 第一步、收集棋譜
 
-需要收集訓練的棋譜，如果你沒有可使用的棋譜，可以使用附的 sgf.zip，裡面包含三萬五千盤左右的九路棋譜。也可以到 [Aya](http://www.yss-aya.com/ayaself/ayaself.html) 、 [KGS](https://www.u-go.net/gamerecords/) 或是 [leela zero](https://leela.online-go.com/zero/) 上找到更多可訓練的棋譜。需要注意的是，dlgo 不能解析讓子棋棋譜。
+需要收集訓練的棋譜，如果你沒有可使用的棋譜，可以使用附的 sgf.zip，裡面包含三萬五千盤左右的九路棋譜。也可以到 [Aya](http://www.yss-aya.com/ayaself/ayaself.html) 、 [KGS](https://www.u-go.net/gamerecords/) 或是 [Leela Zero](https://leela.online-go.com/zero/) 上找到更多可訓練的棋譜。需要注意的是，dlgo 不能解析讓子棋棋譜。
 
 #### 第二步、設定網路大小
 
@@ -34,7 +34,8 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
 | BLOCK_SIZE        | 殘差網路的 block 的數目，數目越大網路越大 |
 | FILTER_SIZE       | 卷積網路 filter 的數目，數目越大網路越大  |
 | BOARD_SIZE        | 棋盤大小，必須和棋譜的大小一致            |
-| USE_SE            | 是否啟用 SE 網路結構                         |
+| USE_SE            | 是否啟用 SE 網路結構                     |
+| USE_POLICY_ATTENTION  | 是否啟用 self-attention 網路結構     |
 | USE_GPU           | 是否使用 GPU 訓練。如果為 True ，會自動檢查是否有可用的 GPU ，如果沒有檢測到 GPU ，則會使用 CPU 訓練，如果為 False ，則強制使用 CPU 訓練。此參數建議使用 True |
 
 
@@ -44,13 +45,12 @@ dlgo 可以解析 SGF 格式的棋譜，並將棋譜作為訓練資料訓練一�
     
 | 參數                 |參數類別            | 說明              |
 | :---------------:    | :---------------: | :---------------: |
-| -d, --dir            | string            | 要訓練的 SGF 檔案夾|
+| -d, --dir            | string            | 要訓練的 SGF 檔案夾，不指定則直接使用 ```data-cache``` 的訓練資料|
 | -s, --steps          | integer           | 要訓練的步數，越多訓練時間越久 |
 | -b, --batch-size     | integer           | 訓練的 batch size，建議至少大於 128 ，太低會無法訓練 |
 | -l, --learning-rate  | float             | 學習率大小 ，建議從 0.01 開始|
 | -w, --weights-name   | string            | 要輸出的網路權重名稱 |
 | --load-weights       | string            | 載入其它權重，可以從此權重繼續開始訓練 |
-| -c, --cacge          | NA                | 直接使用 ```data-cache``` 的訓練資料 |
 | --noplot             | NA                | 訓練完後不要使用 Matplotlib 繪圖 |
 
 以下是訓練範例命令
@@ -104,11 +104,11 @@ Windows 系統是無法直接使用此程式的，必須先將 dlgo 打包成 ex
     C:\Users\administrator> pyinstaller -D dlgo.py
 
 
-另外，最好不要使用 pyinstaller -F 指令進行操作，否則很可能在運行程式後，C 盤下產生大量的臨時文件，導致 C 盤爆滿！並且每次啟動前需要解壓，導致啟動緩慢。當打包成功之後的操作與下面相同，引擎選中目標文件夾下 dist 文件夾中的 dlgo.exe 即可。
+另外，最好不要使用 pyinstaller -F 指令進行操作，否則很可能在運行程式後，C 盤下產生大量的臨時文件，導致 C 盤容量不足，並且每次啟動前需要解壓，使得啟動緩慢。當打包成功之後的操作與下面相同，引擎選中目標文件夾下 dist 文件夾中的 dlgo.exe 即可。
 
 ## 三、使用 GTP 介面
 
-dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比如用 [Sabaki](https://sabaki.yichuanshen.de) 或是 [gogui](https://github.com/Remi-Coulom/gogui) 將 dlgo 掛載上去，使用的參數參考第二部份。以下是如何在 Sabaki 上使用的教學。
+dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比如用 [Sabaki](https://sabaki.yichuanshen.de) 或是 [GoGui](https://github.com/Remi-Coulom/gogui) 將 dlgo 掛載上去，使用的參數參考第二部份。以下是如何在 Sabaki 上使用的教學。
 
 #### 第一步、打開引擎選項
 
@@ -168,7 +168,6 @@ KGS 是一個網路圍棋伺服器，它曾經世界最大、最多人使用的�
 
 登錄 KGS 客戶端（注意，你第一個申請的帳號正在被引擎使用，請申請第二個帳號或使用參觀模式），可以從“新開對局”中找到你的帳號，點擊你的帳號即可發出對局申請。
 
-
 ## 五、參加 TCGA 競賽
 
 TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型的電腦對局比賽，當然也包括圍棋。TCGA 的圍棋比賽是使用 KGS 伺服器連線的，如果你已經能順利掛載引擎到 KGS 上，恭喜你完成第一步比賽的準備，接下來可以設法強化 dlgo，像是訓練更大的權重，或是更改網路結構等等，希望你能在比賽中獲得好成績。
@@ -212,7 +211,7 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
     可以，但是要求報名時標注使用此程式，並且要有一定的改進，最後希望能將更改的程式開源。
 
 
-### 比賽列表
+### TCGA 相關比賽列表
 
 * TCGA 管理的網站這幾年好像有點疏於維護，容易出現錯誤訊息，如果出現錯誤訊息請等幾天或幾個禮拜後再嘗試進去看看。
 
@@ -220,9 +219,10 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 | :------------:                                   | :---------------: | :---------------: |
 | [2021 TAAI](https://www.tcga.tw/taai2021/zh_TW/) | 11 月 20 號比賽 | 結束   |
 | [2022 TCGA](https://sites.google.com/mail.ncnu.edu.tw/2022-tcga/%E5%A4%A7%E6%9C%83%E7%B0%A1%E4%BB%8B) | 5 月 14 號比賽 | 結束   |
-| [2022 ICGA](https://icga.org/?page_id=3468) |  7 月 23 號到 29 號間比賽 | 開始報名  |
 
-### 聯絡資訊
+### ICGA 比賽列表
 
-如果有其它問題，可以通過 ```cglemon000@gmail.com``` 聯繫我。
+| 比賽                                             |時間                | 狀態               |
+| :------------:                                   | :---------------: | :---------------: |
+| [2022 ICGA](https://icga.org/?page_id=3468)      |  7 月 23 號到 29 號間比賽 | 報名截止  |
 

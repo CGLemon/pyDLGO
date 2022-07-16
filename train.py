@@ -244,14 +244,14 @@ class DataSet:
         return self.dummy_size
 
 class TrainingPipe:
-    def __init__(self, dir_name, use_cache):
+    def __init__(self, dir_name):
         self.network = Network(BOARD_SIZE)
         self.network.trainable()
 
         self.num_workers = max(min(os.cpu_count(), 16) - 2 , 0)
         self.steps_per_epoch = 2000
 
-        if not use_cache:
+        if dir_name is not None:
             self.data_chopper = DataChopper(dir_name)
         self.data_set = DataSet(self.num_workers)
         
@@ -368,9 +368,6 @@ class TrainingPipe:
 def valid_args(args):
     result = True
 
-    if args.dir == None:
-        print("Must to give the argument --dir <string>")
-        result = False
     if args.weights_name == None:
         print("Must to give the argument --weights-name <string>")
         result = False
@@ -389,7 +386,7 @@ def valid_args(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dir", metavar="<string>",
-                        help="The input SGF files directory", type=str)
+                        help="The input SGF files directory. Will use data cache if set None.", type=str)
     parser.add_argument("-s", "--steps", metavar="<integer>",
                         help="Terminate after these steps", type=int)
     parser.add_argument("-v", "--verbose-steps", metavar="<integer>",
@@ -400,8 +397,6 @@ if __name__ == "__main__":
                         help="The learning rate.", type=float)
     parser.add_argument("-w", "--weights-name", metavar="<string>",
                         help="The output weights name.", type=str)
-    parser.add_argument("-c", "--cache", action="store_true",
-                        help="Use the data cache without parsing new SGF files.", default=False)
     parser.add_argument("--load-weights", metavar="<string>",
                         help="The inputs weights name.", type=str)
     parser.add_argument("--noplot", action="store_true",
@@ -409,7 +404,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     if valid_args(args):
-        pipe = TrainingPipe(args.dir, args.cache)
+        pipe = TrainingPipe(args.dir)
         pipe.load_weights(args.load_weights)
         pipe.running(args.steps, args.verbose_steps, args.batch_size, args.learning_rate, args.noplot)
         pipe.save_weights(args.weights_name)
