@@ -25,7 +25,6 @@ The simple English tutorial is [Here](https://github.com/CGLemon/pyDLGO/blob/mas
 4. [SGF 格式說明](https://github.com/CGLemon/pyDLGO/blob/master/docs/SmartGameFormat.md)
 5. [board.py 內的 functions](https://github.com/CGLemon/pyDLGO/blob/master/docs/dlgoAPI.md)
 6. [Python 圍棋引擎列表（歡迎添加）](https://github.com/CGLemon/pyDLGO/blob/master/docs/PyGoEngine.md)
-7. [一個 C++ 圍棋引擎實做](https://github.com/CGLemon/Sayuri)
 
 ## License
 
