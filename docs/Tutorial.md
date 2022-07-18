@@ -23,7 +23,7 @@ dlgo 包含 SGF 解析器，可以解析此格式的棋譜，並將棋譜作為�
 
 #### 第一步、收集棋譜
 
-需要收集訓練的棋譜，如果你沒有可使用的棋譜，可以使用附的 sgf.zip，裡面包含三萬五千盤左右的九路棋譜。也可以到 [Aya](http://www.yss-aya.com/ayaself/ayaself.html) 、 [KGS](https://www.u-go.net/gamerecords/) 或是 [Leela Zero](https://leela.online-go.com/zero/) 上找到更多可訓練的棋譜。需要注意的是，dlgo 不能解析讓子棋棋譜。
+需要收集訓練的棋譜，如果你沒有可使用的棋譜，可以使用附的 sgf.zip，裡面包含三萬五千盤左右的九路棋譜。也可以到 [Aya](http://www.yss-aya.com/ayaself/ayaself.html) 、[DarkGo](https://pjreddie.com/media/files/jgdb.tar.gz) 、[KGS](https://www.u-go.net/gamerecords/) 或是 [Leela Zero](https://leela.online-go.com/zero/) 上找到更多可訓練的棋譜。需要注意的是，dlgo 不能解析讓子棋棋譜，如有讓子棋棋譜需要事先清除。
 
 #### 第二步、設定網路大小
 
