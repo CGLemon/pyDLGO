@@ -329,7 +329,7 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 ``
 
 其中 
 
-<img src="https://render.githubusercontent.com/render/math?math=\Large w_i"> 表示節點累積的分數（或勝利次數）
+<img src="https://render.githubusercontent.com/render/math?math=\Large w_i"> 表示節點累積己方的分數（或勝利次數）
 
 <img src="https://render.githubusercontent.com/render/math?math=\Large n_i"> 表示節點訪問次數
 
@@ -344,7 +344,7 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 ``
 使用蒙地卡羅（Monte Carlo Method）方法，計算第一步驟中被選到的葉節點的分數（或勝率）
 
 4. 迭代：
-延著被選擇的路徑，依序迭代路徑更新分數（或勝率），迭代的節點訪問次數加一
+延著被選擇的路徑，依序迭代路徑，以當前節的顏色（對方或己方）更新分數（或勝率），迭代的節點訪問次數加一
 
 如果仔細看的話，會發現我對於四個步驟的描述和圖片的執行過程稍有不一樣，但其實只是敘述方式不太一樣，計算結果會是一樣的。
 
@@ -354,7 +354,7 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 ``
 <img src="https://github.com/CGLemon/pyDLGO/blob/master/img/alphago_zero_mcts.jpg" align=center/>
 </div>
 
-2017 年的 AlphaGo Zero 提出改進過的 MCTS 演算法，主要兩點不同，第一點是用 PUCT 取代 UCT 找尋節點，第二就是移除模擬的過程，所以只會重複三個步驟。
+2017 年的 AlphaGo Zero 提出改進過的 MCTS 演算法，主要兩點不同，第一點是以 UCT 基礎上加入策略數值，第二就是移除隨機模擬的過程，所以只會重複三個步驟。
 
 1. 選擇：
 由根節點開始，根據 PUCT 選擇算法，選擇 PUCT 值最大的子節點往下搜尋，直到葉節點（終端節點，此節點尚無價值數值）
@@ -363,7 +363,7 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 ``
 
 其中 
 
-<img src="https://render.githubusercontent.com/render/math?math=\Large w_i"> 表示節點累積的價值數值（即累積的勝率）
+<img src="https://render.githubusercontent.com/render/math?math=\Large w_i"> 表示節點累積的己方價值數值（即累積的勝率）
 
 <img src="https://render.githubusercontent.com/render/math?math=\Large n_i"> 表示節點訪問次數
 
@@ -377,7 +377,7 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 ``
 將被選到的葉節點，生長新的子節點。新的子節點代表當前葉節點的合法走步，並將神經網路策略數值加入新的子節點
 
 3. 迭代：
-延著被選擇的路徑上的每一個節點，依序迭代路徑更新神經網路價值數值（即勝率），迭代的節點訪問次數加一
+延著被選擇的路徑上的每一個節點，依序迭代路徑，以當前節的顏色（對方或己方）更新神經網路價值數值（即勝率），迭代的節點訪問次數加一
 
 AlphaGo Zero 版本的 MCTS 相當精簡，並且去除了模擬步驟，整體來講可以說是和跟蒙地卡羅方法毫無關係，理論上，此演算法不包含隨機性，由於本程式也是實做此版本的 MCTS 演算法，所以本程式在同個盤面上給相同的計算量時，每次的計算結果都會一致。
 
