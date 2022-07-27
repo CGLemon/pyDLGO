@@ -19,6 +19,7 @@ The simple English tutorial is [Here](https://github.com/CGLemon/pyDLGO/blob/mas
     $ python3 dlgo.py --weights nn_2x64.pt --gui
 
 ## 文件目錄
+0. [圍棋規則的簡單介紹](https://www.smartgo.com/tw/go.html)
 1. [完整的操作教學和 TCGA 比賽](https://github.com/CGLemon/pyDLGO/blob/master/docs/Tutorial.md)
 2. [演算法實做和原理（持續施工中）](https://github.com/CGLemon/pyDLGO/blob/master/docs/Methods.md)
 3. [GTP 界面原理](https://github.com/CGLemon/pyDLGO/blob/master/docs/dlgoGTP.md)
