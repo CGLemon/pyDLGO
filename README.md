@@ -14,6 +14,10 @@ The simple English tutorial is [Here](https://github.com/CGLemon/pyDLGO/blob/mas
 2. NumPy
 3. Tkinter
 
+請輸入下列指令安裝，或自行使用下載可執行的版本
+
+    pip3 install -r requirements.txt
+
 完成依賴庫安裝後，首先請先下載本程式碼和預先訓練好的權重，預先訓練好的權重可到 Release 裡找到（為 pt 檔，不需要解壓縮），將權重放到 pyDLGO 的資料夾裡，假設權重的名稱為 nn_2x64.pt ，請輸入以下指令打開圖形界面
 
     $ python3 dlgo.py --weights nn_2x64.pt --gui
@@ -35,6 +39,7 @@ MIT License
 * 修復 GUI 的 bug 並優化之
 * 訓練十九路權重
 * 支援 ```analyze``` 和 ```genmove_analyze``` 指令，利於分析
+* 內部鍊結使用區域位址取代全域位址
 
 ### 聯絡資訊
 
