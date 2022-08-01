@@ -126,6 +126,7 @@ class GTP_LOOP:
     def __init__(self, args):
         self.engine = GTP_ENGINE(args)
         self.args = args
+        self.cmd_id = None
 
         # Start the main GTP loop.
         self.loop()
@@ -135,6 +136,9 @@ class GTP_LOOP:
             # Get the commands.
             cmd = stdin.readline().split()
 
+            # Get the command id.
+            self.set_id(cmd)
+
             if len(cmd) == 0:
                 continue
 
@@ -143,8 +147,16 @@ class GTP_LOOP:
                 self.success_print("")
                 break
 
-            # Parse the commands.
+            # Parse the commands and execute it.
             self.process(cmd)
+
+    def set_id(self, cmd):
+        self.cmd_id = None
+        if len(cmd) == 0:
+            return
+
+        if cmd[0].isdigit():
+            self.cmd_id = cmd.pop(0)
 
     def process(self, cmd):
         # TODO: Support analyze and genmove_analyze commands.
@@ -210,7 +222,10 @@ class GTP_LOOP:
             self.fail_print("Unknown command")
 
     def success_print(self, res):
-        stdout.write("= {}\n\n".format(res))
+        if self.cmd_id is not None:
+            stdout.write("={} {}\n\n".format(self.cmd_id, res))
+        else:
+            stdout.write("= {}\n\n".format(res))
         stdout.flush()
 
     def fail_print(self, res):
