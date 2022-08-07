@@ -81,6 +81,7 @@ class DataSource:
             data.value = value_buf[i]
             data.to_move = to_move_buf[i]
             self.buffer.append(data)
+        random.shuffle(self.buffer)
 
     def next(self):
         if len(self.buffer) == 0:
