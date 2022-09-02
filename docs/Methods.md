@@ -317,7 +317,7 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 ``
 ### 基本的 UCT（Upper Confidence bounds applied to Trees）
 
 <div align=center>
-<img src="./img/mcts.png" align=center/>
+<img src="../img/mcts.png" align=center/>
 </div>
 
 傳統的 MCTS 的每輪迭代更新會經歷基本的四個步驟
@@ -351,7 +351,7 @@ MailBox 的核心概念就是在棋盤外圍加一圈無效區域（標示為 ``
 ### PUCT 的改進
 
 <div align=center>
-<img src="./img/alphago_zero_mcts.jpg" align=center/>
+<img src="../img/alphago_zero_mcts.jpg" align=center/>
 </div>
 
 2017 年的 AlphaGo Zero 提出改進過的 MCTS 演算法，主要兩點不同，第一點是以 UCT 基礎上加入策略數值，第二就是移除隨機模擬的過程，所以只會重複三個步驟。
