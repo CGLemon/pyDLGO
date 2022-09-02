@@ -39,7 +39,7 @@ Following above simple steps to train a new weights
 2. Set the network parametes in the config.py. Including ```BOARD_SIZE```, ```BLOCK_SIZE```, ```FILTER_SIZE```.
 3. Start training.
 
-        $ python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
+        $ python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.005 --weights-name weights
 
 Some helpful optional arguments are here.
 

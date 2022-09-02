@@ -66,6 +66,7 @@ class DataSource:
         self.buffer = []
         self.chunks = []
         self.done = glob.glob(os.path.join(self.cache_dir, "*"))
+        self.down_sample_rate = 0
 
     def _chunk_to_buf(self, chunk):
         inputs_buf = chunk['i']
@@ -80,7 +81,14 @@ class DataSource:
             data.policy = policy_buf[i]
             data.value = value_buf[i]
             data.to_move = to_move_buf[i]
-            self.buffer.append(data)
+
+            # Apply down-sample, will improve the training
+            # performance.
+            if self.down_sample_rate > 1:
+                if random.randint(0, self.down_sample_rate-1) == 0:
+                    self.buffer.append(data)
+            else:
+                self.buffer.append(data)
         random.shuffle(self.buffer)
 
     def next(self):
@@ -98,21 +106,21 @@ class DataSource:
 
 # Load the SGF files and save the training data to the disk.
 class DataChopper:
-    def  __init__(self, dir_name):
+    def  __init__(self, dir_name, num_chunks):
         self.cache_dir = CACHE_DIR
-        self.__chop_data(dir_name)
+        self.__chop_data(dir_name, num_chunks)
 
     def __del__(self):
-        # Do not delete the cache training data. We may
+        # Do not delete the training data in the cache dir. We may
         # use them next time.
         pass
 
-    def __chop_data(self, dir_name, num_chunks=100):
+    def __chop_data(self, dir_name, num_chunks):
         # Load the SGF files and tranfer them to training data.
         sgf_games = sgf.parse_from_dir(dir_name)
-        total = len(sgf_games)
+        total_steps = len(sgf_games)
 
-        print("imported {} SGF files".format(total))
+        print("imported {} SGF files".format(total_steps))
 
         if os.path.isdir(self.cache_dir):
             shutil.rmtree(self.cache_dir, ignore_errors=True)
@@ -120,24 +128,24 @@ class DataChopper:
         os.mkdir(self.cache_dir)
 
         cnt = 0
-        steps = 0
-        chop_steps = max(total//num_chunks, 1)
+        num_steps = 0
+        chop_steps = total_steps//num_chunks + 1
         buf = []
 
         for game in sgf_games:
-            steps += 1
+            num_steps += 1
             temp = self.__process_one_game(game)
 
             buf.extend(temp)
 
-            if steps % chop_steps == 0:
-                print("parsed {:.2f}% games".format(num_chunks * steps/total))
+            if num_steps % chop_steps == 0:
+                print("parsed {:.2f}% games".format(100 * num_steps/total_steps))
                 self.__save_chunk(buf, cnt)
                 cnt += 1
                 buf = []
 
         if len(buf) != 0:
-            print("parsed {:.2f}% games".format(num_chunks * steps/total))
+            print("parsed {:.2f}% games".format(100 * num_steps/total_steps))
             self.__save_chunk(buf, cnt)
 
     def __save_chunk(self, buf, cnt):
@@ -245,15 +253,16 @@ class DataSet:
         return self.dummy_size
 
 class TrainingPipe:
-    def __init__(self, dir_name):
+    def __init__(self, dir_name, num_chunks):
         self.network = Network(BOARD_SIZE)
-        self.network.trainable()
+        self.network.trainable(True)
 
+        # leave two cores for training pipe.
         self.num_workers = max(min(os.cpu_count(), 16) - 2 , 0)
         self.steps_per_epoch = 2000
 
         if dir_name is not None:
-            self.data_chopper = DataChopper(dir_name)
+            self.data_chopper = DataChopper(dir_name, num_chunks)
         self.data_set = DataSet(self.num_workers)
         
     def running(self, max_steps, verbose_steps, batch_size, learning_rate, noplot):
@@ -294,10 +303,10 @@ class TrainingPipe:
                     target_p = target_p.to(self.network.gpu_device)
                     target_v = target_v.to(self.network.gpu_device)
 
-                # Third, compute network result.
+                # Third, compute the network result.
                 p, v = self.network(inputs)
 
-                # Fourth, compute loss result and update network.
+                # Fourth, compute the loss result and update network.
                 p_loss = cross_entry(p, target_p)
                 v_loss = mse_loss(v, target_v)
                 loss = p_loss + v_loss
@@ -360,6 +369,7 @@ class TrainingPipe:
         plt.show()
 
     def save_weights(self, name):
+        # TODO: We need save the optimizer status too.
         self.network.save_pt(name)
 
     def load_weights(self, name):
@@ -398,6 +408,8 @@ if __name__ == "__main__":
                         help="The learning rate.", type=float)
     parser.add_argument("-w", "--weights-name", metavar="<string>",
                         help="The output weights name.", type=str)
+    parser.add_argument("-c", "--chunks", metavar="<integer>",
+                        help="The number of ouput chunks.", type=int, default=10)
     parser.add_argument("--load-weights", metavar="<string>",
                         help="The inputs weights name.", type=str)
     parser.add_argument("--noplot", action="store_true",
@@ -405,7 +417,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     if valid_args(args):
-        pipe = TrainingPipe(args.dir)
+        pipe = TrainingPipe(args.dir, args.chunks)
         pipe.load_weights(args.load_weights)
         pipe.running(args.steps, args.verbose_steps, args.batch_size, args.learning_rate, args.noplot)
         pipe.save_weights(args.weights_name)

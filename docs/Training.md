@@ -164,7 +164,7 @@
 
 最後完成訓練後，會出現以下圖片以視覺化的方式顯示訓練過程
 
-![loss_plot](https://github.com/CGLemon/pyDLGO/blob/master/img/loss_plot.png)
+![loss_plot](./img/loss_plot.png)
 
 ## 指定訓練的 GPU
 
@@ -172,7 +172,7 @@
 
     $ CUDA_VISIBLE_DEVICES=0 python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.0001 --load-weights preweights --weights-name outweights
 
-## 訓練技巧
+## 降低學習率
 
 事實上，訓練圍棋的網路，持續的降低學習率是很重要的，相同訓練資料，有降低學習率和沒有學習率的網路，其強度可以差距三段以上，這個差距在讓子棋中尤其明顯，未降低學習率的網路在前期通常無法有效辨識當前盤面的好壞。dlgo 提供重新載入網路的的功能，輸入下列指令即可調整學習率重新訓練。這邊可以不用再輸入指令 ```--dir``` ，可以避免重新解析棋譜，直接使用 data-cache 內的資料，加速訓練流程
 
@@ -182,4 +182,7 @@
 
 ## 為甚麼使用 data-cache？
 
-我們將訓練資處理好後儲存在硬碟上，需要時才讀進主記憶體，因為在訓練大盤面網路時（十九路），需要大量資料，通常需要上百 GB 才能完全讀入，使用 data-cache 可以避免主記憶體容量不夠而且也不影響訓練效率。
+我們將訓練資處理好後儲存在硬碟上，需要時才讀進主記憶體，因為在訓練大盤面網路時（十九路），需要大量資料，通常需要上百 GB 才能完全讀入，使用 data-cache 可以避免主記憶體容量不夠而且也不影響訓練效率。預設是切割成 10 份，如果 10 份佔用的的記憶體還是太多，可以輸入參數 ```--chunks``` 切割成更多份，例如 100 份
+
+    $ python3 train.py --chunks 100
+
