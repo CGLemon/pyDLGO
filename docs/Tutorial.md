@@ -61,7 +61,7 @@ dlgo 包含 SGF 解析器，可以解析此格式的棋譜，並將棋譜作為�
 
     $ python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
 
-在一台有配備獨立顯示卡的電腦，大概數個小時內可以完成訓練，如果使用 CPU 訓練大概需要幾天時間。當網路權重出現後，就完成第一步的訓練了。如果你對當前的訓練結果不滿意，可到[這裏](./docs/Training.md)查看一些訓練時的小技巧。
+在一台有配備獨立顯示卡的電腦，大概數個小時內可以完成訓練，如果使用 CPU 訓練大概需要幾天時間。當網路權重出現後，就完成第一步的訓練了。如果你對當前的訓練結果不滿意，可到[這裏](../docs/Training.md)查看一些訓練時的小技巧。
 
 ## 二、啟動引擎
 
@@ -116,17 +116,17 @@ dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比�
 
 #### 第一步、打開引擎選項
 
-![step_one](./screenshot_sabaki_01.png)
+![step_one](../img/screenshot_sabaki_01.png)
 
 #### 第二步、新增引擎
 
-![step_two](./img/screenshot_sabaki_02.png)
+![step_two](../img/screenshot_sabaki_02.png)
 
 #### 第三步、加載引擎
 
-![step_two](./img/screenshot_sabaki_03.png)
+![step_two](../img/screenshot_sabaki_03.png)
 
-設置完成後就可以和 dlgo 對戰了。如果想知道 dlgo 支援哪些 GTP 指令，可到[這裏](./docs/dlgoGTP.md)查看。
+設置完成後就可以和 dlgo 對戰了。如果想知道 dlgo 支援哪些 GTP 指令，可到[這裏](../docs/dlgoGTP.md)查看。
 
 ## 四、在 KGS 上使用
 

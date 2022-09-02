@@ -164,7 +164,7 @@
 
 最後完成訓練後，會出現以下圖片以視覺化的方式顯示訓練過程
 
-![loss_plot](./img/loss_plot.png)
+![loss_plot](../img/loss_plot.png)
 
 ## 指定訓練的 GPU
 
