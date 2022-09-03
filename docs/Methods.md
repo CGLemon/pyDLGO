@@ -414,8 +414,8 @@ Tromp-Taylor 規則為中國規則的變體，計點方式也為子地皆目，�
 
 由於沒有定義死棋和禁全同，一來循環劫不可能產生，二來出現複雜劫爭也都有實際定義，不會有實戰解決的問題。下圖為計地範例，標記的白棋在其它一般規則下可能會被視為死棋，但在 Tromp-Taylor 規則下視為活棋，視為白方的領地，而其周圍五點區域同時接觸黑棋和白棋，被視為單官，剩餘的領地都明確被某一方包圍，視為包圍方的領地。
 
-<div id="sayuri-art" align="center">
-    <img src="../img/score_board.png" alt="score_board" width="500"/>
+<div>
+    <img src="../img/score_board.png" alt="score_board" width="768"/>
 </div>
 
 dlgo 基本實作所有的 Tromp-Taylor 規則，不同之處是 dlgo 禁止自殺手。
