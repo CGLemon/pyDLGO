@@ -22,3 +22,8 @@
 * [Irene](https://github.com/GWDx/Irene)
 
 十九路圍棋引擎，主要使用 Policy Network 下棋 。
+
+
+* [AlphaGOZero-python-tensorflow](https://github.com/yhyu13/AlphaGOZero-python-tensorflow)
+
+十九路圍棋引擎，使用 Policy Network 和 Value Network，實做監督學習和強化學習。

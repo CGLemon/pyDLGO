@@ -6,7 +6,11 @@ USE_GPU = True # Set true will use the GPU automatically if you have one.
 
 BLOCK_SIZE = 2 # The network residual block size.
 
-FILTER_SIZE = 64 # The network residual filter size.
+BLOCK_CHANNELS = 64 # The number of network residual channels.
+
+POLICY_CHANNELS = 8 # The number of value head channels.
+
+VALUE_CHANNELS = 4 # The number of policy head channels.
 
 INPUT_CHANNELS = 18 # Number of the network input layers.
 

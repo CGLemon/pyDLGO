@@ -104,8 +104,10 @@ class ResBlock(nn.Module):
 class Network(nn.Module):
     def __init__(self, board_size,
                        input_channels=INPUT_CHANNELS,
-                       block_size = BLOCK_SIZE,
-                       filter_size = FILTER_SIZE,
+                       block_size=BLOCK_SIZE,
+                       block_channels=BLOCK_CHANNELS,
+                       policy_channels=POLICY_CHANNELS,
+                       value_channels=VALUE_CHANNELS,
                        use_se=USE_SE,
                        use_policy_attention=USE_POLICY_ATTENTION,
                        use_gpu=USE_GPU):
@@ -114,9 +116,9 @@ class Network(nn.Module):
         self.nn_cache = {}
 
         self.block_size = block_size
-        self.residual_channels = filter_size
-        self.policy_channels = 8
-        self.value_channels = 4
+        self.residual_channels = block_channels
+        self.policy_channels = policy_channels
+        self.value_channels = value_channels
         self.value_layers = 256
         self.board_size = board_size
         self.spatial_size = self.board_size ** 2
@@ -127,7 +129,7 @@ class Network(nn.Module):
         self.gpu_device = torch.device('cpu')
 
         if self.use_se:
-            assert self.residual_channels // 2 == 0, "FILTER_SIZE must be divided by 2."
+            assert self.residual_channels // 2 == 0, "BLOCK_CHANNELS must be divided by 2."
 
         self.construct_layers()
         if self.use_gpu:
@@ -227,7 +229,7 @@ class Network(nn.Module):
         return pol, torch.tanh(val)
         
     def get_outputs(self, planes):
-        # TODO: Limit the nn cache size.
+        # TODO: Limit the NN cache size.
 
         h = hash(planes.tostring())
         res = self.nn_cache.get(h) # search the NN computation

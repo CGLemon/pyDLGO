@@ -46,7 +46,7 @@ class Data:
     def do_symmetry(self, symm=None):
         assert self.policy != None, ""
 
-        if symm == None:
+        if symm is None:
             symm = int(np.random.choice(8, 1)[0])
 
         for i in range(INPUT_CHANNELS-2): # last 2 channels is side to move.
@@ -61,17 +61,17 @@ class Data:
 
 # DataSource will load the training data from disk.
 class DataSource:
-    def  __init__(self):
+    def  __init__(self, rate):
         self.cache_dir = CACHE_DIR
         self.buffer = []
         self.chunks = []
         self.done = glob.glob(os.path.join(self.cache_dir, "*"))
-        self.down_sample_rate = 0
+        self.down_sample_rate = rate
 
-    def _chunk_to_buf(self, chunk):
+    def __chunk_to_buf(self, chunk):
         inputs_buf = chunk['i']
         policy_buf = chunk['p']
-        value_buf = chunk['v']
+        value_buf  = chunk['v']
         to_move_buf = chunk['t']
 
         size = to_move_buf.shape[0]
@@ -101,24 +101,24 @@ class DataSource:
             self.done.append(filename)
 
             chunk = np.load(filename)
-            self._chunk_to_buf(chunk)
+            self.__chunk_to_buf(chunk)
         return self.buffer.pop()
 
 # Load the SGF files and save the training data to the disk.
 class DataChopper:
-    def  __init__(self, dir_name, num_chunks):
+    def  __init__(self, dir_name, num_chunks, num_sgfs):
         self.cache_dir = CACHE_DIR
-        self.__chop_data(dir_name, num_chunks)
+        self.__chop_data(dir_name, num_chunks, num_sgfs)
 
     def __del__(self):
         # Do not delete the training data in the cache dir. We may
         # use them next time.
         pass
 
-    def __chop_data(self, dir_name, num_chunks):
+    def __chop_data(self, dir_name, num_chunks, num_sgfs):
         # Load the SGF files and tranfer them to training data.
         sgf_games = sgf.parse_from_dir(dir_name)
-        total_steps = len(sgf_games)
+        total_steps = min(len(sgf_games), num_sgfs)
 
         print("imported {} SGF files".format(total_steps))
 
@@ -127,12 +127,14 @@ class DataChopper:
 
         os.mkdir(self.cache_dir)
 
-        cnt = 0
+        chunk_cnt = 0
         num_steps = 0
         chop_steps = total_steps//num_chunks + 1
         buf = []
 
-        for game in sgf_games:
+        for i in range(total_steps):
+            game = sgf_games[i]
+
             num_steps += 1
             temp = self.__process_one_game(game)
 
@@ -140,13 +142,13 @@ class DataChopper:
 
             if num_steps % chop_steps == 0:
                 print("parsed {:.2f}% games".format(100 * num_steps/total_steps))
-                self.__save_chunk(buf, cnt)
-                cnt += 1
+                self.__save_chunk(buf, chunk_cnt)
+                chunk_cnt += 1
                 buf = []
 
         if len(buf) != 0:
             print("parsed {:.2f}% games".format(100 * num_steps/total_steps))
-            self.__save_chunk(buf, cnt)
+            self.__save_chunk(buf, chunk_cnt)
 
     def __save_chunk(self, buf, cnt):
         # Save the training data to the disk.
@@ -155,10 +157,10 @@ class DataChopper:
         # Shuffle it.
         random.shuffle(buf)
 
-        inputs_buf = np.zeros((size, INPUT_CHANNELS, BOARD_SIZE, BOARD_SIZE))
-        policy_buf = np.zeros((size))
-        value_buf = np.zeros((size, 1))
-        to_move_buf = np.zeros((size))
+        inputs_buf = np.zeros((size, INPUT_CHANNELS, BOARD_SIZE, BOARD_SIZE), dtype=np.int8)
+        policy_buf = np.zeros((size), dtype=np.int32)
+        value_buf = np.zeros((size, 1), dtype=np.float32)
+        to_move_buf = np.zeros((size), dtype=np.int8)
 
         for i in range(size):
             data = buf[i]
@@ -225,14 +227,14 @@ class DataChopper:
         return policy
 
 class DataSet:
-    def __init__(self, num_workers):
+    def __init__(self, num_workers, rate):
         self.dummy_size = 0
         self.data_loaders = []
         self.data_scrs = []
 
         num_workers = max(num_workers, 1)
         for _ in range(num_workers):
-            self.data_scrs.append(DataSource())
+            self.data_scrs.append(DataSource(rate))
 
     def __getitem__(self, idx):
         worker_info = torch.utils.data.get_worker_info()
@@ -243,6 +245,8 @@ class DataSet:
             worker_id = worker_info.id
 
         data = self.data_scrs[worker_id].next()
+        data.do_symmetry()
+
         return (
             torch.tensor(data.inputs).float(),
             torch.tensor(data.policy).long(),
@@ -253,17 +257,17 @@ class DataSet:
         return self.dummy_size
 
 class TrainingPipe:
-    def __init__(self, dir_name, num_chunks):
+    def __init__(self, dir_name, rate, num_chunks, num_sgfs):
         self.network = Network(BOARD_SIZE)
         self.network.trainable(True)
 
-        # leave two cores for training pipe.
+        # Leave two cores for training pipe.
         self.num_workers = max(min(os.cpu_count(), 16) - 2 , 0)
         self.steps_per_epoch = 2000
 
         if dir_name is not None:
-            self.data_chopper = DataChopper(dir_name, num_chunks)
-        self.data_set = DataSet(self.num_workers)
+            self.data_chopper = DataChopper(dir_name, num_chunks, num_sgfs)
+        self.data_set = DataSet(self.num_workers, rate)
         
     def running(self, max_steps, verbose_steps, batch_size, learning_rate, noplot):
         cross_entry = nn.CrossEntropyLoss()
@@ -275,7 +279,7 @@ class TrainingPipe:
                               lr=learning_rate,
                               momentum=0.9,
                               nesterov=True,
-                              weight_decay=1e-4)
+                              weight_decay=1e-3)
 
         p_running_loss = 0
         v_running_loss = 0
@@ -296,6 +300,7 @@ class TrainingPipe:
             for _, batch in enumerate(train_data):
                 # First, get the batch data.
                 inputs, target_p, target_v = batch
+
 
                 # Second, Move the data to GPU memory if we use it.
                 if self.network.use_gpu:
@@ -410,6 +415,10 @@ if __name__ == "__main__":
                         help="The output weights name.", type=str)
     parser.add_argument("-c", "--chunks", metavar="<integer>",
                         help="The number of ouput chunks.", type=int, default=10)
+    parser.add_argument("-i", "--imported-games", metavar="<integer>",
+                        help="The max number of imported games.", type=int, default=10240000)
+    parser.add_argument("-r", "--rate", metavar="<int>",
+                        help="The down sample rate.", type=int, default=16)
     parser.add_argument("--load-weights", metavar="<string>",
                         help="The inputs weights name.", type=str)
     parser.add_argument("--noplot", action="store_true",
@@ -417,7 +426,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     if valid_args(args):
-        pipe = TrainingPipe(args.dir, args.chunks)
+        pipe = TrainingPipe(args.dir, args.rate, args.chunks, args.imported_games)
         pipe.load_weights(args.load_weights)
         pipe.running(args.steps, args.verbose_steps, args.batch_size, args.learning_rate, args.noplot)
         pipe.save_weights(args.weights_name)

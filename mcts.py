@@ -49,6 +49,8 @@ class Node:
         # The pass move is alwaly the legal move. We don't need to
         # check it.
         self.children[PASS] = Node(policy[board.num_intersections])
+
+        # The nn eval is side-to-move winrate. 
         self.nn_eval = self.clamp(value[0])
 
         return self.nn_eval
@@ -75,9 +77,11 @@ class Node:
 
         # Select the best node by PUCT algorithm. 
         for vtx, child in self.children.items():
-            q_value = self.clamp(0) # Fair winrate if the node is no visit.
+            q_value = self.values/self.visits - 0.25/numerator # first play urgency
+
             if child.visits != 0:
                 q_value = self.inverse(child.values / child.visits)
+
             puct = q_value + self.C_PUCT * child.policy * (numerator / (1+child.visits))
             puct_list.append((puct, vtx))
         return max(puct_list)[1]

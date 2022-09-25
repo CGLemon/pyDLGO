@@ -425,7 +425,7 @@ class Board(object):
         return self.get_vertex(idx % self.board_size, idx // self.board_size)
 
     def vertex_to_text(self, vtx):
-        # vertex to GTP move.
+        # vertex to GTP move
 
         if vtx == PASS:
             return "pass"

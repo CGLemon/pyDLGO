@@ -27,21 +27,24 @@ dlgo 包含 SGF 解析器，可以解析此格式的棋譜，並將棋譜作為�
 
 #### 第一步、收集棋譜
 
-需要收集訓練的棋譜，如果你沒有可使用的棋譜，可以使用附的 sgf.zip，裡面包含三萬五千盤左右的九路棋譜。也可以到 [Aya](http://www.yss-aya.com/ayaself/ayaself.html) 、[DarkGo](https://pjreddie.com/media/files/jgdb.tar.gz) 、[KGS](https://www.u-go.net/gamerecords/) 或是 [Leela Zero](https://leela.online-go.com/zero/) 上找到更多可訓練的棋譜。需要注意的是，dlgo 不能解析讓子棋棋譜，如有讓子棋棋譜需要事先清除。
+需要收集訓練的棋譜，如果你沒有可使用的棋譜，可以使用附的 sgf.zip，裡面包含三萬五千盤左右的九路棋譜。也可以到 [Aya](http://www.yss-aya.com/ayaself/ayaself.html) 、[DarkGo](https://pjreddie.com/media/files/jgdb.tar.gz) 、[KGS](https://www.u-go.net/gamerecords/) 或是 [Leela Zero](https://leela.online-go.com/zero/) 上找到更多可訓練的棋譜。需要注意的是，dlgo 不能解析讓子棋棋譜，如有讓子棋棋譜需要事先清除，還有訓練棋譜至少要有數萬盤，不然的話價值頭（value head）容易崩潰，尤其是十九路。
 
 #### 第二步、設定網路大小
 
 網路的參數包含在 config.py 裡，所需要用到的參數如下
 
-| 參數              | 說明              |
-| :---------------: | :---------------: |
-| BLOCK_SIZE        | 殘差網路的 block 的數目，數目越大網路越大 |
-| FILTER_SIZE       | 卷積網路 filter 的數目，數目越大網路越大  |
-| BOARD_SIZE        | 棋盤大小，必須和棋譜的大小一致            |
-| USE_SE            | 是否啟用 SE 網路結構                     |
-| USE_POLICY_ATTENTION  | 是否啟用 self-attention 網路結構     |
-| USE_GPU           | 是否使用 GPU 訓練。如果為 True ，會自動檢查是否有可用的 GPU ，如果沒有檢測到 GPU ，則會使用 CPU 訓練，如果為 False ，則強制使用 CPU 訓練。此參數建議使用 True |
+| 參數                 | 說明                                          |
+| :------------------: | :------------------------------------------: |
+| BLOCK_SIZE           | 殘差網路的 block 的數目，數目越大網路越大      |
+| BLOCK_CHANNELS       | 卷積網路 channel 的數目，數目越大網路越大      |
+| POLICY_CHANNELS      | 策略頭 channel 的數目，數目越大策略頭預準度越好 |
+| VALUE_CHANNELS       | 價值頭 channel 的數目，數目越大價值頭預準度越好 |
+| BOARD_SIZE           | 棋盤大小，必須和棋譜的大小一致                 |
+| USE_SE               | 是否啟用 SE 網路結構                          |
+| USE_POLICY_ATTENTION | 是否啟用 self-attention 網路結構              |
+| USE_GPU              | 是否使用 GPU 訓練。如果為 True ，會自動檢查是否有可用的 GPU ，如果沒有檢測到 GPU ，則會使用 CPU 訓練，如果為 False ，則強制使用 CPU 訓練。此參數建議使用 True |
 
+<br>
 
 #### 第三步、開始訓練
 
@@ -54,8 +57,11 @@ dlgo 包含 SGF 解析器，可以解析此格式的棋譜，並將棋譜作為�
 | -b, --batch-size     | integer           | 訓練的 batch size，建議至少大於 128 ，太低會無法訓練 |
 | -l, --learning-rate  | float             | 學習率大小 ，建議從 0.005 開始|
 | -w, --weights-name   | string            | 要輸出的網路權重名稱 |
+| -r, --rate           | integer           | 下採樣率，有 1/N 的機率採樣訓練資料，剩餘的捨棄，可以大幅度增加訓練穩定度|
 | --load-weights       | string            | 載入其它權重，可以從此權重繼續開始訓練 |
 | --noplot             | NA                | 訓練完後不要使用 Matplotlib 繪圖 |
+
+<br>
 
 以下是訓練範例命令
 
@@ -75,6 +81,8 @@ dlgo 包含 SGF 解析器，可以解析此格式的棋譜，並將棋譜作為�
 | -p, --playouts | integer           | MCTS 的 playouts，數目越多越強。預設值是 400 |
 | -r, --resign-threshold | float     | 投降的門檻，0.1 代表勝率低於 10% 就會投降。預設值是 0.1 |
 | -g, --gui      | NA                | 使用內建的圖形界面。|
+
+<br>
 
 注意在啟動以前，必須確定你有權限執行 dlgo.py ，如果沒有，請先使用 chmod 指令更改權限，以下是啟動的範例
 
@@ -116,15 +124,25 @@ dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比�
 
 #### 第一步、打開引擎選項
 
-![step_one](../img/screenshot_sabaki_01.png)
+
+<div id="step_one">
+    <img src="../img/screenshot_sabaki_01.png" alt="drawing" width="500"/>
+</div>
+<br>
 
 #### 第二步、新增引擎
 
-![step_two](../img/screenshot_sabaki_02.png)
+<div id="step_two">
+    <img src="../img/screenshot_sabaki_02.png" alt="drawing" width="500"/>
+</div>
+<br>
 
 #### 第三步、加載引擎
 
-![step_two](../img/screenshot_sabaki_03.png)
+<div id="step_three">
+    <img src="../img/screenshot_sabaki_03.png" alt="drawing" width="500"/>
+</div>
+<br>
 
 設置完成後就可以和 dlgo 對戰了。如果想知道 dlgo 支援哪些 GTP 指令，可到[這裏](../docs/dlgoGTP.md)查看。
 
@@ -205,14 +223,13 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
     不一定，但需要事先聯繫其他人，討論決定當天比賽如何進行。
 
 
-6. 參加比賽的程式是否都很強？
+6. 使用 dlgo 參加比賽是否可以？
 
-    TCGA 的比賽目前偏向同好會性質，相較於其它比賽，平均強度並不是特高，參加人數也比較少，認真實做每個人都有機會得獎。
+    可以，但是要求報名時標注使用此程式，並且要有一定的改進，最後希望能將改進的程式能開源。
 
+7. 比賽規則為何？
 
-7. 使用 dlgo 參加比賽是否可以？
-
-    可以，但是要求報名時標注使用此程式，並且要有一定的改進，最後希望能將更改的程式開源。
+    通過 KGS 平台比賽。均採用中國規則且禁全同，九路思考時間為 10 分鐘不讀秒，十九路思考時間為 30 分鐘不讀秒。
 
 
 ### TCGA 相關比賽列表
@@ -224,6 +241,7 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 | [2021 TAAI](https://www.tcga.tw/taai2021/zh_TW/) | 11 月 20 號比賽 | 結束   |
 | [2022 TCGA](https://sites.google.com/mail.ncnu.edu.tw/2022-tcga/%E5%A4%A7%E6%9C%83%E7%B0%A1%E4%BB%8B) | 5 月 14 號比賽 | 結束   |
 
+<br>
 ### ICGA 比賽列表
 
 | 比賽                                             |時間                | 狀態               |
