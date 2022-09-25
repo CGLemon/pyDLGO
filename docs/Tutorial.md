@@ -126,21 +126,21 @@ dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比�
 
 
 <div id="step_one">
-    <img src="../img/screenshot_sabaki_01.png" alt="drawing" width="500"/>
+    <img src="../img/screenshot_sabaki_01.png" alt="drawing" width="768"/>
 </div>
 <br>
 
 #### 第二步、新增引擎
 
 <div id="step_two">
-    <img src="../img/screenshot_sabaki_02.png" alt="drawing" width="500"/>
+    <img src="../img/screenshot_sabaki_02.png" alt="drawing" width="768"/>
 </div>
 <br>
 
 #### 第三步、加載引擎
 
 <div id="step_three">
-    <img src="../img/screenshot_sabaki_03.png" alt="drawing" width="500"/>
+    <img src="../img/screenshot_sabaki_03.png" alt="drawing" width="768"/>
 </div>
 <br>
 
