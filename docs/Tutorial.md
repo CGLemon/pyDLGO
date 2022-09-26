@@ -242,6 +242,7 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 | [2022 TCGA](https://sites.google.com/mail.ncnu.edu.tw/2022-tcga/%E5%A4%A7%E6%9C%83%E7%B0%A1%E4%BB%8B) | 5 月 14 號比賽 | 結束   |
 
 <br>
+
 ### ICGA 比賽列表
 
 | 比賽                                             |時間                | 狀態               |
