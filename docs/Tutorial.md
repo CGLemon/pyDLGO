@@ -40,7 +40,7 @@ dlgo 包含 SGF 解析器，可以解析此格式的棋譜，並將棋譜作為�
 | POLICY_CHANNELS      | 策略頭 channel 的數目，數目越大策略頭預準度越好 |
 | VALUE_CHANNELS       | 價值頭 channel 的數目，數目越大價值頭預準度越好 |
 | BOARD_SIZE           | 棋盤大小，必須和棋譜的大小一致                 |
-| USE_SE               | 是否啟用 SE 網路結構                          |
+| USE_SE               | 是否啟用 Squeeze-and-Excitation 網路結構      |
 | USE_POLICY_ATTENTION | 是否啟用 self-attention 網路結構              |
 | USE_GPU              | 是否使用 GPU 訓練。如果為 True ，會自動檢查是否有可用的 GPU ，如果沒有檢測到 GPU ，則會使用 CPU 訓練，如果為 False ，則強制使用 CPU 訓練。此參數建議使用 True |
 
@@ -58,6 +58,7 @@ dlgo 包含 SGF 解析器，可以解析此格式的棋譜，並將棋譜作為�
 | -l, --learning-rate  | float             | 學習率大小 ，建議從 0.005 開始|
 | -w, --weights-name   | string            | 要輸出的網路權重名稱 |
 | -r, --rate           | integer           | 下採樣率，有 1/N 的機率採樣訓練資料，剩餘的捨棄，可以大幅度增加訓練穩定度|
+| -c, --chunk          | integer           | 決定資料要切割成幾份 |
 | --load-weights       | string            | 載入其它權重，可以從此權重繼續開始訓練 |
 | --noplot             | NA                | 訓練完後不要使用 Matplotlib 繪圖 |
 
@@ -240,6 +241,8 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
 | :------------:                                   | :---------------: | :---------------: |
 | [2021 TAAI](https://www.tcga.tw/taai2021/zh_TW/) | 11 月 20 號比賽 | 結束   |
 | [2022 TCGA](https://sites.google.com/mail.ncnu.edu.tw/2022-tcga/%E5%A4%A7%E6%9C%83%E7%B0%A1%E4%BB%8B) | 5 月 14 號比賽 | 結束   |
+| [2022 TAAI](https://www.tcga.tw/taai2022/zh_TW/) | 11 月 26 號報名截止 | 開始報名  |
+
 
 <br>
 
