@@ -168,7 +168,7 @@
 
 ## 指定訓練的 GPU
 
-在 ```python3``` 輸入環境參數 ```CUDA_VISIBLE_DEVICES``` ，可以指定要用哪個 GPU 訓練網路，GPU 的編號從 0 開始，如果有 4 個 GPU 則編號從 0 到 3，數字 0 代表使用預設的。如果不指定，則默認使用所有的 GPU。
+在 ```python3``` 輸入環境參數 ```CUDA_VISIBLE_DEVICES``` ，可以指定要用哪個 GPU 訓練網路，GPU 的編號從 0 開始，如果有 4 個 GPU 則編號從 0 到 3，數字 0 代表使用預設的。如果不指定，則默認使用 0 號 GPU。
 
     $ CUDA_VISIBLE_DEVICES=0 python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.0001 --load-weights preweights --weights-name outweights
 
@@ -185,4 +185,8 @@
 我們將訓練資處理好後儲存在硬碟上，需要時才讀進主記憶體，因為在訓練大盤面網路時（十九路），需要大量資料，通常需要上百 GB 才能完全讀入，使用 data-cache 可以避免主記憶體容量不夠而且也不影響訓練效率。預設是切割成 10 份，如果 10 份佔用的的記憶體還是太多，可以輸入參數 ```--chunks``` 切割成更多份，例如 100 份
 
     $ python3 train.py --chunks 100
+
+但如果主記憶體足夠大的話，可以不進行切割，這樣可以保證最好的亂度和資料擴散度，輸入可以保證 0 不切割（輸入 1 還是有可能切割成兩份）
+
+    $ python3 train.py --chunks 0
 

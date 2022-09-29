@@ -119,6 +119,7 @@ class DataChopper:
         # Load the SGF files and tranfer them to training data.
         sgf_games = sgf.parse_from_dir(dir_name)
         total_steps = min(len(sgf_games), num_sgfs)
+        num_chunks = max(num_chunks, 0)
 
         print("imported {} SGF files".format(total_steps))
 
