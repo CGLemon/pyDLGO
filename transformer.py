@@ -194,4 +194,4 @@ if __name__ == '__main__':
     gpt = TransformerEncoderOnly(d_model=512)
     gpt.eval()
     o1 = gpt(src)
-    print(o0.size()) # should be [1, 10, 512]
+    print(o1.size()) # should be [1, 10, 512]

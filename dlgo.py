@@ -17,7 +17,7 @@ if __name__ == "__main__":
     parser.add_argument("-k", "--kgs", default=False,
                         help="Dump some hint verbose on KGS.", action="store_true")
     parser.add_argument("-g", "--gui", default=False,
-                        help="Open with GUI.", action="store_true")
+                        help="Open it with GUI.", action="store_true")
 
     args = parser.parse_args()
     if args.gui:

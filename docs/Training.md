@@ -170,7 +170,7 @@
 
 在 ```python3``` 輸入環境參數 ```CUDA_VISIBLE_DEVICES``` ，可以指定要用哪個 GPU 訓練網路，GPU 的編號從 0 開始，如果有 4 個 GPU 則編號從 0 到 3，數字 0 代表使用預設的。如果不指定，則默認使用 0 號 GPU。
 
-    $ CUDA_VISIBLE_DEVICES=0 python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.0001 --load-weights preweights --weights-name outweights
+    $ CUDA_VISIBLE_DEVICES=0 python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
 
 ## 降低學習率
 
@@ -178,20 +178,21 @@
 
     $ python3 train.py --steps 128000 --batch-size 512 --learning-rate 0.0001 --load-weights preweights --weights-name outweights
 
-你可能會好奇，每次降低學習大概需要多少個 steps ，以經驗來看，範例給的 128000 steps 配合 512 batch 的訓練量就非常足夠，依照上面的訓練資訊，loss 已經很難再降低了。當然如果你不放心，可以選用更大 step 數來訓練，以確到達到完全訓練，只要訓練集夠大，過度訓練並不會影響網路強度。最後學習率大概要降低到多少，這沒有一定值，但一般來講 loss 不再降低時就可以停止了。
+你可能會好奇，每次降低學習大概需要多少個 steps ，以經驗來看，範例給的 128000 steps 配合 512 batch 的訓練量就非常足夠，依照上面的訓練資訊，loss 已經很難再降低了。當然如果你不放心，可以選用更大 step 數來訓練，以確到達到完全訓練，只要訓練集夠大，過度訓練並不會太影響網路強度。最後學習率大概要降低到多少，大概到 1e-5 就可以停止了，如果低於這個值，監督學習的網路可能會 overfitting ，導致網路強度降低。
 
 ## 為甚麼使用 data-cache？
 
-我們將訓練資處理好後儲存在硬碟上，需要時才讀進主記憶體，因為在訓練大盤面網路時（十九路），需要大量資料，通常需要上百 GB 才能完全讀入，使用 data-cache 可以避免主記憶體容量不夠而且也不影響訓練效率。預設是切割成 10 份，如果 10 份佔用的的記憶體還是太多，可以輸入參數 ```--chunks``` 切割成更多份，例如 100 份
+我們將訓練資處理好後儲存在硬碟上，需要時才讀進主記憶體，因為在訓練大盤面網路時（十九路），需要大量資料，通常需要上百 GB 才能完全讀入，使用 data-cache 可以避免主記憶體容量不夠而且也不太影響訓練效率。預設是 50 個遊戲切割成一個 chunk，如果想要增加每個 chunk 包含的遊戲數目，可以輸入
 
-    $ python3 train.py --chunks 100
+    $ python3 train.py --games-per-chunk 100
 
-但如果主記憶體足夠大的話，可以不進行切割，這樣可以保證最好的亂度和資料擴散度，輸入 1 可以保證不切割
+每筆輸入的資料都會丟入緩衝區並重新打亂，理論上越大可以提供越好的亂度，但會消耗更多記憶體。預設的緩衝大小是 512000 ，如果想改變大小，可以輸入
 
-    $ python3 train.py --chunks 1
-
+    $ python3 train.py --buffer-size 256000
 
 ## Down Sample Rate
 
-由於本程式的資料讀取資料的方式，是一個 chunk 為單位讀入，假設讀入的順序為 A、B、C ，那麼 A 的資料就永遠不可能在 B 之後，這樣會導致整體的亂度不夠。如果設定採樣率為 3（平均每三筆資料會丟棄倆筆），此情況下，會有 2/3 A 資料會在 B 和 C 之後（B 和 C 也只有 1/3 ）。簡單來說，採樣率越大等效的亂度也就越大。
+由於本程式的資料讀取資料的方式，是一個 chunk 為單位讀入，假設讀入的順序為 A、B、C 且不打亂，那麼 A 的資料就永遠不可能在 B 之後，這樣會導致整體的亂度不夠。通過採樣方式只讀入 1/N 筆資料，比如設定採樣率為 3（平均每三筆資料會丟棄倆筆），此情況下，會有 2/3 A 資料會在 B 和 C 之後（B 和 C 也只有 1/3 ）。簡單來說，採樣率越大等效的亂度也就越大。預設是不使用下採樣，如果使用之，可以輸入
+
+    $ python3 train.py --rate 16
 
