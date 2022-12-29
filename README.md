@@ -6,11 +6,12 @@ The simple English tutorial is [Here](./docs/English.md)
 
 #### (黑) dlgo-0.1 vs (白) Leela-0.11 (黑中盤勝) 
 ![vs_leela](./img/dlgo_vs_leela.gif)
+<br/>
 
 #### 使用 Sabaki 分析
-<div id="sabaki-analysis" align="center">
+<div id="sabaki-analysis">
     <br/>
-    <img src="./img/sabaki-analysis.png" alt="Sabaki Analysis" width="512"/>
+    <img src="./img/sabaki-analysis.png" alt="Sabaki Analysis" width="768"/>
 </div>
 
 ## 快速開始
