@@ -7,6 +7,12 @@ The simple English tutorial is [Here](./docs/English.md)
 #### (黑) dlgo-0.1 vs (白) Leela-0.11 (黑中盤勝) 
 ![vs_leela](./img/dlgo_vs_leela.gif)
 
+#### 使用 Sabaki 分析
+<div id="sabaki-analysis" align="center">
+    <br/>
+    <img src="./img/sabaki-analysis.png" alt="Sabaki Analysis" width="512"/>
+</div>
+
 ## 快速開始
 
 開始前請先安裝以下的 python 依賴庫（請注意本程式使用 python3）
@@ -38,7 +44,6 @@ MIT License
 ## Todo
 * 新增 UEC 的比賽資訊
 * 修復 GUI 的 bug 並優化之
-* 支援 ```analyze``` 和 ```genmove_analyze``` 指令，利於分析
 * 實做 AlphaGo Zero pipe？
 
 ### 聯絡資訊

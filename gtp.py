@@ -2,7 +2,7 @@ from sys import stderr, stdout, stdin
 from board import Board, PASS, RESIGN, BLACK, WHITE, INVLD
 from network import Network
 from mcts import Search
-from config import BOARD_SIZE, KOMI, INPUT_CHANNELS, PAST_MOVES
+from config import BOARD_SIZE, KOMI
 from time_control import TimeControl
 
 class GTP_ENGINE:
@@ -29,16 +29,19 @@ class GTP_ENGINE:
     def genmove(self, color):
         # Genrate next move and play it.
         c = self.board.to_move
-        if color == "black" or color == "b"  or color == "B":
+        if color.lower()[:1] == "b":
             c = BLACK
-        elif color == "white" or color == "w" or color == "W":
+        elif color.lower()[:1] == "w":
             c = WHITE
 
         self.board.to_move = c
         search = Search(self.board, self.network, self.time_control)
 
         # Collect the search verbose for the built-in GUI.
-        move, self.last_verbose = search.think(self.args.playouts, self.args.resign_threshold, self.args.verbose)
+        move, self.last_verbose = search.think(
+                                      self.args.playouts,
+                                      self.args.resign_threshold,
+                                      self.args.verbose)
         if self.board.play(move):
             self.board_history.append(self.board.copy())
 
@@ -48,9 +51,9 @@ class GTP_ENGINE:
     def play(self, color, move):
         # play move if the move is legal.
         c = INVLD
-        if color == "black" or color == "b"  or color == "B":
+        if color.lower()[:1] == "b":
             c = BLACK
-        elif color == "white" or color == "w" or color == "W":
+        elif color.lower()[:1] == "w":
             c = WHITE
 
         vtx = None
@@ -103,9 +106,9 @@ class GTP_ENGINE:
     # For GTP command "time_left". Set time left value for one side.
     def time_left(self, color, time, stones):
         c = INVLD
-        if color == "black" or color == "b"  or color == "B":
+        if color.lower()[:1] == "b":
             c = BLACK
-        elif color == "white" or color == "w" or color == "W":
+        elif color.lower()[:1] == "w":
             c = WHITE
         if c == INVLD:
             return False
@@ -117,11 +120,48 @@ class GTP_ENGINE:
         stderr.write(str(self.board))
         stderr.flush()
 
+    def lz_genmove_analyze(self, color, interval):
+        c = self.board.to_move
+        if color.lower()[:1] == "b":
+            c = BLACK
+        elif color.lower()[:1] == "w":
+            c = WHITE
+
+        self.board.to_move = c
+        search = Search(self.board, self.network, self.time_control)
+        search.analysis_tag["interval"] = interval/100
+
+        # Collect the search verbose for the built-in GUI.
+        move, self.last_verbose = search.think(
+                                      self.args.playouts,
+                                      self.args.resign_threshold,
+                                      self.args.verbose)
+        if self.board.play(move):
+            self.board_history.append(self.board.copy())
+
+        return self.board.vertex_to_text(move)
+
+    def lz_analyze(self, color, interval):
+        c = self.board.to_move
+        if color.lower()[:1] == "b":
+            c = BLACK
+        elif color.lower()[:1] == "w":
+            c = WHITE
+
+        self.board.to_move = c
+        search = Search(self.board, self.network, self.time_control)
+        search.analysis_tag["interval"] = interval/100
+
+        # Collect the search verbose for the built-in GUI.
+        self.last_verbose = search.ponder(
+                                self.args.playouts * 100,
+                                self.args.verbose)
+
 class GTP_LOOP:
     COMMANDS_LIST = [
         "quit", "name", "version", "protocol_version", "list_commands",
         "play", "genmove", "undo", "clear_board", "boardsize", "komi",
-        "time_settings", "time_left"
+        "time_settings", "time_left", "lz-genmove_analyze", "lz-analyze"
     ]
     def __init__(self, args):
         self.engine = GTP_ENGINE(args)
@@ -214,12 +254,46 @@ class GTP_LOOP:
             else:
                 self.fail_print("")
         elif main == "time_left":
-            if self.engine.time_left(cmd[1], cmd[2], cmd[3]):
-                self.success_print("")
+            if self.cmd_id is not None:
+                stdout.write("={}\n".format(self.cmd_id))
             else:
-                self.fail_print("")
+                stdout.write("=\n")
+            stdout.flush()
+        elif main == "lz-genmove_analyze":
+            color = "tomove"
+            interval = 0
+            if len(cmd) >= 2:
+                if cmd[1].isdigit():
+                    interval = cmd[1]
+                if cmd[2].isdigit():
+                    color = cmd[1]
+                    interval = cmd[2]
+            self.success_half('')
+            m = self.engine.lz_genmove_analyze(color, int(interval))
+            stdout.write("play {}\n\n".format(m))
+            stdout.flush()
+        elif main == "lz-analyze":
+            color = "tomove"
+            interval = 0
+            if len(cmd) >= 2:
+                if cmd[1].isdigit():
+                    interval = cmd[1]
+                if cmd[2].isdigit():
+                    color = cmd[1]
+                    interval = cmd[2]
+            self.success_half('')
+            m = self.engine.lz_analyze(color, int(interval))
+            stdout.write("\n")
+            stdout.flush()
         else:
             self.fail_print("Unknown command")
+
+    def success_half(self, res):
+        if self.cmd_id is not None:
+            stdout.write("={} {}\n".format(self.cmd_id, res))
+        else:
+            stdout.write("= {}\n".format(res))
+        stdout.flush()
 
     def success_print(self, res):
         if self.cmd_id is not None:

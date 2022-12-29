@@ -1,10 +1,11 @@
-from config import INPUT_CHANNELS
 from board import Board, PASS, RESIGN, BLACK, WHITE
 from network import Network
 from time_control import TimeControl
 
-from sys import stderr
+from sys import stderr, stdout, stdin
 import math
+import time
+import select
 
 class Node:
     # TODO: Tnue C_PUCT parameter.
@@ -98,7 +99,8 @@ class Node:
 
     def get_best_move(self, resign_threshold):
         # Return best probability move if there are no playouts.
-        if self.visits == 1:
+        if self.visits == 1 and \
+               resign_threshold is not None:
             if self.values < resign_threshold:
                 return 0;
             else:
@@ -113,9 +115,9 @@ class Node:
         child = self.children[vtx]
 
         # Play resin move if we think we have already lost.
-        if self.inverse(child.values / child.visits) < resign_threshold:
+        if resign_threshold is not None and \
+               self.inverse(child.values / child.visits) < resign_threshold:
             return RESIGN
-
         return vtx
 
     def to_string(self, board: Board):
@@ -141,6 +143,46 @@ class Node:
                            child.visits)
         return out
 
+    def get_pv(self, board: Board, pv_str):
+        if len(self.children) == 0: 
+            return pv_str
+
+        next_vtx = self.get_best_move(None)
+        next = self.children[next_vtx]
+        pv_str += "{} ".format(board.vertex_to_text(next_vtx))
+        return next.get_pv(board, pv_str)
+
+    def to_lz_analysis(self, board: Board):
+        out = str()
+
+        gather_list = []
+        for vtx, child in self.children.items():
+            gather_list.append((child.visits, vtx))
+        gather_list.sort(reverse=True)
+
+        i = 0
+        for _, vtx in gather_list:
+            child = self.children[vtx]
+            if child.visits != 0:
+                winrate = self.inverse(child.values/child.visits)
+                prior = child.policy
+                lcb = winrate
+                order = i
+                pv = "{} ".format(board.vertex_to_text(vtx))
+                out += "info move {} visits {} winrate {} prior {} lcb {} order {} pv {}".format(
+                           board.vertex_to_text(vtx),
+                           child.visits,
+                           int(10000 * winrate),
+                           int(10000 * prior),
+                           int(10000 * lcb),
+                           order,
+                           child.get_pv(board, pv))
+                i+=1
+        out += '\n'
+        return out
+
+
+
 #TODO: The MCTS performance is bad. Maybe the recursive is much
 #      slower than loop. Or self.children do too many times mapping
 #      operator. Try to fix it.
@@ -150,6 +192,9 @@ class Search:
         self.root_node = None # Root node, start the PUCT search from it.
         self.network = network
         self.time_control = time_control
+        self.analysis_tag = {
+            "interval" : -1
+        }
 
     def _prepare_root_node(self):
         # Expand the root node first.
@@ -194,13 +239,54 @@ class Search:
 
         return node.inverse(value)
 
+    def ponder(self, playouts, verbose):
+        if self.root_board.num_passes >= 2:
+            return str()
+
+        analysis_clock = time.time()
+        interval = self.analysis_tag["interval"]
+
+        # Try to expand the root node first.
+        self._prepare_root_node()
+
+        for p in range(playouts):
+            if p != 0 and \
+                   interval >= 0 and \
+                   time.time() - analysis_clock  > interval:
+                analysis_clock = time.time()
+                stdout.write(self.root_node.to_lz_analysis(self.root_board))
+                stdout.flush()
+
+            rlist, _, _ = select.select([stdin], [], [], 0)
+            if rlist:
+                break
+
+            # Copy the root board because we need to simulate the current board.
+            curr_board = self.root_board.copy()
+            color = curr_board.to_move
+
+            # Start the Monte Carlo tree search.
+            self._descend(color, curr_board, self.root_node)
+
+        out_verbose = self.root_node.to_string(self.root_board)
+        if verbose:
+            # Dump verbose to stderr because we want to debug it on GTP
+            # interface(sabaki).
+            stderr.write(out_verbose)
+            stderr.write("\n")
+            stderr.flush()
+
+        return out_verbose
+
     def think(self, playouts, resign_threshold, verbose):
         # Get the best move with Monte carlo tree. The time controller and max playouts limit
         # the search. More thinking time or playouts is stronger.
 
         if self.root_board.num_passes >= 2:
-            return PASS
+            return PASS, str()
 
+        analysis_clock = time.time()
+        interval = self.analysis_tag["interval"]
         self.time_control.clock()
         if verbose:
             stderr.write(str(self.time_control))
@@ -218,7 +304,14 @@ class Search:
         # Try to expand the root node first.
         self._prepare_root_node()
 
-        for _ in range(playouts):
+        for p in range(playouts):
+            if p != 0 and \
+                   interval >= 0 and \
+                   time.time() - analysis_clock  > interval:
+                analysis_clock = time.time()
+                stdout.write(self.root_node.to_lz_analysis(self.root_board))
+                stdout.flush()
+
             if self.time_control.should_stop(max_time):
                 break
 
@@ -232,14 +325,13 @@ class Search:
         # Eat the remaining time. 
         self.time_control.took_time(to_move)
 
+        out_verbose = self.root_node.to_string(self.root_board)
         if verbose:
             # Dump verbose to stderr because we want to debug it on GTP
             # interface(sabaki).
-            stderr.write(self.root_node.to_string(self.root_board))
+            stderr.write(out_verbose)
             stderr.write(str(self.time_control))
             stderr.write("\n")
             stderr.flush()
-
-        out_verbose = self.root_node.to_string(self.root_board)
 
         return self.root_node.get_best_move(resign_threshold), out_verbose
