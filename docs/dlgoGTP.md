@@ -1,7 +1,7 @@
 # dlgo GTP
 
 ## ㄧ、GTP 簡介
-GTP(Go Text Protocol) 最早為 GNU Go 團隊為了簡化當時的圍棋協定 Go Modem Protocol，在 GNU Go 3.0 時引入，到了現代 GTP 以成為圍棋軟體普遍的溝通方式。GTP 運作的原理相當簡單，就是界面（或是使用者）向引擎送出一條指令，引擎根據指令做出相應的動作，並且回覆訊息給界面。回覆的格式分成兩種，一種是執行成功，此時回覆的第一個字元是 ```=```，另一種是執行失敗，此時回覆的第一個字元是 ```?```，回覆完結時要換兩行表示結束。以下是 dlgo 的範例，此範例要注意的是 showboard 的輸出並不是標準的 GTP 指令（一般而言 showboard 不會在程式界面用到）
+GTP(Go Text Protocol) 最早為 GNU Go 團隊為了簡化當時的圍棋協定 Go Modem Protocol，在 GNU Go 3.0 時引入，到了現代 GTP 以成為圍棋軟體普遍的溝通方式。GTP 運作的原理相當簡單，就是界面（或是使用者）向引擎送出一條指令，引擎根據指令做出相應的動作，並且回覆訊息給界面。回覆的格式分成兩種，一種是執行成功，此時回覆的第一個字元是 ```=```，另一種是執行失敗，此時回覆的第一個字元是 ```?```，回覆完結時要換兩行表示結束。以下是 dlgo 的範例，此範例要注意的是 showboard 的部份輸出是 stderr ，stdout 部份依舊是標準的 GTP 指令。
 
     name
     = dlgo
@@ -103,6 +103,12 @@ dlgo 僅支援基本的 GTP 指令集，主要是為了滿足 TCGA 比賽的基�
    * `time_left [black|white] <main time: integer> <byo time: integer> <byo stones: integer>`
       * 設定某方剩餘的時限。
 
+   * `analyze [black|white] <interval: integer>`
+      * 背景分析結果，詳細指令的參數可到[這裡](https://github.com/SabakiHQ/Sabaki/blob/master/docs/guides/engine-analysis-integration.md)查看。
+      
+   * `genmove_analyze [black|white] <interval: integer>`
+      * 讓引擎思考並產生下一手棋到盤面上並在背景送出分析結果，詳細指令的參數可到[這裡](https://github.com/SabakiHQ/Sabaki/blob/master/docs/guides/engine-analysis-integration.md)查看。
+
 ## 三、其它 KGS 可用指令
 
 有些指令在 KGS 上有特殊效果，或是可以提供更多功能，如果有興趣的話，可以優先實作下列指令，指令的參數和效果可到 [GTP 英文文檔](https://www.gnu.org/software/gnugo/gnugo_19.html)查看
@@ -124,15 +130,3 @@ dlgo 僅支援基本的 GTP 指令集，主要是為了滿足 TCGA 比賽的基�
       
    * `kgs-game_over`
       * 當每盤對戰結束，會發出此指令。
-
-
-## 四、其它 Sabaki 可用指令
-
-有些指令在 Sabaki 上有特殊效果，可提供分析功能，詳細指令的參數可到[這裡](https://github.com/SabakiHQ/Sabaki/blob/master/docs/guides/engine-analysis-integration.md)查看
-
-   * `analyze [black|white] <interval: integer>`
-      * 背景分析結果。
-      
-   * `genmove_analyze [black|white] <interval: integer>`
-      * 讓引擎思考並產生下一手棋到盤面上並在背景送出分析結果。
-

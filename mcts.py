@@ -17,7 +17,7 @@ class Node:
         self.values = 0 # The accumulate winrate.
         self.visits = 0 # The accumulate node visits.
                         # The Q value must be equal to (self.values / self.visits)
-        self.children = {} # Next node.
+        self.children = dict() # Next node.
 
     def clamp(self, v):
         # Map the winrate 1 ~ -1 to 1 ~ 0.
@@ -59,7 +59,7 @@ class Node:
     def remove_superko(self, board: Board):
         # Remove all superko moves.
 
-        remove_list = []
+        remove_list = list()
         for vtx, _ in self.children.items():
             if vtx != PASS:
                 next_board = board.copy()
@@ -73,12 +73,12 @@ class Node:
         parent_visits = max(self.visits, 1) # The parent visits must great than 1 because we want to get the
                                             # best policy value if it is the first selection.
         numerator = math.sqrt(parent_visits)
-
-        puct_list = []
+        puct_list = list()
 
         # Select the best node by PUCT algorithm. 
         for vtx, child in self.children.items():
-            q_value = self.values/self.visits - 0.25/numerator # first play urgency
+            q_value = self.nn_eval # The First Play Urgency for unvisited
+                                   # nodes.
 
             if child.visits != 0:
                 q_value = self.inverse(child.values / child.visits)
@@ -92,7 +92,7 @@ class Node:
         self.visits += 1
 
     def get_best_prob_move(self):
-        gather_list = []
+        gather_list = list()
         for vtx, child in self.children.items():
             gather_list.append((child.policy, vtx))
         return max(gather_list)[1]
@@ -107,7 +107,7 @@ class Node:
                 return self.get_best_prob_move()
 
         # Get best move by number of node visits.
-        gather_list = []
+        gather_list = list()
         for vtx, child in self.children.items():
             gather_list.append((child.visits, vtx))
 
@@ -128,7 +128,7 @@ class Node:
                     100.0 * self.values/self.visits,
                     self.visits)
 
-        gather_list = []
+        gather_list = list()
         for vtx, child in self.children.items():
             gather_list.append((child.visits, vtx))
         gather_list.sort(reverse=True)
@@ -144,6 +144,8 @@ class Node:
         return out
 
     def get_pv(self, board: Board, pv_str):
+        # Get the best Principal Variation list since this
+        # node.
         if len(self.children) == 0: 
             return pv_str
 
@@ -153,9 +155,11 @@ class Node:
         return next.get_pv(board, pv_str)
 
     def to_lz_analysis(self, board: Board):
+        # Output the leela zero analysis string. Watch the detail
+        # here: https://github.com/SabakiHQ/Sabaki/blob/master/docs/guides/engine-analysis-integration.md
         out = str()
 
-        gather_list = []
+        gather_list = list()
         for vtx, child in self.children.items():
             gather_list.append((child.visits, vtx))
         gather_list.sort(reverse=True)
@@ -201,7 +205,7 @@ class Search:
         self.root_node = Node(1)
         val = self.root_node.expand_children(self.root_board, self.network)
 
-        # In order to avoid overhead, we only remove the superko position in
+        # In order to avoid overhead, we only remove the superko positions in
         # the root.
         self.root_node.remove_superko(self.root_board)
         self.root_node.update(val)
@@ -251,7 +255,7 @@ class Search:
 
         for p in range(playouts):
             if p != 0 and \
-                   interval >= 0 and \
+                   interval > 0 and \
                    time.time() - analysis_clock  > interval:
                 analysis_clock = time.time()
                 stdout.write(self.root_node.to_lz_analysis(self.root_board))
@@ -306,7 +310,7 @@ class Search:
 
         for p in range(playouts):
             if p != 0 and \
-                   interval >= 0 and \
+                   interval > 0 and \
                    time.time() - analysis_clock  > interval:
                 analysis_clock = time.time()
                 stdout.write(self.root_node.to_lz_analysis(self.root_board))

@@ -27,3 +27,8 @@
 * [AlphaGOZero-python-tensorflow](https://github.com/yhyu13/AlphaGOZero-python-tensorflow)
 
 十九路圍棋引擎，使用 Policy Network 和 Value Network，實做監督學習和強化學習。
+
+
+* [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
+
+九路圍棋引擎，示範和教學使用。
