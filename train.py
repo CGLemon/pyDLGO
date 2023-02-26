@@ -273,7 +273,7 @@ class TrainingPipe:
         )
         batch = next(self.loader) # init the loader
 
-    def running(self, max_steps, verbose_steps, learning_rate, noplot):
+    def running(self, max_steps, verbose_steps, learning_rate, decay_steps, decay_factor, noplot):
         cross_entry = nn.CrossEntropyLoss()
         mse_loss = nn.MSELoss()
 
@@ -293,6 +293,16 @@ class TrainingPipe:
         clock_time = time.time()
 
         while steps < max_steps:
+            if decay_steps is not None:
+                if (steps+1) % decay_steps == 0:
+                    print("Drop the learning rate from {} to {}.".format(
+                              learning_rate,
+                              learning_rate * decay_factor
+                              ))
+                    learning_rate = learning_rate * decay_factor
+                    for param in optimizer.param_groups:
+                        param["lr"] = learning_rate
+
             # First, get the batch data.
             inputs, target_p, target_v = next(self.loader)
 
@@ -416,11 +426,22 @@ if __name__ == "__main__":
                         help="Disable plotting.", default=False)
     parser.add_argument("--buffer-size", metavar="<integer>",
                         help="The buffer size of lazy loader.", type=int, default=512000)
+    parser.add_argument("--lr-decay-steps", metavar="<integer>",
+                        help="Reduce the learning rate every X steps.", type=int, default=None)
+    parser.add_argument("--lr-decay-factor", metavar="<float>",
+                        help="The learning rate decay multiple factor.", type=float, default=0.1)
 
     args = parser.parse_args()
     if valid_args(args):
         pipe = TrainingPipe(args.dir, args.rate, args.buffer_size,
                             args.batch_size, args.games_per_chunk, args.imported_games)
         pipe.load_weights(args.load_weights)
-        pipe.running(args.steps, args.verbose_steps, args.learning_rate, args.noplot)
+        pipe.running(
+            args.steps,
+            args.verbose_steps,
+            args.learning_rate,
+            args.lr_decay_steps,
+            args.lr_decay_factor,
+            args.noplot
+        )
         pipe.save_weights(args.weights_name)

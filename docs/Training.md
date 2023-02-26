@@ -178,6 +178,10 @@
 
     $ python3 train.py --steps 128000 --batch-size 512 --learning-rate 0.0001 --load-weights preweights --weights-name outweights
 
+或是直接輸入 ```--lr-decay``` 的參數，讓程式自動降低學習率。
+
+    $ python3 train.py ...  --steps 512000 --lr-decay-steps 128000 --lr-decay-factor 0.1
+
 你可能會好奇，每次降低學習大概需要多少個 steps ，以經驗來看，範例給的 128000 steps 配合 512 batch 的訓練量就非常足夠，依照上面的訓練資訊，loss 已經很難再降低了。當然如果你不放心，可以選用更大 step 數來訓練，以確到達到完全訓練，只要訓練集夠大，過度訓練並不會太影響網路強度。最後學習率大概要降低到多少，大概到 1e-5 就可以停止了，如果低於這個值，監督學習的網路可能會 overfitting ，導致網路強度降低。
 
 ## 為甚麼使用 data-cache？
