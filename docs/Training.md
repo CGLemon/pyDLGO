@@ -170,13 +170,13 @@
 
 在 ```python3``` 輸入環境參數 ```CUDA_VISIBLE_DEVICES``` ，可以指定要用哪個 GPU 訓練網路，GPU 的編號從 0 開始，如果有 4 個 GPU 則編號從 0 到 3，數字 0 代表使用預設的。如果不指定，則默認使用 0 號 GPU。
 
-    $ CUDA_VISIBLE_DEVICES=0 python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
+    $ CUDA_VISIBLE_DEVICES=0 python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.01 --weights-name weights
 
 ## 降低學習率
 
 事實上，訓練圍棋的網路，持續的降低學習率是很重要的，相同訓練資料，有降低學習率和沒有學習率的網路，其強度可以差距三段以上，這個差距在讓子棋中尤其明顯，未降低學習率的網路在前期通常無法有效辨識當前盤面的好壞。dlgo 提供重新載入網路的的功能，輸入下列指令即可調整學習率重新訓練。這邊可以不用再輸入指令 ```--dir``` ，可以避免重新解析棋譜，直接使用 data-cache 內的資料，加速訓練流程
 
-    $ python3 train.py --steps 128000 --batch-size 512 --learning-rate 0.0001 --load-weights preweights --weights-name outweights
+    $ python3 train.py --steps 128000 --batch-size 512 --learning-rate 0.001 --load-weights preweights --weights-name outweights
 
 或是直接輸入 ```--lr-decay``` 的參數，讓程式自動降低學習率。
 
@@ -196,7 +196,7 @@
 
 ## Down Sample Rate
 
-由於本程式的資料讀取資料的方式，是一個 chunk 為單位讀入，假設讀入的順序為 A、B、C 且不打亂，那麼 A 的資料就永遠不可能在 B 之後，這樣會導致整體的亂度不夠。通過採樣方式只讀入 1/N 筆資料，比如設定採樣率為 3（平均每三筆資料會丟棄倆筆），此情況下，會有 2/3 A 資料會在 B 和 C 之後（B 和 C 也只有 1/3 ）。簡單來說，採樣率越大等效的亂度也就越大。預設是不使用下採樣，如果使用之，可以輸入
+由於本程式的資料讀取資料的方式，是一個 chunk 為單位讀入，假設讀入的順序為 A、B、C 且不打亂，那麼 A 的資料就永遠不可能在 B 之後，這樣會導致整體的亂度不夠。通過採樣方式只讀入 1/N 筆資料，比如設定採樣率為 3（平均每三筆資料會丟棄倆筆），此情況下，會有 2/3 A 資料會在 B 和 C 之後（B 和 C 也只有 1/3 ）。簡單來說，採樣率越大等效的亂度也就越大。預設是不使用下採樣，如果想使用之，可以輸入
 
     $ python3 train.py --rate 16
 

@@ -1,7 +1,7 @@
 from network import Network
 from config import BOARD_SIZE, INPUT_CHANNELS
 from board import Board, PASS, BLACK, WHITE, INVLD, NUM_INTESECTIONS
-from lazy_loader import LazyLoader
+from lazy_loader import LazyLoader, LoaderFlag
 
 import sgf, argparse
 import copy, random, time, os, shutil, glob
@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
 
 CACHE_DIR = "data-cache"
 
@@ -24,7 +23,6 @@ def gather_filenames():
             else:
                 l.append(name)
         return l
-
     return gather_recursive_files(CACHE_DIR)
 
 def get_currtime():
@@ -129,14 +127,14 @@ class DataChopper:
     def  __init__(self, dir_name, games_per_chunk, num_sgfs):
         self.cache_dir = CACHE_DIR
         self.num_data = 0
-        self.__chop_data(dir_name, games_per_chunk, num_sgfs)
+        self._chop_data(dir_name, games_per_chunk, num_sgfs)
 
     def __del__(self):
         # Do not delete the training data in the cache dir. We may
         # use them next time.
         pass
 
-    def __chop_data(self, dir_name, games_per_chunk, num_sgfs):
+    def _chop_data(self, dir_name, games_per_chunk, num_sgfs):
         # Load the SGF files and tranfer them to training data.
         sgf_games = sgf.parse_from_dir(dir_name)
         total_steps = min(len(sgf_games), num_sgfs)
@@ -153,22 +151,22 @@ class DataChopper:
 
         for s in range(total_steps):
             game = sgf_games[s]
-            temp = self.__process_one_game(game)
+            temp = self._process_one_game(game)
 
             buf.extend(temp)
 
             if (s+1) % games_per_chunk == 0:
                 print("parsed {:.2f}% games".format(100 * (s+1)/total_steps))
-                self.__save_chunk(buf, chunk_cnt)
+                self._save_chunk(buf, chunk_cnt)
                 chunk_cnt += 1
                 buf = []
 
         # There still some data in the buffer. Save them.
         if len(buf) != 0:
             print("parsed {:.2f}% games".format(100))
-            self.__save_chunk(buf, chunk_cnt)
+            self._save_chunk(buf, chunk_cnt)
 
-    def __save_chunk(self, buf, cnt):
+    def _save_chunk(self, buf, cnt):
         # Save the training data to the disk.
         size = len(buf)
 
@@ -192,7 +190,7 @@ class DataChopper:
         filenmae = os.path.join(self.cache_dir, "chunk_{}.npz".format(cnt))
         np.savez_compressed(filenmae, i=inputs_buf, p=policy_buf, v=value_buf, t=to_move_buf)
 
-    def __process_one_game(self, game):
+    def _process_one_game(self, game):
         # Collect training data from one SGF game.
 
         temp = []
@@ -217,7 +215,7 @@ class DataChopper:
                 data = Data()
                 data.inputs = board.get_features()
                 data.to_move = color
-                data.policy = self.__do_text_move(board, color, move)
+                data.policy = self._do_text_move(board, color, move)
                 temp.append(data)
 
         for data in temp:
@@ -229,7 +227,7 @@ class DataChopper:
                 data.value = -1
         return temp
 
-    def __do_text_move(self, board, color, move):
+    def _do_text_move(self, board, color, move):
         # Play next move and return the policy data.
 
         board.to_move = color
@@ -247,6 +245,8 @@ class DataChopper:
         return policy
 
 class TrainingPipe:
+    VALUE_LOSS_SCALE = 0.25
+
     def __init__(self, dir_name, rate, buffer_size, batch_size, games_per_chunk, num_sgfs):
         self.network = Network(BOARD_SIZE)
         self.network.trainable(True)
@@ -261,6 +261,7 @@ class TrainingPipe:
 
         # We use the customized loader instead of pyTorch loader in
         # order to improve the randomness of data.
+        self.flag = LoaderFlag()
         self.loader = LazyLoader(
             filenames = gather_filenames(),
             stream_loader = StreamLoader(),
@@ -269,7 +270,8 @@ class TrainingPipe:
             down_sample_rate = rate,
             num_workers = self.num_workers,
             buffer_size = buffer_size,
-            batch_size = batch_size
+            batch_size = batch_size,
+            flag = self.flag
         )
         batch = next(self.loader) # init the loader
 
@@ -306,7 +308,6 @@ class TrainingPipe:
             # First, get the batch data.
             inputs, target_p, target_v = next(self.loader)
 
-
             # Second, Move the data to GPU memory if we use it.
             if self.network.use_gpu:
                 inputs = inputs.to(self.network.gpu_device)
@@ -319,7 +320,7 @@ class TrainingPipe:
             # Fourth, compute the loss result and update network.
             p_loss = cross_entry(p, target_p)
             v_loss = mse_loss(v, target_v)
-            loss = p_loss + v_loss
+            loss = p_loss + self.VALUE_LOSS_SCALE * v_loss
 
             optimizer.zero_grad()
             loss.backward()
@@ -350,6 +351,12 @@ class TrainingPipe:
                 clock_time = time.time()
             steps += 1
 
+        self.flag.set_stop_flag()
+        try:
+            inputs, target_p, target_v = next(self.loader)
+        except StopIteration:
+            pass
+
         print("Training is over.");
         if not noplot:
             # sixth plot the running loss graph.
@@ -375,7 +382,7 @@ class TrainingPipe:
         plt.show()
 
     def save_weights(self, name):
-        # TODO: We need save the optimizer status too.
+        # TODO: We should save the optimizer status too.
         self.network.save_pt(name)
 
     def load_weights(self, name):

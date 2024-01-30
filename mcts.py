@@ -77,8 +77,7 @@ class Node:
 
         # Select the best node by PUCT algorithm. 
         for vtx, child in self.children.items():
-            q_value = self.nn_eval # The First Play Urgency for unvisited
-                                   # nodes.
+            q_value = 0 # init to lose
 
             if child.visits != 0:
                 q_value = self.inverse(child.values / child.visits)

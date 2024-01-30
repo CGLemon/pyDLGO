@@ -4,22 +4,22 @@ import random
 
 class ShuffleBuffer:
     def __init__(self, buf_size):
-        self.__buf = list()
-        self.__max_buf_size = buf_size
-        assert self.__max_buf_size >= 1, "Buffer size must be greater than zero."
+        self._buf = list()
+        self._max_buf_size = buf_size
+        assert self._max_buf_size >= 1, "Buffer size must be greater than zero."
 
     def insert_item_and_pop(self, item):
-        size = len(self.__buf)
+        size = len(self._buf)
 
         if size > 4:
             i = random.randint(0, size-1)
 
             # Apply Fisher-Yates shuffle algorithm. Efficiently shuffle
             # the random buffer.
-            self.__buf[i], item = item, self.__buf[i]
+            self._buf[i], item = item, self._buf[i]
 
-        if size < self.__max_buf_size:
-            self.__buf.append(item)
+        if size < self._max_buf_size:
+            self._buf.append(item)
             return None
         return item
 
@@ -33,13 +33,13 @@ class DataLoader:
         self.writer = data_writer
         self.stream = None
 
-        # Use a random sample input data read. This helps improve the spread of
+        # Use a random sample input data reader. This helps improve the spread of
         # games in the shuffle buffer.
         self.rate = down_sample_rate
 
         assert len(filenames) != 0, ""
 
-    def __open_new_stream(self):
+    def _open_new_stream(self):
         if len(self.tasks) == 0:
             self.tasks, self.done = self.done, self.tasks
             random.shuffle(self.tasks)
@@ -52,7 +52,7 @@ class DataLoader:
     def next(self):
         while True:
             if self.stream is None:
-                self.stream = self.__open_new_stream()
+                self.stream = self._open_new_stream()
 
             data = self.parser.func(self.stream)
 
@@ -79,6 +79,7 @@ class LoaderConfig:
         self.num_workers = 0
         self.buffer_size = 0
         self.batch_size = 0
+        self.flag = None
 
     def valid(self):
         if len(self.filenames) <= 0 or \
@@ -91,9 +92,29 @@ class LoaderConfig:
             return False
         return True
 
-def __load_from_files(config, data_writer):
-    # Load the data from disk. Recommand to design a heavy stream parser instead 
-    # of heavy batch generator. It is because that there are N workers execute the 
+class LoaderFlag:
+    NONE = 0
+    STOP = 1
+
+    def __init__(self):
+        self.flag = mp.Value("i", self.NONE)
+
+    def is_stop(self):
+        with self.flag.get_lock():
+            v = self.flag.value
+        return v == self.STOP
+
+    def reset_flag(self):
+        with self.flag.get_lock():
+            self.flag.value = self.NONE
+
+    def set_stop_flag(self):
+        with self.flag.get_lock():
+            self.flag.value = self.STOP
+
+def _load_from_files(config, data_writer):
+    # Load the data from disk. Suggest to design a heavy stream parser instead
+    # of heavy batch generator. It is because that N workers execute the
     # parser function, only one worker executes generator function.
 
     loader = DataLoader(
@@ -105,9 +126,12 @@ def __load_from_files(config, data_writer):
              )
 
     while True:
+        if config.flag.is_stop():
+            data_writer.close()
+            break
         loader.next()
 
-def __gather_batch(config, data_readers, batch_writer):
+def _gather_batch(config, data_readers, batch_writer):
     shuf_buff = ShuffleBuffer(config.buffer_size)
     batch_gen = config.batch_generator
 
@@ -126,6 +150,10 @@ def __gather_batch(config, data_readers, batch_writer):
     # Now, start to prepare the batch. It significantly improve
     # the loader performanc.
     while True:
+        if config.flag.is_stop():
+            batch_writer.close()
+            break
+
         data_list = list()
 
         while len(data_list) < config.batch_size:
@@ -156,11 +184,13 @@ def LazyLoader(*args, **kwargs):
     config.num_workers = kwargs.get("num_workers", 0)
     config.buffer_size = kwargs.get("buffer_size", 0)
     config.batch_size = kwargs.get("batch_size", 0)
+    config.flag = kwargs.get("flag", LoaderFlag())
 
     if not config.valid():
         print("Config is invalid. Please check your setting.")
         return None
 
+    proc_list = list()
     data_readers = list()
     batch_reader, batch_writer = mp.Pipe(duplex=False)
 
@@ -170,23 +200,42 @@ def LazyLoader(*args, **kwargs):
         data_readers.append(data_reader)
 
         # Create one SMP process.
-        mp.Process(
-            target=__load_from_files,
-            args=(config, data_writer),
-            daemon=True
-        ).start()
+        p = mp.Process(
+                target=_load_from_files,
+                args=(config, data_writer),
+                daemon=True
+            )
+        p.start()
+        proc_list.append(p)
         data_writer.close()
 
-    threading.Thread(
-        target=__gather_batch,
-        args=(config, data_readers, batch_writer),
-        daemon=True
-    ).start()
+    t = threading.Thread(
+            target=_gather_batch,
+            args=(config, data_readers, batch_writer),
+            daemon=True
+        )
+    t.start()
 
     # Do not close it because the thread and main thread share the same
     # writer.
     # batch_writer.close()
 
     while True:
-        batch = batch_reader.recv()
-        yield batch
+        if config.flag.is_stop():
+            for idx, p in enumerate(proc_list):
+                while p.is_alive():
+                    try:
+                        _ = data_readers[idx].recv()
+                        continue
+                    except:
+                        pass
+                data_readers[idx].close()
+            batch_reader.close()
+            batch_writer.close()
+            t.join()
+            return
+        try:
+            batch = batch_reader.recv()
+            yield batch
+        except:
+            return

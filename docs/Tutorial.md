@@ -184,7 +184,7 @@ KGS 是一個網路圍棋伺服器，它曾經世界最大、最多人使用的�
 
     $ java -jar kgsGtp.jar config.txt
     
-詳細的參數說明可以看 [KGS GTP 文件]( http://www.weddslist.com/kgs/how/kgsGtp.html)。注意這是舊版的文件，如果要新版的文件，可以點擊在同個資料夾的 kgsGtp.xhtml，或是輸入以下命令在終端機觀看。
+詳細的參數說明可以看 [KGS GTP 文件](http://www.weddslist.com/kgs/how/kgsGtp.html)。注意這是舊版的文件，如果要新版的文件，可以點擊在同個資料夾的 kgsGtp.xhtml，或是輸入以下命令在終端機觀看。
 
     $ java -jar kgsGtp.jar -h
 
@@ -234,22 +234,7 @@ TCGA 全名為台灣電腦對局協會，基本上每年會舉辦兩場各類型
     通過 KGS 平台比賽。均採用中國規則且禁全同，九路思考時間為 10 分鐘不讀秒，十九路思考時間為 30 分鐘不讀秒。
 
 
-### TCGA 相關比賽列表
+### TCGA/ICGA 相關比賽列表
 
-* TCGA 管理的網站這幾年好像有點疏於維護，容易出現錯誤訊息，如果出現錯誤訊息請等幾天或幾個禮拜後再嘗試進去看看。
-
-| 比賽                                             |時間                | 狀態               |
-| :------------:                                   | :---------------: | :---------------: |
-| [2021 TAAI](https://www.tcga.tw/taai2021/zh_TW/) | 11 月 20 號比賽 | 結束   |
-| [2022 TCGA](https://sites.google.com/mail.ncnu.edu.tw/2022-tcga/%E5%A4%A7%E6%9C%83%E7%B0%A1%E4%BB%8B) | 5 月 14 號比賽 | 結束   |
-| [2022 TAAI](https://www.tcga.tw/taai2022/zh_TW/) | 12 月 3 號報名截止 | 結束  |
-
-
-<br>
-
-### ICGA 比賽列表
-
-| 比賽                                             |時間                | 狀態               |
-| :------------:                                   | :---------------: | :---------------: |
-| [2022 ICGA](https://icga.org/?page_id=3468)      |  7 月 23 號到 29 號間比賽 | 結束  |
+請查看[這裡](https://hackmd.io/@yrHb-fKBRoyrKDEKdPSDWg/ryoCXyXjK)
 

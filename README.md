@@ -48,9 +48,7 @@ The simple English tutorial is [Here](./docs/English.md)
 
 
 ## Todo
-* 新增 UEC 的比賽資訊
 * 修復 GUI 的 bug 並優化之
-* 實做 AlphaGo Zero pipe？
 
 ### 聯絡資訊
 

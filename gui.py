@@ -79,7 +79,6 @@ class GUI_LOOP(GTP_ENGINE):
         self.draw_canvas(self.canvas_x, self.canvas_y)
         self.draw_scroll_text(self.scrolled_x, self.scrolled_y)
 
-
     def draw_canvas(self, x, y):
         bsize = self.board.board_size
         square_size = self.canvas_size / bsize
@@ -122,9 +121,9 @@ class GUI_LOOP(GTP_ENGINE):
 
         radius = max(square_size/2 - 5, 15)
         border = max(round(radius/15), 2)
-        self.oval_buffer[self.board.get_index(r, c)] = self.canvas.create_oval(x-radius, y-radius, x+radius, y+radius,
-                                                                               fill=color_stone, outline=color_border, width=border)
-
+        self.oval_buffer[self.board.get_index(r, c)] = self.canvas.create_oval(
+                x-radius, y-radius, x+radius, y+radius,
+                fill=color_stone, outline=color_border, width=border)
         if self.rect == None:
             offset = max(square_size/2 , 20)
             self.rect = self.canvas.create_rectangle(x-offset, y-offset, x+offset, y+offset, outline="#c1005d")
@@ -197,7 +196,7 @@ class GUI_LOOP(GTP_ENGINE):
             move_num = self.board.move_num
 
             if self.turns[to_move] == "compute":
-                move = self.genmove(to_move)
+                move = self.genmove("black" if to_move == BLACK else "white")
                 
                 vtx = self.board.last_move
                 if move == "resign":

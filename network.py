@@ -30,7 +30,7 @@ class ConvBlock(nn.Module):
             in_channels,
             out_channels,
             kernel_size,
-            padding=1 if kernel_size == 3 else 0,
+            padding="same",
             bias=True,
         )
         self.bn = nn.BatchNorm2d(

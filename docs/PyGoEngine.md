@@ -32,3 +32,7 @@
 * [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
 
 九路圍棋引擎，示範和教學使用。
+
+* [kobanium/TamaGo](https://github.com/kobanium/TamaGo)
+
+通過 Gumbel AlphaZero 強化學習的九路圍棋引擎，具有較高的強度。

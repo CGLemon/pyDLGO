@@ -41,7 +41,7 @@ Following above simple steps to train a new weights
 
         $ python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.005 --weights-name weights
 
-Some helpful optional arguments are here.
+Some helpful arguments are here.
 
     optional arguments:
       -h, --help            show this help message and exit
