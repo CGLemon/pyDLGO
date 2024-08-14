@@ -41,7 +41,6 @@ dlgo 包含 SGF 解析器，可以解析此格式的棋譜，並將棋譜作為�
 | VALUE_CHANNELS       | 價值頭 channel 的數目，數目越大價值頭預準度越好 |
 | BOARD_SIZE           | 棋盤大小，必須和棋譜的大小一致                 |
 | USE_SE               | 是否啟用 Squeeze-and-Excitation 網路結構      |
-| USE_POLICY_ATTENTION | 是否啟用 self-attention 網路結構              |
 | USE_GPU              | 是否使用 GPU 訓練。如果為 True ，會自動檢查是否有可用的 GPU ，如果沒有檢測到 GPU ，則會使用 CPU 訓練，如果為 False ，則強制使用 CPU 訓練。此參數建議使用 True |
 
 <br>
@@ -56,18 +55,17 @@ dlgo 包含 SGF 解析器，可以解析此格式的棋譜，並將棋譜作為�
 | -s, --steps          | integer           | 要訓練的步數，越多訓練時間越久 |
 | -b, --batch-size     | integer           | 訓練的 batch size，建議至少大於 128 ，太低會無法訓練 |
 | -l, --learning-rate  | float             | 學習率大小 ，建議從 0.005 開始 |
-| -w, --weights-name   | string            | 要輸出的網路權重名稱 |
 | -r, --rate           | integer           | 下採樣率，有 1/N 的機率採樣訓練資料，剩餘的捨棄，可以大幅度增加訓練穩定度 |
+| --value-loss-scale   | float             | Value Loss 的倍率，預設是 0.25 倍 |
 | --lr-decay-steps     | integer           | 每 X steps 降低當前的學習率 |
 | --lr-decay-factor    | float             | 降低學習率的乘數 |
-| --load-weights       | string            | 載入其它權重，可以從此權重繼續開始訓練 |
 | --noplot             | NA                | 訓練完後不要使用 Matplotlib 繪圖 |
 
 <br>
 
 以下是訓練範例命令
 
-    $ python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.001 --weights-name weights
+    $ python3 train.py --dir sgf-directory-name --steps 128000 --batch-size 512 --learning-rate 0.001
 
 在一台有配備獨立顯示卡的電腦，大概數個小時內可以完成訓練，如果使用 CPU 訓練大概需要幾天時間。當網路權重出現後，就完成第一步的訓練了。如果你對當前的訓練結果不滿意，可到[這裏](../docs/Training.md)查看一些訓練時的小技巧。
 

@@ -42,7 +42,6 @@ The simple English tutorial is [Here](./docs/English.md)
 
 本程式為 MIT License ，部份程式有各自的 License ，分別為
 
-* [sgf.py](https://github.com/jtauber/sgf)
 * [board.py](https://github.com/ymgaq/Pyaq) 和 [sgf.zip](https://github.com/ymgaq/Pyaq)
 * [gui.py](https://github.com/YoujiaZhang/AlphaGo-Zero-Gobang)
 

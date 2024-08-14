@@ -402,7 +402,7 @@ def training_process(args):
 
     print("Training is over.");
     if not args.noplot:
-        # sixth plot the running loss graph.
+        # Sixth plot the running loss graph.
         plot_loss(running_loss_record)
     network.save_pt("weights-{}.pt".format(get_currtime(version=2)))
 
@@ -413,7 +413,7 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--steps", metavar="<integer>",
                         help="Terminate after these steps for each run.", type=int)
     parser.add_argument("-v", "--verbose-steps", metavar="<integer>",
-                        help="Dump verbose on every X steps.", type=int, default=1000)
+                        help="Dump verbose and save checkpoint every X steps.", type=int, default=1000)
     parser.add_argument("-b", "--batch-size", metavar="<integer>",
                         help="The batch size number.", type=int)
     parser.add_argument("-l", "--learning-rate", metavar="<float>",

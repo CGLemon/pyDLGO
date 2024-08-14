@@ -201,7 +201,8 @@ class Network(nn.Module):
         val = self.winrate_fc(val)
 
         return pol, torch.tanh(val)
-        
+
+    @torch.no_grad()
     def get_outputs(self, planes):
         # TODO: Limit the NN cache size.
 

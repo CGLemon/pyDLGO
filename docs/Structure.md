@@ -32,10 +32,6 @@
 
 實做神經網路結構。
 
-#### transformer.py
-
-實做 transformer 網路，它是神經網路實做的一部分。
-
 #### sgf.py
 
 SGF 格式檔案的解析器。
