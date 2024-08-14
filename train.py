@@ -1,6 +1,6 @@
 from network import Network
 from config import BOARD_SIZE, INPUT_CHANNELS
-from board import Board, PASS, BLACK, WHITE, INVLD, NUM_INTESECTIONS
+from board import Board, PASS, BLACK, WHITE, EMPTY, INVLD, NUM_INTESECTIONS
 from lazy_loader import LazyLoader, LoaderFlag
 
 import sgf, argparse
@@ -30,18 +30,6 @@ def get_currtime():
     return "[{y}-{m}-{d} {h:02d}:{mi:02d}:{s:02d}]".format(
                y=lt.tm_year, m=lt.tm_mon,  d=lt.tm_mday, h=lt.tm_hour, mi=lt.tm_min, s=lt.tm_sec)
 
-def get_symmetry_plane(symm, plane):
-    use_flip = False
-    if symm // 4 != 0:
-        use_flip = True
-    symm = symm % 4
-
-    transformed = np.rot90(plane, symm)
-
-    if use_flip:
-        transformed = np.flip(transformed, 1)
-    return transformed
-
 class Data:
     def __init__(self):
         self.inputs = None # should be numpy array, shape is [INPUT_CHANNELS, BOARD_SIZE, BOARD_SIZE]
@@ -49,10 +37,17 @@ class Data:
         self.value = None # should be float, range is -1 ~ 1
         self.to_move = None
 
-    def __str__(self):
-        out = str()
-        out += "policy: {p} | value: {v}\n".format(p=self.policy, v=self.value)
-        return out
+    def _get_symmetry_plane(self, symm, plane):
+        use_flip = False
+        if symm // 4 != 0:
+            use_flip = True
+        symm = symm % 4
+
+        transformed = np.rot90(plane, symm)
+
+        if use_flip:
+            transformed = np.flip(transformed, 1)
+        return transformed
 
     def do_symmetry(self, symm=None):
         assert self.policy != None, ""
@@ -62,12 +57,12 @@ class Data:
 
         for i in range(INPUT_CHANNELS-2): # last 2 channels is side to move.
             p = self.inputs[i]
-            self.inputs[i][:][:] = get_symmetry_plane(symm, p)[:][:]
+            self.inputs[i][:][:] = self._get_symmetry_plane(symm, p)[:][:]
 
         if self.policy != NUM_INTESECTIONS:
             buf = np.zeros(NUM_INTESECTIONS)
             buf[self.policy] = 1
-            buf = get_symmetry_plane(symm, np.reshape(buf, (BOARD_SIZE, BOARD_SIZE)))
+            buf = self._get_symmetry_plane(symm, np.reshape(buf, (BOARD_SIZE, BOARD_SIZE)))
             self.policy = int(np.argmax(buf))
 
 class StreamLoader:
@@ -193,56 +188,34 @@ class DataChopper:
     def _process_one_game(self, game):
         # Collect training data from one SGF game.
 
-        temp = []
-        winner = None
+        if game.board_size is not BOARD_SIZE:
+            return list()
+
+        temp = list()
+        winner = game.winner
         board = Board(BOARD_SIZE)
-        for node in game:
-            color = INVLD
-            move = None
-            if "W" in node.properties:
-                color = WHITE
-                move = node.properties["W"][0]
-            elif "B" in node.properties:
-                color = BLACK
-                move = node.properties["B"][0]
-            elif "RE" in node.properties:
-                result = node.properties["RE"][0]
-                if "B+" in result:
-                    winner = BLACK
-                elif "W+" in result:
-                    winner = WHITE
-            if color != INVLD:
-                data = Data()
-                data.inputs = board.get_features()
-                data.to_move = color
-                data.policy = self._do_text_move(board, color, move)
-                temp.append(data)
+
+        for color, move in game.history:
+            data = Data()
+            data.inputs = board.get_features()
+            data.to_move = color
+            if move:
+                x, y = move
+                data.policy = board.get_index(x, y)
+                board.play(board.get_vertex(x, y))
+            else:
+                data.policy = board.num_intersections
+                board.play(PASS)
+            temp.append(data)
 
         for data in temp:
-            if winner == None:
+            if winner == EMPTY:
                 data.value = 0
             elif winner == data.to_move:
                 data.value = 1
             elif winner != data.to_move:
                 data.value = -1
         return temp
-
-    def _do_text_move(self, board, color, move):
-        # Play next move and return the policy data.
-
-        board.to_move = color
-        policy = None
-        vtx = None
-        if len(move) == 0 or move == "tt":
-           vtx = PASS
-           policy = NUM_INTESECTIONS
-        else:
-            x = ord(move[0]) - ord('a')
-            y = ord(move[1]) - ord('a')
-            vtx = board.get_vertex(x, y)
-            policy = board.get_index(x, y)
-        board.play(vtx)
-        return policy
 
 class TrainingPipe:
     VALUE_LOSS_SCALE = 0.25
@@ -251,13 +224,13 @@ class TrainingPipe:
         self.network = Network(BOARD_SIZE)
         self.network.trainable(True)
 
+        if dir_name is not None:
+            self.data_chopper = DataChopper(dir_name, games_per_chunk, num_sgfs)
+
         # Leave two cores for training pipe.
         self.num_workers = max(min(os.cpu_count(), 16) - 2 , 1)
 
         print("Use {n} workers for loader.".format(n=self.num_workers))
-
-        if dir_name is not None:
-            self.data_chopper = DataChopper(dir_name, games_per_chunk, num_sgfs)
 
         # We use the customized loader instead of pyTorch loader in
         # order to improve the randomness of data.
@@ -276,6 +249,7 @@ class TrainingPipe:
         batch = next(self.loader) # init the loader
 
     def running(self, max_steps, verbose_steps, learning_rate, decay_steps, decay_factor, noplot):
+        print("Start training...");
         cross_entry = nn.CrossEntropyLoss()
         mse_loss = nn.MSELoss()
 
@@ -442,6 +416,7 @@ if __name__ == "__main__":
     if valid_args(args):
         pipe = TrainingPipe(args.dir, args.rate, args.buffer_size,
                             args.batch_size, args.games_per_chunk, args.imported_games)
+
         pipe.load_weights(args.load_weights)
         pipe.running(
             args.steps,

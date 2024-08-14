@@ -192,20 +192,7 @@ class Network(nn.Module):
         x = self.residual_tower(x)
 
         # policy head
-        pol = x
-
-        if self.use_policy_attention:
-            n, c, h, w = pol.size()
-
-            pol = torch.reshape(pol, (n, c, h*w))
-            pol = pol.transpose(1,2)
-
-            pol = self.encoder_layers(pol)
-
-            pol = pol.transpose(1,2)
-            pol = torch.reshape(pol, (n, c, h, w))
-
-        pol = self.policy_conv(pol)
+        pol = self.policy_conv(x)
         pol = self.policy_fc(torch.flatten(pol, start_dim=1, end_dim=3))
 
         # value head
