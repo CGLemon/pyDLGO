@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from config import *
-from transformer import TransformerEncoderOnly 
 
 class FullyConnect(nn.Module):
     def __init__(self, in_size,
@@ -109,7 +108,6 @@ class Network(nn.Module):
                        policy_channels=POLICY_CHANNELS,
                        value_channels=VALUE_CHANNELS,
                        use_se=USE_SE,
-                       use_policy_attention=USE_POLICY_ATTENTION,
                        use_gpu=USE_GPU):
         super().__init__()
 
@@ -124,7 +122,6 @@ class Network(nn.Module):
         self.spatial_size = self.board_size ** 2
         self.input_channels = input_channels
         self.use_se = use_se
-        self.use_policy_attention = use_policy_attention
         self.use_gpu = True if torch.cuda.is_available() and use_gpu else False
         self.gpu_device = torch.device('cpu')
 
@@ -156,16 +153,6 @@ class Network(nn.Module):
             nn_stack.append(ResBlock(self.residual_channels, se_size))
 
         self.residual_tower = nn.Sequential(*nn_stack)
-
-        # policy head
-        if self.use_policy_attention:
-            self.encoder_layers = TransformerEncoderOnly(
-                d_model=self.residual_channels,
-                n_head=4,
-                dim_feedforward=2*self.residual_channels,
-                num_layer=1,
-                drop_rate=0
-            )
 
         self.policy_conv = ConvBlock(
             in_channels=self.residual_channels,

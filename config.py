@@ -17,5 +17,3 @@ INPUT_CHANNELS = 18 # Number of the network input layers.
 PAST_MOVES = 8 # Number of past moves encoding to the planes.
 
 USE_SE = False # Enable Squeeze-and-Excite net struct.
-
-USE_POLICY_ATTENTION = False # Enable self-attention net struct.
