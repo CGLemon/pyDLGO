@@ -14,7 +14,7 @@ import torch.optim as optim
 
 CACHE_DIR = "data-cache"
 
-def gather_filenames():
+def gather_filenames(dirname):
     def gather_recursive_files(root):
         l = list()
         for name in glob.glob(os.path.join(root, "*")):
@@ -23,12 +23,15 @@ def gather_filenames():
             else:
                 l.append(name)
         return l
-    return gather_recursive_files(CACHE_DIR)
+    return gather_recursive_files(root=dirname)
 
-def get_currtime():
+def get_currtime(version=1):
     lt = time.localtime(time.time())
-    return "[{y}-{m}-{d} {h:02d}:{mi:02d}:{s:02d}]".format(
-               y=lt.tm_year, m=lt.tm_mon,  d=lt.tm_mday, h=lt.tm_hour, mi=lt.tm_min, s=lt.tm_sec)
+    if version == 1:
+        return "[{y}-{m}-{d} {h:02d}:{mi:02d}:{s:02d}]".format(
+                   y=lt.tm_year, m=lt.tm_mon,  d=lt.tm_mday, h=lt.tm_hour, mi=lt.tm_min, s=lt.tm_sec)
+    return "{y}-{m}-{d}-{h:02d}-{mi:02d}-{s:02d}".format(
+                y=lt.tm_year, m=lt.tm_mon,  d=lt.tm_mday, h=lt.tm_hour, mi=lt.tm_min, s=lt.tm_sec)
 
 class Data:
     def __init__(self):
@@ -217,158 +220,9 @@ class DataChopper:
                 data.value = -1
         return temp
 
-class TrainingPipe:
-    VALUE_LOSS_SCALE = 0.25
-
-    def __init__(self, dir_name, rate, buffer_size, batch_size, games_per_chunk, num_sgfs):
-        self.network = Network(BOARD_SIZE)
-        self.network.trainable(True)
-
-        if dir_name is not None:
-            self.data_chopper = DataChopper(dir_name, games_per_chunk, num_sgfs)
-
-        # Leave two cores for training pipe.
-        self.num_workers = max(min(os.cpu_count(), 16) - 2 , 1)
-
-        print("Use {n} workers for loader.".format(n=self.num_workers))
-
-        # We use the customized loader instead of pyTorch loader in
-        # order to improve the randomness of data.
-        self.flag = LoaderFlag()
-        self.loader = LazyLoader(
-            filenames = gather_filenames(),
-            stream_loader = StreamLoader(),
-            stream_parser = StreamParser(),
-            batch_generator = BatchGenerator(),
-            down_sample_rate = rate,
-            num_workers = self.num_workers,
-            buffer_size = buffer_size,
-            batch_size = batch_size,
-            flag = self.flag
-        )
-        batch = next(self.loader) # init the loader
-
-    def running(self, max_steps, verbose_steps, learning_rate, decay_steps, decay_factor, noplot):
-        print("Start training...");
-        cross_entry = nn.CrossEntropyLoss()
-        mse_loss = nn.MSELoss()
-
-        # SGD instead of Adam. Seemd the SGD performance
-        # is better Adam.
-        optimizer = optim.SGD(self.network.parameters(),
-                              lr=learning_rate,
-                              momentum=0.9,
-                              nesterov=True,
-                              weight_decay=1e-3)
-
-        p_running_loss = 0
-        v_running_loss = 0
-        steps = 0
-        keep_running = True
-        running_loss_record = []
-        clock_time = time.time()
-
-        while steps < max_steps:
-            if decay_steps is not None:
-                if (steps+1) % decay_steps == 0:
-                    print("Drop the learning rate from {} to {}.".format(
-                              learning_rate,
-                              learning_rate * decay_factor
-                              ))
-                    learning_rate = learning_rate * decay_factor
-                    for param in optimizer.param_groups:
-                        param["lr"] = learning_rate
-
-            # First, get the batch data.
-            inputs, target_p, target_v = next(self.loader)
-
-            # Second, Move the data to GPU memory if we use it.
-            if self.network.use_gpu:
-                inputs = inputs.to(self.network.gpu_device)
-                target_p = target_p.to(self.network.gpu_device)
-                target_v = target_v.to(self.network.gpu_device)
-
-            # Third, compute the network result.
-            p, v = self.network(inputs)
-
-            # Fourth, compute the loss result and update network.
-            p_loss = cross_entry(p, target_p)
-            v_loss = mse_loss(v, target_v)
-            loss = p_loss + self.VALUE_LOSS_SCALE * v_loss
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            # Accumulate running loss.
-            p_running_loss += p_loss.item()
-            v_running_loss += v_loss.item()
-
-            # Fifth, dump training verbose.
-            if (steps+1) % verbose_steps == 0:
-                elapsed = time.time() - clock_time
-                rate = verbose_steps/elapsed
-                remaining_steps = max_steps - steps
-                estimate_remaining_time = int(remaining_steps/rate)
-                print("{} steps: {}/{}, {:.2f}% -> policy loss: {:.4f}, value loss: {:.4f} | rate: {:.2f}(steps/sec), estimate: {}(sec)".format(
-                          get_currtime(),
-                          steps+1,
-                          max_steps,
-                          100 * ((steps+1)/max_steps),
-                          p_running_loss/verbose_steps,
-                          v_running_loss/verbose_steps,
-                          rate,
-                          estimate_remaining_time))
-                running_loss_record.append((steps+1, p_running_loss/verbose_steps, v_running_loss/verbose_steps))
-                p_running_loss = 0
-                v_running_loss = 0
-                clock_time = time.time()
-            steps += 1
-
-        self.flag.set_stop_flag()
-        try:
-            inputs, target_p, target_v = next(self.loader)
-        except StopIteration:
-            pass
-
-        print("Training is over.");
-        if not noplot:
-            # sixth plot the running loss graph.
-            self.plot_loss(running_loss_record)
-
-    def plot_loss(self, record):
-        p_running_loss = []
-        v_running_loss = []
-        step = []
-        for (s, p, v) in record:
-            p_running_loss.append(p)
-            v_running_loss.append(v)
-            step.append(s)
-
-        y_upper = max(max(p_running_loss), max(v_running_loss))
-
-        plt.plot(step, p_running_loss, label="policy loss")
-        plt.plot(step, v_running_loss, label="value loss")
-        plt.ylabel("loss")
-        plt.xlabel("steps")
-        plt.ylim([0, y_upper * 1.1])
-        plt.legend()
-        plt.show()
-
-    def save_weights(self, name):
-        # TODO: We should save the optimizer status too.
-        self.network.save_pt(name)
-
-    def load_weights(self, name):
-        if name != None:
-            self.network.load_pt(name)
-
 def valid_args(args):
     result = True
 
-    if args.weights_name == None:
-        print("Must to give the argument --weights-name <string>")
-        result = False
     if args.steps == None:
         print("Must to give the argument --steps <integer>")
         result = False
@@ -381,28 +235,197 @@ def valid_args(args):
 
     return result
 
+def plot_loss(record):
+    if len(record) <= 1:
+        return
+
+    p_running_loss = []
+    v_running_loss = []
+    step = []
+    for (s, p, v) in record:
+        p_running_loss.append(p)
+        v_running_loss.append(v)
+        step.append(s)
+
+    y_upper = max(max(p_running_loss), max(v_running_loss))
+
+    plt.plot(step, p_running_loss, label="policy loss")
+    plt.plot(step, v_running_loss, label="value loss")
+    plt.ylabel("loss")
+    plt.xlabel("steps")
+    plt.ylim([0, y_upper * 1.1])
+    plt.legend()
+    plt.show()
+
+def load_checkpoint(network, optimizer, workspace):
+    filenames = gather_filenames(workspace)
+    if len(filenames) == 0:
+        return network, optimizer, 0
+
+    filenames.sort(key=os.path.getmtime, reverse=True)
+    last_pt = filenames[0]
+
+    state_dict = torch.load(last_pt, map_location=network.gpu_device)
+    network.load_state_dict(state_dict["network"])
+    optimizer.load_state_dict(state_dict["optimizer"])
+    steps = state_dict["steps"]
+    return network, optimizer, steps
+
+def save_checkpoint(network, optimizer, steps, workspace):
+    state_dict = dict()
+    state_dict["network"] = network.state_dict()
+    state_dict["optimizer"] = optimizer.state_dict()
+    state_dict["steps"] = steps
+    torch.save(state_dict, os.path.join(workspace, "checkpoint-s{}.pt".format(steps)))
+
+def training_process(args):
+    # Set the network. Will push on GPU device later if it is
+    # available.
+    network = Network(BOARD_SIZE)
+    network.trainable(True)
+
+    # SGD instead of Adam. Seemd the SGD performance
+    # is better Adam.
+    optimizer = optim.SGD(network.parameters(),
+                          lr=args.learning_rate,
+                          momentum=0.9,
+                          nesterov=True,
+                          weight_decay=1e-3)
+    if not os.path.isdir(args.workspace):
+        os.mkdir(args.workspace)
+    network, optimizer, steps = load_checkpoint(network, optimizer, args.workspace)
+    cross_entry = nn.CrossEntropyLoss()
+    mse_loss = nn.MSELoss()
+
+    if args.dir is not None:
+        data_chopper = DataChopper(
+            args.dir,
+            args.games_per_chunk,
+            args.imported_games
+        )
+
+    # Leave two cores for training pipe.
+    num_workers = max(min(os.cpu_count(), 16) - 2 , 1)
+
+    print("Use {n} workers for loader.".format(n=num_workers))
+
+    # We use the customized loader instead of pyTorch loader in
+    # order to improve the randomness of data.
+    loader_flag = LoaderFlag()
+    data_loader = LazyLoader(
+        filenames = gather_filenames(CACHE_DIR),
+        stream_loader = StreamLoader(),
+        stream_parser = StreamParser(),
+        batch_generator = BatchGenerator(),
+        down_sample_rate = args.rate,
+        num_workers = num_workers,
+        buffer_size = args.buffer_size,
+        batch_size = args.batch_size,
+        flag = loader_flag
+    )
+    batch = next(data_loader) # init the loader
+
+    print("Start training...");
+
+    # init some basic parameters
+    p_running_loss = 0
+    v_running_loss = 0
+    max_steps = steps + args.steps
+    running_loss_record = []
+    clock_time = time.time()
+
+    while steps < max_steps:
+        if args.lr_decay_steps is not None:
+            learning_rate = optimizer.param_groups[0]["lr"]
+            if (steps+1) % args.lr_decay_steps == 0:
+                print("Drop the learning rate from {} to {}.".format(
+                          learning_rate,
+                          learning_rate * args.lr_decay_factor
+                          ))
+                learning_rate = learning_rate * args.lr_decay_factor
+                for param in optimizer.param_groups:
+                    param["lr"] = learning_rate
+
+        # First, get the batch data.
+        inputs, target_p, target_v = next(data_loader)
+
+        # Second, Move the data to GPU memory if we use it.
+        if network.use_gpu:
+            inputs = inputs.to(network.gpu_device)
+            target_p = target_p.to(network.gpu_device)
+            target_v = target_v.to(network.gpu_device)
+
+        # Third, compute the network result.
+        p, v = network(inputs)
+
+        # Fourth, compute the loss result and update network.
+        p_loss = cross_entry(p, target_p)
+        v_loss = mse_loss(v, target_v)
+        loss = p_loss + args.value_loss_scale * v_loss
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        # Accumulate running loss.
+        p_running_loss += p_loss.item()
+        v_running_loss += v_loss.item()
+
+        # Fifth, dump training verbose.
+        if (steps+1) % args.verbose_steps == 0:
+            elapsed = time.time() - clock_time
+            rate = args.verbose_steps/elapsed
+            remaining_steps = max_steps - steps
+            estimate_remaining_time = int(remaining_steps/rate)
+            print("{} steps: {}/{}, {:.2f}% -> policy loss: {:.4f}, value loss: {:.4f} | rate: {:.2f}(steps/sec), estimate: {}(sec)".format(
+                      get_currtime(),
+                      steps+1,
+                      max_steps,
+                      100 * ((steps+1)/max_steps),
+                      p_running_loss/args.verbose_steps,
+                      v_running_loss/args.verbose_steps,
+                      rate,
+                      estimate_remaining_time))
+            running_loss_record.append(
+                (steps+1, p_running_loss/args.verbose_steps, v_running_loss/args.verbose_steps))
+            p_running_loss = 0
+            v_running_loss = 0
+            save_checkpoint(network, optimizer, steps+1, args.workspace)
+            clock_time = time.time()
+        steps += 1
+
+    loader_flag.set_stop_flag()
+    try:
+        _, _, _ = next(data_loader)
+    except StopIteration:
+        pass
+
+    print("Training is over.");
+    if not args.noplot:
+        # sixth plot the running loss graph.
+        plot_loss(running_loss_record)
+    network.save_pt("weights-{}.pt".format(get_currtime(version=2)))
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dir", metavar="<string>",
                         help="The input SGF files directory. Will use data cache if set None.", type=str)
     parser.add_argument("-s", "--steps", metavar="<integer>",
-                        help="Terminate after these steps", type=int)
+                        help="Terminate after these steps for each run.", type=int)
     parser.add_argument("-v", "--verbose-steps", metavar="<integer>",
                         help="Dump verbose on every X steps.", type=int, default=1000)
     parser.add_argument("-b", "--batch-size", metavar="<integer>",
                         help="The batch size number.", type=int)
     parser.add_argument("-l", "--learning-rate", metavar="<float>",
                         help="The learning rate.", type=float)
-    parser.add_argument("-w", "--weights-name", metavar="<string>",
-                        help="The output weights name.", type=str)
+    parser.add_argument("-w", "--workspace", metavar="<string>", default="workspace",
+                        help="Will save the checkpoint here.", type=str)
     parser.add_argument("-g", "--games-per-chunk", metavar="<integer>",
                         help="The SGF games per chunk.", type=int, default=50)
     parser.add_argument("-i", "--imported-games", metavar="<integer>",
                         help="The max number of imported games.", type=int, default=10240000)
     parser.add_argument("-r", "--rate", metavar="<int>",
                         help="The down sample rate.", type=int, default=0)
-    parser.add_argument("--load-weights", metavar="<string>",
-                        help="The inputs weights name.", type=str)
     parser.add_argument("--noplot", action="store_true",
                         help="Disable plotting.", default=False)
     parser.add_argument("--buffer-size", metavar="<integer>",
@@ -411,19 +434,9 @@ if __name__ == "__main__":
                         help="Reduce the learning rate every X steps.", type=int, default=None)
     parser.add_argument("--lr-decay-factor", metavar="<float>",
                         help="The learning rate decay multiple factor.", type=float, default=0.1)
+    parser.add_argument("--value-loss-scale", metavar="<float>",
+                        help="Scaling factor of value loss. Default is 0.25 based on AlphaGo paper.", type=float, default=0.25)
 
     args = parser.parse_args()
     if valid_args(args):
-        pipe = TrainingPipe(args.dir, args.rate, args.buffer_size,
-                            args.batch_size, args.games_per_chunk, args.imported_games)
-
-        pipe.load_weights(args.load_weights)
-        pipe.running(
-            args.steps,
-            args.verbose_steps,
-            args.learning_rate,
-            args.lr_decay_steps,
-            args.lr_decay_factor,
-            args.noplot
-        )
-        pipe.save_weights(args.weights_name)
+        training_process(args)
