@@ -68,27 +68,3 @@ SGF 是以樹狀結構紀錄，每一個節點以 ```;``` 分隔，每一個樹�
     )
 
 其中座標的表示法為 ```a~z```，如 ```B[ab]``` 代表黑棋下在 (1,2) 的位置。而虛手，在十九路或小於十九路的棋盤裡，可用 ```[tt]``` 或是 ```[]``` 代表，但如果棋盤超過十九路，則 ```[tt]``` 代表 (20,20) 的位置，只有 ```[]``` 代表虛手。至於投降手沒有統一的表示方式，通常是不會紀錄在棋譜裡。
-
-## 五、使用 sgf.py
-
-sgf.py 提供三個 functions 解析 SGF 檔案
-
-   * `parse_from_string(string)`
-      * 直接解析 SGF 字串
-
-   * `parse_from_file(string)`
-      * 解析包含 SGF 字串的檔案
-
-   * `parse_from_dir(string)`
-      * 解析裝有 SGF 檔案的檔案夾，必須注意檔案的後綴必須是 ```.sgf``` 或是 ```.sgfs```
-
-解析出來的結果，是包含每個棋譜的 sgf tree 的資料，使用方式如下
-
-    sgf_games = parse_from_string(sgf_strig)
-    for game in sgf_games:
-        # 每個 game 都是單獨的 sgf tree
-        for node in game:
-            # 從 root 遍歷 sgf tree 的主要 node
-            if "W" in node.properties:
-                data = node.properties["W"][0] # 取出屬性值
-    

@@ -3,10 +3,9 @@
 ## 零、依賴與來源
 
 以下是部份程式碼和資源的來源
-1. sgf.py 修改自 [jtauber/sgf](https://github.com/jtauber/sgf)
-2. board.py 修改自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
-3. sgf.zip 來源自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
-4. gui.py 修改自 [YoujiaZhang/AlphaGo-Zero-Gobang](https://github.com/YoujiaZhang/AlphaGo-Zero-Gobang)
+1. board.py 修改自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
+2. sgf.zip 來源自 [ymgaq/Pyaq](https://github.com/ymgaq/Pyaq)
+3. gui.py 修改自 [YoujiaZhang/AlphaGo-Zero-Gobang](https://github.com/YoujiaZhang/AlphaGo-Zero-Gobang)
 
 以下的 python 依賴庫需要安裝（請注意本程式使用 python3）
 1. PyTorch（1.x 版本，如果要使用 GPU 請下載對應的 CUDA/cuDNN 版本）
@@ -55,7 +54,6 @@ dlgo 包含 SGF 解析器，可以解析此格式的棋譜，並將棋譜作為�
 | -s, --steps          | integer           | 要訓練的步數，越多訓練時間越久 |
 | -b, --batch-size     | integer           | 訓練的 batch size，建議至少大於 128 ，太低會無法訓練 |
 | -l, --learning-rate  | float             | 學習率大小 ，建議從 0.005 開始 |
-| -r, --rate           | integer           | 下採樣率，有 1/N 的機率採樣訓練資料，剩餘的捨棄，可以大幅度增加訓練穩定度 |
 | --value-loss-scale   | float             | Value Loss 的倍率，預設是 0.25 倍 |
 | --lr-decay-steps     | integer           | 每 X steps 降低當前的學習率 |
 | --lr-decay-factor    | float             | 降低學習率的乘數 |
@@ -84,7 +82,11 @@ dlgo 包含 SGF 解析器，可以解析此格式的棋譜，並將棋譜作為�
 
 <br>
 
-注意在啟動以前，必須確定你有權限執行 dlgo.py ，如果沒有，請先使用 chmod 指令更改權限，以下是啟動的範例
+可使用兩種方式執行，一個是直接使用 python 執行之
+
+    $ python3 ./dlgo.py --weights weights-name --playouts 1600 -r 0.25
+
+或是將程式碼當作可執行檔案執行，注意在執行以前，必須確定你有權限執行 dlgo.py ，如果沒有，請先使用 chmod 指令更改權限，以下是啟動的範例
 
     $ chmod 777 dlgo.py
     $ ./dlgo.py --weights weights-name --playouts 1600 -r 0.25
@@ -109,14 +111,9 @@ dlgo 包含 SGF 解析器，可以解析此格式的棋譜，並將棋譜作為�
 
 ### Windows
 
-Windows 系統是無法直接使用此程式的，必須先將 dlgo 打包成 exe 執行檔，可以使用 pyinstaller 打包此程式。首先通過 pip 安裝 pyinstaller，再執行如下指令
+請直接使用 python 執行之
 
-
-    C:\Users\administrator> pip3 install pyinstaller
-    C:\Users\administrator> pyinstaller -D dlgo.py
-
-
-另外，最好不要使用 pyinstaller -F 指令進行操作，否則很可能在運行程式後，C 盤下產生大量的臨時文件，導致 C 盤容量不足，並且每次啟動前需要解壓，使得啟動緩慢。當打包成功之後的操作與下面相同，引擎選中目標文件夾下 dist 文件夾中的 dlgo.exe 即可。
+    $ python3 ./dlgo.py --weights weights-name --playouts 1600 -r 0.25
 
 ## 三、使用 GTP 介面
 
@@ -136,6 +133,8 @@ dlgo 支援基本的 GTP 介面，你可以使用任何支援 GTP 軟體，比�
     <img src="../img/screenshot_sabaki_02.png" alt="drawing" width="768"/>
 </div>
 <br>
+
+* 如果想用 python 執行之，請將 path 欄位改成 python 執行檔的位置，arguments 改為 ```path/to/dlgo.py --weights weights-name --playouts 1600 -r 0.25```
 
 #### 第三步、加載引擎
 

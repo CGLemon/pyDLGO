@@ -1,7 +1,6 @@
 from network import Network
 from config import BOARD_SIZE, INPUT_CHANNELS
 from board import Board, PASS, BLACK, WHITE, EMPTY, INVLD, NUM_INTESECTIONS
-from lazy_loader import LazyLoader, LoaderFlag
 
 import sgf, argparse
 import copy, random, time, os, shutil, glob
@@ -27,11 +26,11 @@ def gather_filenames(dirname):
 
 def get_currtime(version=1):
     lt = time.localtime(time.time())
-    if version == 1:
-        return "[{y}-{m}-{d} {h:02d}:{mi:02d}:{s:02d}]".format(
-                   y=lt.tm_year, m=lt.tm_mon,  d=lt.tm_mday, h=lt.tm_hour, mi=lt.tm_min, s=lt.tm_sec)
-    return "{y}-{m}-{d}-{h:02d}-{mi:02d}-{s:02d}".format(
-                y=lt.tm_year, m=lt.tm_mon,  d=lt.tm_mday, h=lt.tm_hour, mi=lt.tm_min, s=lt.tm_sec)
+    return "[{y}-{m}-{d} {h:02d}:{mi:02d}:{s:02d}]".format(
+               y=lt.tm_year, m=lt.tm_mon,  d=lt.tm_mday, h=lt.tm_hour, mi=lt.tm_min, s=lt.tm_sec)
+
+def get_weights_name(prefix):
+    return "{}-{}.pt".format(prefix, get_currtime().replace(":", "-").replace(" ", "-"))
 
 class Data:
     def __init__(self):
@@ -68,125 +67,85 @@ class Data:
             buf = self._get_symmetry_plane(symm, np.reshape(buf, (BOARD_SIZE, BOARD_SIZE)))
             self.policy = int(np.argmax(buf))
 
-class StreamLoader:
-    def __init__(self):
-        pass
+    def from_npfile(self, filename):
+        npdata = np.load(filename)
+        self.inputs = npdata["i"]
+        self.policy = npdata["p"][0]
+        self.value = npdata["v"][0]
+        self.to_move = npdata["t"][0]
 
-    def func(self, filename):
-        chunk = np.load(filename)
-        sub_buffer = []
+class Dataset(torch.utils.data.Dataset):
+    def __init__(self, source_dir, num_virtual_samples):
+        self.filenames = gather_filenames(source_dir)
+        self.num_virtual_samples = num_virtual_samples
 
-        inputs_buf = chunk['i']
-        policy_buf = chunk['p']
-        value_buf  = chunk['v']
-        to_move_buf = chunk['t']
+    def __len__(self):
+        return self.num_virtual_samples
 
-        size = to_move_buf.shape[0]
-        for i in range(size):
-            data = Data()
-            data.inputs = inputs_buf[i]
-            data.policy = policy_buf[i]
-            data.value = value_buf[i]
-            data.to_move = to_move_buf[i]
-            data.do_symmetry()
-            sub_buffer.append(data)
-        random.shuffle(sub_buffer)
-        return sub_buffer
+    def __getitem__(self, i):
+        current_idx = i % len(self.filenames)
+        data = Data()
+        data.from_npfile(self.filenames[current_idx])
+        data.do_symmetry()
 
-class StreamParser:
-    def __init__(self):
-        pass
-
-    def func(self, sub_buffer):
-        if len(sub_buffer) == 0:
-            return None
-        return sub_buffer.pop()
-
-class BatchGenerator:
-    def __init__(self):
-        pass
-
-    def func(self, data_list):
-        i_batch = []
-        p_batch = []
-        v_batch = []
-        for d in data_list:
-            i_batch.append(d.inputs)
-            p_batch.append(d.policy)
-            v_batch.append(d.value)
-        i_t_batch = torch.tensor(np.array(i_batch)).float()
-        p_t_batch = torch.tensor(np.array(p_batch)).long()
-        v_t_batch = torch.tensor(np.array(v_batch)).float()
-
-        return i_t_batch, p_t_batch, v_t_batch
+        inputs = torch.tensor(data.inputs).float()
+        policy = torch.tensor(data.policy).long()
+        value = torch.tensor([data.value]).float()
+        return inputs, policy, value
 
 # Load the SGF files and save the training data to the disk.
 class DataChopper:
-    def  __init__(self, dir_name, games_per_chunk, num_sgfs):
+    def  __init__(self, dir_name, num_sgfs):
         self.cache_dir = CACHE_DIR
         self.num_data = 0
-        self._chop_data(dir_name, games_per_chunk, num_sgfs)
+        self._chop_data(dir_name, num_sgfs)
 
     def __del__(self):
         # Do not delete the training data in the cache dir. We may
         # use them next time.
         pass
 
-    def _chop_data(self, dir_name, games_per_chunk, num_sgfs):
+    def _chop_data(self, dir_name, num_sgfs):
         # Load the SGF files and tranfer them to training data.
         sgf_games = sgf.parse_from_dir(dir_name)
-        total_steps = min(len(sgf_games), num_sgfs)
-        games_per_chunk = max(games_per_chunk, 1)
+        total_games = min(len(sgf_games), num_sgfs)
 
-        print("imported {} SGF files".format(total_steps))
+        print("imported {} SGF files".format(total_games))
 
         if os.path.isdir(self.cache_dir):
             shutil.rmtree(self.cache_dir, ignore_errors=True)
         os.mkdir(self.cache_dir)
 
-        chunk_cnt = 0
-        buf = []
-
-        for s in range(total_steps):
+        for s in range(total_games):
             game = sgf_games[s]
-            temp = self._process_one_game(game)
+            buf = self._process_one_game(game)
 
-            buf.extend(temp)
+            if (s+1) % (max(1, total_games//100)) == 0:
+                print("parsed {:.2f}% games".format(100 * (s+1)/total_games))
+            self._save_data(buf)
+        print("done! parsed {:.2f}% games".format(100))
 
-            if (s+1) % games_per_chunk == 0:
-                print("parsed {:.2f}% games".format(100 * (s+1)/total_steps))
-                self._save_chunk(buf, chunk_cnt)
-                chunk_cnt += 1
-                buf = []
-
-        # There still some data in the buffer. Save them.
-        if len(buf) != 0:
-            print("parsed {:.2f}% games".format(100))
-            self._save_chunk(buf, chunk_cnt)
-
-    def _save_chunk(self, buf, cnt):
-        # Save the training data to the disk.
+    def _save_data(self, buf):
         size = len(buf)
 
-        # Shuffle it.
-        random.shuffle(buf)
-
-        inputs_buf = np.zeros((size, INPUT_CHANNELS, BOARD_SIZE, BOARD_SIZE), dtype=np.int8)
-        policy_buf = np.zeros((size), dtype=np.int32)
-        value_buf = np.zeros((size, 1), dtype=np.float32)
-        to_move_buf = np.zeros((size), dtype=np.int8)
-
-        self.num_data += size
-
         for i in range(size):
-            data = buf[i]
-            inputs_buf[i, :] = data.inputs[:]
-            policy_buf[i] = data.policy
-            value_buf[i, 0] = data.value
-            to_move_buf[i] = data.to_move
+            # Allocate data buffer
+            inputs_buf = np.zeros((INPUT_CHANNELS, BOARD_SIZE, BOARD_SIZE), dtype=np.int8)
+            policy_buf = np.zeros((1), dtype=np.int32)
+            value_buf = np.zeros((1), dtype=np.float32)
+            to_move_buf = np.zeros((1), dtype=np.int8)
 
-        filenmae = os.path.join(self.cache_dir, "chunk_{}.npz".format(cnt))
-        np.savez_compressed(filenmae, i=inputs_buf, p=policy_buf, v=value_buf, t=to_move_buf)
+            # Fill the data buffer.
+            data = buf[i]
+            inputs_buf[:] = data.inputs[:]
+            policy_buf[:] = data.policy
+            value_buf[:] = data.value
+            to_move_buf[:] = data.to_move
+
+            # Save the date on disk.
+            filenmae = os.path.join(self.cache_dir, "data_{}.npz".format(self.num_data))
+            np.savez_compressed(filenmae, i=inputs_buf, p=policy_buf, v=value_buf, t=to_move_buf)
+            self.num_data += 1
 
     def _process_one_game(self, game):
         # Collect training data from one SGF game.
@@ -285,7 +244,7 @@ def training_process(args):
     network.trainable(True)
 
     # SGD instead of Adam. Seemd the SGD performance
-    # is better Adam.
+    # is better than Adam.
     optimizer = optim.SGD(network.parameters(),
                           lr=args.learning_rate,
                           momentum=0.9,
@@ -300,7 +259,6 @@ def training_process(args):
     if args.dir is not None:
         data_chopper = DataChopper(
             args.dir,
-            args.games_per_chunk,
             args.imported_games
         )
 
@@ -309,21 +267,12 @@ def training_process(args):
 
     print("Use {n} workers for loader.".format(n=num_workers))
 
-    # We use the customized loader instead of pyTorch loader in
-    # order to improve the randomness of data.
-    loader_flag = LoaderFlag()
-    data_loader = LazyLoader(
-        filenames = gather_filenames(CACHE_DIR),
-        stream_loader = StreamLoader(),
-        stream_parser = StreamParser(),
-        batch_generator = BatchGenerator(),
-        down_sample_rate = args.rate,
-        num_workers = num_workers,
-        buffer_size = args.buffer_size,
-        batch_size = args.batch_size,
-        flag = loader_flag
+    data_loader = torch.utils.data.DataLoader(
+        dataset=Dataset(CACHE_DIR, args.batch_size * args.steps),
+        batch_size=args.batch_size,
+        shuffle=True,
+        num_workers=num_workers
     )
-    batch = next(data_loader) # init the loader
 
     print("Start training...");
 
@@ -334,7 +283,7 @@ def training_process(args):
     running_loss_record = []
     clock_time = time.time()
 
-    while steps < max_steps:
+    for _, batch in enumerate(data_loader):
         if args.lr_decay_steps is not None:
             learning_rate = optimizer.param_groups[0]["lr"]
             if (steps+1) % args.lr_decay_steps == 0:
@@ -347,7 +296,7 @@ def training_process(args):
                     param["lr"] = learning_rate
 
         # First, get the batch data.
-        inputs, target_p, target_v = next(data_loader)
+        inputs, target_p, target_v = batch
 
         # Second, Move the data to GPU memory if we use it.
         if network.use_gpu:
@@ -394,17 +343,11 @@ def training_process(args):
             clock_time = time.time()
         steps += 1
 
-    loader_flag.set_stop_flag()
-    try:
-        _, _, _ = next(data_loader)
-    except StopIteration:
-        pass
-
     print("Training is over.");
     if not args.noplot:
         # Sixth plot the running loss graph.
         plot_loss(running_loss_record)
-    network.save_pt("weights-{}.pt".format(get_currtime(version=2)))
+    network.save_pt(get_weights_name("weights"))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -420,16 +363,10 @@ if __name__ == "__main__":
                         help="The learning rate.", type=float)
     parser.add_argument("-w", "--workspace", metavar="<string>", default="workspace",
                         help="Will save the checkpoint here.", type=str)
-    parser.add_argument("-g", "--games-per-chunk", metavar="<integer>",
-                        help="The SGF games per chunk.", type=int, default=50)
     parser.add_argument("-i", "--imported-games", metavar="<integer>",
                         help="The max number of imported games.", type=int, default=10240000)
-    parser.add_argument("-r", "--rate", metavar="<int>",
-                        help="The down sample rate.", type=int, default=0)
     parser.add_argument("--noplot", action="store_true",
                         help="Disable plotting.", default=False)
-    parser.add_argument("--buffer-size", metavar="<integer>",
-                        help="The buffer size of lazy loader.", type=int, default=512000)
     parser.add_argument("--lr-decay-steps", metavar="<integer>",
                         help="Reduce the learning rate every X steps.", type=int, default=None)
     parser.add_argument("--lr-decay-factor", metavar="<float>",

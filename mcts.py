@@ -8,8 +8,9 @@ import time
 import select
 
 class Node:
-    # TODO: Tnue C_PUCT parameter.
-    C_PUCT = 0.5 # The PUCT hyperparameter.
+    C_PUCT = 0.5 # The PUCT hyperparameter. This value should be 1.25 in
+                 # AlphaGo Zero. However our value range is 1 ~ 0, not 1 ~ -1.
+                 # So we rescale this value as 0.5 (LeelaZero use it).
     def __init__(self, p):
         self.policy = p  # The network raw policy from its parents node.
         self.nn_eval = 0 # The network raw eval from this node.
@@ -186,9 +187,9 @@ class Node:
 
 
 
-#TODO: The MCTS performance is bad. Maybe the recursive is much
-#      slower than loop. Or self.children do too many times mapping
-#      operator. Try to fix it.
+# TODO: The MCTS performance is bad. Maybe the recursive is much
+#       slower than loop. Or self.children do too many times mapping
+#       operator. Try to fix it.
 class Search:
     def __init__(self, board: Board, network: Network, time_control: TimeControl):
         self.root_board = board # Root board positions, all simulation boards will fork from it.
