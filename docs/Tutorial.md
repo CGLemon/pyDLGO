@@ -10,7 +10,7 @@
 以下的 python 依賴庫需要安裝（請注意本程式使用 python3）
 1. PyTorch（1.x 版本，如果要使用 GPU 請下載對應的 CUDA/cuDNN 版本）
 2. NumPy
-3. Tkinter
+3. Tkinter（僅使用內建的 GUI 時需要）
 4. Matplotlib（僅訓練時需要）
 
 以下程式需要 Java

@@ -17,9 +17,9 @@ The simple English tutorial is [Here](./docs/English.md)
 ## 快速開始
 
 開始前請先安裝以下的 python 依賴庫（請注意本程式使用 python3）
-1. PyTorch（1.x 版本，如果要使用 GPU 請下載對應的 CUDA/cuDNN 版本）
+1. PyTorch（1.x 版本或以上，如果要使用 GPU 請下載對應的 CUDA/cuDNN 版本）
 2. NumPy
-3. Tkinter
+3. Tkinter（僅使用內建的 GUI 時需要）
 
 請輸入下列指令安裝，或自行使用下載可執行的版本
 
@@ -47,6 +47,7 @@ The simple English tutorial is [Here](./docs/English.md)
 
 
 ## Todo
+
 * 修復 GUI 的 bug 並優化之
 
 ### 聯絡資訊

@@ -85,6 +85,7 @@ class GTP_ENGINE:
     def boardsize(self, bsize):
         self.board.reset(bsize, self.board.komi)
         self.board_history = [self.board.copy()]
+        self.network.clear_cache()
 
     # For GTP command "boardsize". Set a variant komi.
     def komi(self, k):

@@ -15,8 +15,8 @@ class Node:
         self.policy = p  # The network raw policy from its parents node.
         self.nn_eval = 0 # The network raw eval from this node.
 
-        self.values = 0 # The accumulate winrate.
-        self.visits = 0 # The accumulate node visits.
+        self.values = 0 # The accumulation winrate.
+        self.visits = 0 # The accumulation node visits.
                         # The Q value must be equal to (self.values / self.visits)
         self.children = dict() # Next node.
 
@@ -26,7 +26,7 @@ class Node:
 
     def inverse(self, v):
         # Swap the side to move winrate. 
-        return 1 - v;
+        return 1 - v
 
     def expand_children(self, board: Board, network: Network):
         if board.last_move == PASS:
@@ -99,10 +99,10 @@ class Node:
 
     def get_best_move(self, resign_threshold):
         # Return best probability move if there are no playouts.
-        if self.visits == 1 and \
-               resign_threshold is not None:
-            if self.values < resign_threshold:
-                return 0;
+        if self.visits == 1:
+            if resign_threshold is not None and \
+                   self.values < resign_threshold:
+                return RESIGN
             else:
                 return self.get_best_prob_move()
 
@@ -164,6 +164,9 @@ class Node:
             gather_list.append((child.visits, vtx))
         gather_list.sort(reverse=True)
 
+        if len(gather_list) == 0:
+            return str()
+
         i = 0
         for _, vtx in gather_list:
             child = self.children[vtx]
@@ -176,9 +179,9 @@ class Node:
                 out += "info move {} visits {} winrate {} prior {} lcb {} order {} pv {}".format(
                            board.vertex_to_text(vtx),
                            child.visits,
-                           int(10000 * winrate),
-                           int(10000 * prior),
-                           int(10000 * lcb),
+                           round(10000 * winrate),
+                           round(10000 * prior),
+                           round(10000 * lcb),
                            order,
                            child.get_pv(board, pv))
                 i+=1
@@ -256,7 +259,7 @@ class Search:
         for p in range(playouts):
             if p != 0 and \
                    interval > 0 and \
-                   time.time() - analysis_clock  > interval:
+                   time.time() - analysis_clock > interval:
                 analysis_clock = time.time()
                 stdout.write(self.root_node.to_lz_analysis(self.root_board))
                 stdout.flush()
@@ -271,6 +274,11 @@ class Search:
 
             # Start the Monte Carlo tree search.
             self._descend(color, curr_board, self.root_node)
+
+        # Always dump last tree stats for GUI, like Sabaki.
+        if self.root_node.visits > 1:
+            stdout.write(self.root_node.to_lz_analysis(self.root_board))
+            stdout.flush()
 
         out_verbose = self.root_node.to_string(self.root_board)
         if verbose:
@@ -311,7 +319,7 @@ class Search:
         for p in range(playouts):
             if p != 0 and \
                    interval > 0 and \
-                   time.time() - analysis_clock  > interval:
+                   time.time() - analysis_clock > interval:
                 analysis_clock = time.time()
                 stdout.write(self.root_node.to_lz_analysis(self.root_board))
                 stdout.flush()
@@ -326,8 +334,13 @@ class Search:
             # Start the Monte Carlo tree search.
             self._descend(color, curr_board, self.root_node)
 
-        # Eat the remaining time. 
+        # Eat the remaining time.
         self.time_control.took_time(to_move)
+
+        # Always dump last tree stats for GUI, like Sabaki.
+        if self.root_node.visits > 1:
+            stdout.write(self.root_node.to_lz_analysis(self.root_board))
+            stdout.flush()
 
         out_verbose = self.root_node.to_string(self.root_board)
         if verbose:

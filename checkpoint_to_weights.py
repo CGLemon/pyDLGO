@@ -24,3 +24,5 @@ if __name__ == "__main__":
         network = Network(BOARD_SIZE, use_gpu=False)
         network = load_checkpoint(network, args.checkpoint)
         network.save_pt("weights-{}.pt".format(get_currtime()))
+    else:
+        print("Please give the checkpoint path.")

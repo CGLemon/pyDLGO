@@ -24,9 +24,9 @@ def gather_filenames(dirname):
         return l
     return gather_recursive_files(root=dirname)
 
-def get_currtime(version=1):
+def get_currtime():
     lt = time.localtime(time.time())
-    return "[{y}-{m}-{d} {h:02d}:{mi:02d}:{s:02d}]".format(
+    return "{y}-{m}-{d} {h:02d}:{mi:02d}:{s:02d}".format(
                y=lt.tm_year, m=lt.tm_mon,  d=lt.tm_mday, h=lt.tm_hour, mi=lt.tm_min, s=lt.tm_sec)
 
 def get_weights_name(prefix):
@@ -263,7 +263,8 @@ def training_process(args):
         )
 
     # Leave two cores for training pipe.
-    num_workers = max(min(os.cpu_count(), 16) - 2 , 1)
+    num_workers = max(min(os.cpu_count(), 16) - 2 , 1) \
+                      if args.num_workers is None else max(args.num_workers, 1)
 
     print("Use {n} workers for loader.".format(n=num_workers))
 
@@ -326,7 +327,7 @@ def training_process(args):
             rate = args.verbose_steps/elapsed
             remaining_steps = max_steps - steps
             estimate_remaining_time = int(remaining_steps/rate)
-            print("{} steps: {}/{}, {:.2f}% -> policy loss: {:.4f}, value loss: {:.4f} | rate: {:.2f}(steps/sec), estimate: {}(sec)".format(
+            print("[{}] steps: {}/{}, {:.2f}% -> policy loss: {:.4f}, value loss: {:.4f} | rate: {:.2f}(steps/sec), estimate: {}(sec)".format(
                       get_currtime(),
                       steps+1,
                       max_steps,
@@ -373,6 +374,8 @@ if __name__ == "__main__":
                         help="The learning rate decay multiple factor.", type=float, default=0.1)
     parser.add_argument("--value-loss-scale", metavar="<float>",
                         help="Scaling factor of value loss. Default is 0.25 based on AlphaGo paper.", type=float, default=0.25)
+    parser.add_argument("--num-workers", metavar="<int>",
+                        help="Select a specific number of workerer for DataLoader.", type=int, default=None)
 
     args = parser.parse_args()
     if valid_args(args):
