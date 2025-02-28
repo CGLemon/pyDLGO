@@ -276,7 +276,8 @@ class Search:
             self._descend(color, curr_board, self.root_node)
 
         # Always dump last tree stats for GUI, like Sabaki.
-        if self.root_node.visits > 1:
+        if interval > 0 and \
+               self.root_node.visits > 1:
             stdout.write(self.root_node.to_lz_analysis(self.root_board))
             stdout.flush()
 
@@ -338,7 +339,8 @@ class Search:
         self.time_control.took_time(to_move)
 
         # Always dump last tree stats for GUI, like Sabaki.
-        if self.root_node.visits > 1:
+        if interval > 0 and \
+               self.root_node.visits > 1:
             stdout.write(self.root_node.to_lz_analysis(self.root_board))
             stdout.flush()
 
