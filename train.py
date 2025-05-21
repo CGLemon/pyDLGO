@@ -224,7 +224,7 @@ def load_checkpoint(network, optimizer, workspace):
     filenames.sort(key=os.path.getmtime, reverse=True)
     last_pt = filenames[0]
 
-    state_dict = torch.load(last_pt, map_location=network.gpu_device)
+    state_dict = torch.load(last_pt, map_location=network.gpu_device, weights_only=True)
     network.load_state_dict(state_dict["network"])
     optimizer.load_state_dict(state_dict["optimizer"])
     steps = state_dict["steps"]

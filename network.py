@@ -123,14 +123,14 @@ class Network(nn.Module):
         self.input_channels = input_channels
         self.use_se = use_se
         self.use_gpu = True if torch.cuda.is_available() and use_gpu else False
-        self.gpu_device = torch.device('cpu')
+        self.gpu_device = torch.device("cpu")
 
         if self.use_se:
             assert self.residual_channels // 2 == 0, "BLOCK_CHANNELS must be divided by 2."
 
         self.construct_layers()
         if self.use_gpu:
-            self.gpu_device = torch.device('cuda')
+            self.gpu_device = torch.device("cuda")
             self.to_gpu_device()
 
     def to_gpu_device(self):
@@ -145,15 +145,13 @@ class Network(nn.Module):
         )
 
         # residual tower
-        nn_stack = []
+        self.residual_tower = nn.ModuleList()
         for s in range(self.block_size):
-            se_size = None
-            if self.use_se:
-                se_size = self.residual_channels // 2
-            nn_stack.append(ResBlock(self.residual_channels, se_size))
+            se_size = self.residual_channels // 2 if self.use_se else None
+            self.residual_tower.append(
+                ResBlock(self.residual_channels, se_size))
 
-        self.residual_tower = nn.Sequential(*nn_stack)
-
+        # policy head
         self.policy_conv = ConvBlock(
             in_channels=self.residual_channels,
             out_channels=self.policy_channels,
@@ -189,7 +187,8 @@ class Network(nn.Module):
         x = self.input_conv(planes)
 
         # residual tower
-        x = self.residual_tower(x)
+        for block in self.residual_tower:
+            x = block(x)
 
         # policy head
         pol = self.policy_conv(x)
@@ -238,4 +237,6 @@ class Network(nn.Module):
         torch.save(self.state_dict(), filename)
 
     def load_pt(self, filename):
-        self.load_state_dict(torch.load(filename, map_location=self.gpu_device))
+        self.load_state_dict(
+            torch.load(filename, map_location=self.gpu_device, weights_only=True)
+        )
