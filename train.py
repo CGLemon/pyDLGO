@@ -3,7 +3,7 @@ from config import BOARD_SIZE, INPUT_CHANNELS
 from board import Board, PASS, BLACK, WHITE, EMPTY, INVLD, NUM_INTESECTIONS
 
 import sgf, argparse
-import copy, random, time, os, shutil, glob
+import copy, time, os, shutil, glob
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -11,7 +11,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-CACHE_DIR = "data-cache"
+CACHE_TRAIN_DIR = "tdata-cache"
+CACHE_VALID_DIR = "vdata-cache"
 
 def gather_filenames(dirname):
     def gather_recursive_files(root):
@@ -96,7 +97,6 @@ class Dataset(torch.utils.data.Dataset):
 # Load the SGF files and save the training data to the disk.
 class DataChopper:
     def  __init__(self, dir_name, num_sgfs):
-        self.cache_dir = CACHE_DIR
         self.num_data = 0
         self._chop_data(dir_name, num_sgfs)
 
@@ -112,9 +112,13 @@ class DataChopper:
 
         print("imported {} SGF files".format(total_games))
 
-        if os.path.isdir(self.cache_dir):
-            shutil.rmtree(self.cache_dir, ignore_errors=True)
-        os.mkdir(self.cache_dir)
+        if os.path.isdir(CACHE_TRAIN_DIR):
+            shutil.rmtree(CACHE_TRAIN_DIR, ignore_errors=True)
+        os.makedirs(CACHE_TRAIN_DIR)
+
+        if os.path.isdir(CACHE_VALID_DIR):
+            shutil.rmtree(CACHE_VALID_DIR, ignore_errors=True)
+        os.makedirs(CACHE_VALID_DIR)
 
         for s in range(total_games):
             game = sgf_games[s]
@@ -143,8 +147,12 @@ class DataChopper:
             to_move_buf[:] = data.to_move
 
             # Save the date on disk.
-            filenmae = os.path.join(self.cache_dir, "data_{}.npz".format(self.num_data))
-            np.savez_compressed(filenmae, i=inputs_buf, p=policy_buf, v=value_buf, t=to_move_buf)
+            use_valid = int(np.random.choice(10, 1)[0]) == 0
+            if use_valid:
+                filename = os.path.join(CACHE_VALID_DIR, "data_{}.npz".format(self.num_data))
+            else:
+                filename = os.path.join(CACHE_TRAIN_DIR, "data_{}.npz".format(self.num_data))
+            np.savez_compressed(filename, i=inputs_buf, p=policy_buf, v=value_buf, t=to_move_buf)
             self.num_data += 1
 
     def _process_one_game(self, game):
@@ -269,7 +277,7 @@ def training_process(args):
     print("Use {n} workers for loader.".format(n=num_workers))
 
     data_loader = torch.utils.data.DataLoader(
-        dataset=Dataset(CACHE_DIR, args.batch_size * args.steps),
+        dataset=Dataset(CACHE_TRAIN_DIR, args.batch_size * args.steps),
         batch_size=args.batch_size,
         shuffle=True,
         num_workers=num_workers
