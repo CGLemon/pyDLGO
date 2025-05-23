@@ -76,9 +76,10 @@ class Data:
         self.to_move = npdata["t"][0]
 
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self, source_dir, num_virtual_samples):
+    def __init__(self, source_dir, num_virtual_samples=None):
         self.filenames = gather_filenames(source_dir)
-        self.num_virtual_samples = num_virtual_samples
+        self.num_virtual_samples = num_virtual_samples \
+            if num_virtual_samples is not None else len(self.filenames)
 
     def __len__(self):
         return self.num_virtual_samples
@@ -186,21 +187,6 @@ class DataChopper:
             elif winner != data.to_move:
                 data.value = -1
         return temp
-
-def valid_args(args):
-    result = True
-
-    if args.steps == None:
-        print("Must to give the argument --steps <integer>")
-        result = False
-    if args.batch_size == None:
-        print("Must to give the argument --batch-size <integer>")
-        result = False
-    if args.learning_rate == None:
-        print("Must to give the argument --learning-rate <float>")
-        result = False
-
-    return result
 
 def plot_loss(record):
     if len(record) <= 1:
@@ -363,13 +349,13 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--dir", metavar="<string>",
                         help="The input SGF files directory. Will use data cache if set None.", type=str)
     parser.add_argument("-s", "--steps", metavar="<integer>",
-                        help="Terminate after these steps for each run.", type=int)
+                        help="Terminate after these steps for each run.", type=int, required=True)
     parser.add_argument("-v", "--verbose-steps", metavar="<integer>",
                         help="Dump verbose and save checkpoint every X steps.", type=int, default=1000)
     parser.add_argument("-b", "--batch-size", metavar="<integer>",
-                        help="The batch size number.", type=int)
+                        help="The batch size number.", type=int, required=True)
     parser.add_argument("-l", "--learning-rate", metavar="<float>",
-                        help="The learning rate.", type=float)
+                        help="The learning rate.", type=float, required=True)
     parser.add_argument("-w", "--workspace", metavar="<string>", default="workspace",
                         help="Will save the checkpoint here.", type=str)
     parser.add_argument("-i", "--imported-games", metavar="<integer>",
@@ -386,5 +372,4 @@ if __name__ == "__main__":
                         help="Select a specific number of workerer for DataLoader.", type=int, default=None)
 
     args = parser.parse_args()
-    if valid_args(args):
-        training_process(args)
+    training_process(args)
