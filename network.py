@@ -146,9 +146,15 @@ class Network(nn.Module):
         )
 
         # body tower
+        self.residual_tower = nn.ModuleList()
+        for s in range(self.block_size - 1):
+            se_size = self.residual_channels // 2 if self.use_se else None
+            self.residual_tower.append(
+                ResBlock(self.residual_channels, se_size))
+
         self.pos_encoding = self.get_sincos_pos_encoding(
             self.spatial_size, self.residual_channels, self.gpu_device)
-        self.body = nn.TransformerEncoder(
+        self.trans = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(
                 d_model=self.residual_channels,
                 nhead=8,
@@ -156,7 +162,7 @@ class Network(nn.Module):
                 dropout=0.0,
                 activation="relu"
             ),
-            num_layers=self.block_size
+            num_layers=1
         )
 
         # policy head
@@ -204,12 +210,15 @@ class Network(nn.Module):
     def forward(self, planes):
         x = self.input_conv(planes)
 
-        # transformer tower
+        # body tower
+        for block in self.residual_tower:
+            x = block(x)
+
         n, c, h, w = x.shape
         x = torch.permute(x, (0, 2, 3, 1))
         x = x.view(n, h*w, c)
         x = x + self.pos_encoding
-        x = self.body(x)
+        x = self.trans(x)
         x = x.view(n, h, w, c)
         x = torch.permute(x, (0, 3, 1, 2))
 
