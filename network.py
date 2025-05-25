@@ -135,6 +135,7 @@ class Network(nn.Module):
 
     def to_gpu_device(self):
         self = self.to(self.gpu_device)
+        self.pos_encoding = self.pos_encoding.to(self.gpu_device)
 
     def construct_layers(self):
         self.input_conv = ConvBlock(
@@ -144,12 +145,19 @@ class Network(nn.Module):
             relu=True
         )
 
-        # residual tower
-        self.residual_tower = nn.ModuleList()
-        for s in range(self.block_size):
-            se_size = self.residual_channels // 2 if self.use_se else None
-            self.residual_tower.append(
-                ResBlock(self.residual_channels, se_size))
+        # body tower
+        self.pos_encoding = self.get_sincos_pos_encoding(
+            self.spatial_size, self.residual_channels, self.gpu_device)
+        self.body = nn.TransformerEncoder(
+            nn.TransformerEncoderLayer(
+                d_model=self.residual_channels,
+                nhead=8,
+                dim_feedforward=self.residual_channels*4,
+                dropout=0.0,
+                activation="relu"
+            ),
+            num_layers=self.block_size
+        )
 
         # policy head
         self.policy_conv = ConvBlock(
@@ -183,12 +191,27 @@ class Network(nn.Module):
             relu=False
         )
 
+    def get_sincos_pos_encoding(self, seq_len, dim, device):
+        pos = torch.arange(seq_len, dtype=torch.float, device=device).unsqueeze(1)
+        i = torch.arange(dim, dtype=torch.float, device=device).unsqueeze(0)
+        angle_rates = 1.0 / torch.pow(10000, (2 * (i // 2)) / dim)
+        angle_rads = pos * angle_rates
+        pe = torch.zeros((seq_len, dim), device=device)
+        pe[:, 0::2] = torch.sin(angle_rads[:, 0::2])
+        pe[:, 1::2] = torch.cos(angle_rads[:, 1::2])
+        return pe.unsqueeze(0)  # [1, seq_len, dim]
+
     def forward(self, planes):
         x = self.input_conv(planes)
 
-        # residual tower
-        for block in self.residual_tower:
-            x = block(x)
+        # transformer tower
+        n, c, h, w = x.shape
+        x = torch.permute(x, (0, 2, 3, 1))
+        x = x.view(n, h*w, c)
+        x = x + self.pos_encoding
+        x = self.body(x)
+        x = x.view(n, h, w, c)
+        x = torch.permute(x, (0, 3, 1, 2))
 
         # policy head
         pol = self.policy_conv(x)
