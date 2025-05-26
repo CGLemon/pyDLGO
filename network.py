@@ -107,6 +107,7 @@ class Network(nn.Module):
                        block_channels=BLOCK_CHANNELS,
                        policy_channels=POLICY_CHANNELS,
                        value_channels=VALUE_CHANNELS,
+                       stem_size=STEM_SIZE,
                        use_se=USE_SE,
                        use_gpu=USE_GPU):
         super().__init__()
@@ -121,9 +122,12 @@ class Network(nn.Module):
         self.board_size = board_size
         self.spatial_size = self.board_size ** 2
         self.input_channels = input_channels
+        self.stem_size = stem_size
         self.use_se = use_se
         self.use_gpu = True if torch.cuda.is_available() and use_gpu else False
         self.gpu_device = torch.device("cpu")
+
+        assert self.stem_size <= self.block_size, "STEM_SIZE must be less than or equal to BLOCK_SIZE."
 
         if self.use_se:
             assert self.residual_channels // 2 == 0, "BLOCK_CHANNELS must be divided by 2."
@@ -147,7 +151,7 @@ class Network(nn.Module):
 
         # body tower
         self.residual_tower = nn.ModuleList()
-        for s in range(self.block_size - 1):
+        for s in range(self.stem_size):
             se_size = self.residual_channels // 2 if self.use_se else None
             self.residual_tower.append(
                 ResBlock(self.residual_channels, se_size))
@@ -162,7 +166,7 @@ class Network(nn.Module):
                 dropout=0.1,
                 activation="gelu"
             ),
-            num_layers=1,
+            num_layers=self.block_size - self.stem_size,
             norm=nn.LayerNorm(self.residual_channels)
         )
 
