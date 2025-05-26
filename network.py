@@ -157,12 +157,13 @@ class Network(nn.Module):
         self.trans = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(
                 d_model=self.residual_channels,
-                nhead=8,
+                nhead=4,
                 dim_feedforward=self.residual_channels*4,
-                dropout=0.0,
-                activation="relu"
+                dropout=0.1,
+                activation="gelu"
             ),
-            num_layers=1
+            num_layers=1,
+            norm=nn.LayerNorm(self.residual_channels)
         )
 
         # policy head
