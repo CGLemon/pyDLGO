@@ -34,7 +34,7 @@ def validate(args):
     total = 0
     correct_policy = 0
     total_value_loss = 0.0
-    mse_loss = nn.MSELoss(reduction='sum')
+    mse_loss = nn.MSELoss()
 
     total_samples = len(dataset)
 

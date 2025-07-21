@@ -131,7 +131,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        sgfs = get_sgf_from_dir(args.sgf_dir)
+        sgfs = parse_from_dir(args.sgf_dir)
         print("\nSuccessfuly parse every SGF string...")
     except Exception as e:
         print(e)
