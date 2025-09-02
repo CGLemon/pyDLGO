@@ -1,6 +1,6 @@
 from network import Network
 from config import BOARD_SIZE, INPUT_CHANNELS
-from board import Board, PASS, BLACK, WHITE, EMPTY, INVLD, NUM_INTESECTIONS
+from board import Board, PASS, BLACK, WHITE, EMPTY, INVLD, NUM_INTERSECTIONS
 
 import sgf, argparse
 import copy, time, os, shutil, glob
@@ -36,7 +36,7 @@ def get_weights_name(prefix):
 class Data:
     def __init__(self):
         self.inputs = None # should be numpy array, shape is [INPUT_CHANNELS, BOARD_SIZE, BOARD_SIZE]
-        self.policy = None # should be integer, range is 0 ~ NUM_INTESECTIONS
+        self.policy = None # should be integer, range is 0 ~ NUM_INTERSECTIONS
         self.value = None # should be float, range is -1 ~ 1
         self.to_move = None
 
@@ -62,8 +62,8 @@ class Data:
             p = self.inputs[i]
             self.inputs[i][:][:] = self._get_symmetry_plane(symm, p)[:][:]
 
-        if self.policy != NUM_INTESECTIONS:
-            buf = np.zeros(NUM_INTESECTIONS)
+        if self.policy != NUM_INTERSECTIONS:
+            buf = np.zeros(NUM_INTERSECTIONS)
             buf[self.policy] = 1
             buf = self._get_symmetry_plane(symm, np.reshape(buf, (BOARD_SIZE, BOARD_SIZE)))
             self.policy = int(np.argmax(buf))

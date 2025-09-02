@@ -8,7 +8,7 @@ EMPTY = 2
 INVLD = 3
 
 NUM_VERTICES = (BOARD_SIZE+2) ** 2 # max vertices number
-NUM_INTESECTIONS = BOARD_SIZE ** 2 # max intersections number
+NUM_INTERSECTIONS = BOARD_SIZE ** 2 # max intersections number
 
 PASS = -1  # pass
 RESIGN = -2 # resign
